@@ -1,5 +1,13 @@
 # Changelog
 
+## [2024-02-04] Status Effect Type Immunities
+- Added type-based immunity system for status effects:
+  - Fire types immune to burn
+  - Steel types immune to poison
+  - Electric types immune to paralysis
+  - Ice types immune to freeze
+- Added comprehensive tests for type immunities
+
 ## [2024-02-04] Burn Status Implementation
 - Added burn status effect implementation
   - Deals 1/16 max HP damage per turn

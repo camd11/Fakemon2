@@ -64,16 +64,15 @@ All status effect functionality is verified by tests in `tests/core/test_battle_
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional status effects (Freeze, Burn)
-2. Status immunity based on Pokemon type
-3. Status effect resistance abilities
-4. Items to cure specific status effects
-5. Moves that have increased effect chance on status-afflicted Pokemon
+1. Additional status effects (Freeze)
+2. Status effect resistance abilities
+3. Items to cure specific status effects
+4. Moves that have increased effect chance on status-afflicted Pokemon
 
 ## Next Steps
 
 1. Implement remaining status effects (Freeze)
-2. Add status immunity system based on type (e.g. Fire types immune to burn)
+2. Add status-related abilities
 3. Create status-curing items
 4. Add status-related abilities
 

@@ -365,6 +365,90 @@ def test_burn_duration(battle):
     assert battle.enemy_pokemon.status is None
     assert "Enemy Pokemon's burn faded!" in result.messages
 
+def test_type_immunities(battle):
+    """Test that Pokemon are immune to status effects based on their type."""
+    # Create status moves
+    burn_move = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=15,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
+    )
+    poison_move = Move(
+        name="Toxic",
+        type_=Type.POISON,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=10,
+        effects=[Effect(status=StatusEffect.POISON, status_chance=100)]
+    )
+    paralyze_move = Move(
+        name="Thunder Wave",
+        type_=Type.ELECTRIC,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=20,
+        effects=[Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
+    )
+    freeze_move = Move(
+        name="Ice Beam",
+        type_=Type.ICE,
+        category=MoveCategory.SPECIAL,
+        power=90,
+        accuracy=100,
+        pp=10,
+        effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
+    )
+    
+    # Test Fire type immunity to burn
+    fire_pokemon = Pokemon(
+        name="Fire Pokemon",
+        types=(Type.FIRE,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    battle.enemy_pokemon = fire_pokemon
+    battle.execute_turn(burn_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status is None
+    
+    # Test Steel type immunity to poison
+    steel_pokemon = Pokemon(
+        name="Steel Pokemon",
+        types=(Type.STEEL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    battle.enemy_pokemon = steel_pokemon
+    battle.execute_turn(poison_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status is None
+    
+    # Test Electric type immunity to paralysis
+    electric_pokemon = Pokemon(
+        name="Electric Pokemon",
+        types=(Type.ELECTRIC,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    battle.enemy_pokemon = electric_pokemon
+    battle.execute_turn(paralyze_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status is None
+    
+    # Test Ice type immunity to freeze
+    ice_pokemon = Pokemon(
+        name="Ice Pokemon",
+        types=(Type.ICE,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    battle.enemy_pokemon = ice_pokemon
+    battle.execute_turn(freeze_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status is None
+
 def test_fire_move_thaws_user(battle):
     """Test that using a fire move thaws the user."""
     # Create moves
