@@ -559,6 +559,67 @@ def test_wonder_guard():
     assert damage_dealt == 50  # Full damage dealt
     assert pokemon.current_hp == initial_hp - 50  # HP reduced
 
+def test_protean():
+    """Test that Protean changes type to match move used."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=PROTEAN
+    )
+    
+    # Create test move
+    fire_move = Move(
+        name="Fire Move",
+        type_=Type.FIRE,
+        category=MoveCategory.SPECIAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    # Check type change
+    msg = pokemon.check_protean(fire_move)
+    assert msg == "Test Pokemon became FIRE-type!"
+    assert pokemon.types == (Type.FIRE,)
+    
+    # Check STAB multiplier
+    assert pokemon.get_stab_multiplier(fire_move) == 1.5
+
+def test_adaptability():
+    """Test that Adaptability boosts STAB moves."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.FIRE,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=ADAPTABILITY
+    )
+    
+    # Create test moves
+    fire_move = Move(
+        name="Fire Move",
+        type_=Type.FIRE,
+        category=MoveCategory.SPECIAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    water_move = Move(
+        name="Water Move",
+        type_=Type.WATER,
+        category=MoveCategory.SPECIAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    # Check STAB multipliers
+    assert pokemon.get_stab_multiplier(fire_move) == 2.0  # Boosted STAB
+    assert pokemon.get_stab_multiplier(water_move) == 1.0  # No STAB
+
 def test_transform():
     """Test that transform copies target's stats and moves."""
     target = Pokemon(

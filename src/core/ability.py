@@ -18,7 +18,13 @@ class AbilityType(Enum):
     FORM_CHANGE = auto()    # Changes Pokemon form
     ILLUSION = auto()       # Changes Pokemon appearance
     DISGUISE = auto()       # Protects from damage
+    PROTEAN = auto()        # Changes type based on moves
     OTHER = auto()           # Other effects
+
+class ProteanType(Enum):
+    """Types of protean effects."""
+    MOVE = auto()      # Changes type to match move
+    STAB = auto()      # Boosts STAB moves
 
 class DisguiseType(Enum):
     """Types of disguise effects."""
@@ -79,7 +85,8 @@ class Ability:
         form_types: Optional[Dict[str, Tuple[Type, ...]]] = None,  # Types for each form
         illusion_effect: Optional[IllusionType] = None,
         disguise_type: Optional[DisguiseType] = None,  # Type of disguise protection
-        disguise_hp: Optional[int] = None  # Extra HP for disguise
+        disguise_hp: Optional[int] = None,  # Extra HP for disguise
+        protean_type: Optional[ProteanType] = None  # Type of protean effect
     ) -> None:
         """Initialize an ability.
         
@@ -102,6 +109,7 @@ class Ability:
             illusion_effect: Illusion effect type
             disguise_type: Type of disguise protection
             disguise_hp: Extra HP for disguise
+            protean_type: Type of protean effect
         """
         self.name = name
         self.type = type_
@@ -121,6 +129,7 @@ class Ability:
         self.illusion_effect = illusion_effect
         self.disguise_type = disguise_type
         self.disguise_hp = disguise_hp
+        self.protean_type = protean_type
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -145,6 +154,28 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define protean abilities
+PROTEAN = Ability(
+    name="Protean",
+    type_=AbilityType.PROTEAN,
+    description="Changes type to match move being used.",
+    protean_type=ProteanType.MOVE
+)
+
+LIBERO = Ability(
+    name="Libero",
+    type_=AbilityType.PROTEAN,
+    description="Changes type to match move being used.",
+    protean_type=ProteanType.MOVE
+)
+
+ADAPTABILITY = Ability(
+    name="Adaptability",
+    type_=AbilityType.PROTEAN,
+    description="Powers up moves that match the Pokemon's type.",
+    protean_type=ProteanType.STAB
 )
 
 # Define disguise abilities

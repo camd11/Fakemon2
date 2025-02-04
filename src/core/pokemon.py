@@ -3,8 +3,11 @@
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict
 from .types import Type
-from .move import Move, StatusEffect
-from .ability import Ability, AbilityType, FormChangeType, IllusionType, TerrainType
+from .move import Move, StatusEffect, MoveCategory
+from .ability import (
+    Ability, AbilityType, FormChangeType, IllusionType, TerrainType,
+    DisguiseType, ProteanType
+)
 from .item import Item, HeldItemTrigger, ItemEffect
 
 @dataclass
@@ -69,6 +72,7 @@ class Pokemon:
         self.transformed_stats = None  # Stats when transformed
         self.transformed_types = None  # Types when transformed
         self.transformed_moves = None  # Moves when transformed
+        self.original_types = types  # Store original types for protean abilities
         
         # Set up disguise protection if needed
         if self.ability and self.ability.type == AbilityType.DISGUISE:
@@ -265,6 +269,43 @@ class Pokemon:
                     return self.change_form("complete")
                     
         return None
+        
+    def check_protean(self, move: Move) -> Optional[str]:
+        """Check if type should change based on move used.
+        
+        Args:
+            move: The move being used
+            
+        Returns:
+            Optional[str]: Message about type change if successful, None if failed
+        """
+        if not self.ability or self.ability.type != AbilityType.PROTEAN:
+            return None
+            
+        if self.ability.protean_type != ProteanType.MOVE:
+            return None
+            
+        # Change type to match move
+        self.types = (move.type,)
+        return f"{self.name} became {move.type.name}-type!"
+        
+    def get_stab_multiplier(self, move: Move) -> float:
+        """Get the STAB (Same Type Attack Bonus) multiplier for a move.
+        
+        Args:
+            move: The move being used
+            
+        Returns:
+            float: The STAB multiplier to apply
+        """
+        # Check if move type matches any of Pokemon's types
+        if move.type in self.types:
+            # Adaptability boosts STAB from 1.5x to 2.0x
+            if (self.ability and self.ability.type == AbilityType.PROTEAN and 
+                self.ability.protean_type == ProteanType.STAB):
+                return 2.0
+            return 1.5
+        return 1.0
         
     def get_stat_multiplier(self, stat: str, weather: Optional['Weather'] = None) -> float:
         """Get the current multiplier for a stat based on its stage, status, and ability.

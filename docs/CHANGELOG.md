@@ -1,5 +1,14 @@
 # Changelog
 
+## [2024-02-04] Protean Abilities
+- Added protean system:
+  - Protean: Changes type to match move being used
+  - Libero: Changes type to match move being used
+  - Adaptability: Powers up STAB moves (2.0x instead of 1.5x)
+- Enhanced Pokemon class to handle type changes
+- Enhanced Battle class to handle protean triggers
+- Added comprehensive tests for protean functionality
+
 ## [2024-02-04] Disguise Abilities
 - Added disguise system:
   - Disguise: Takes no damage from first hit

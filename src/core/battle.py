@@ -278,6 +278,11 @@ class Battle:
             # Get type effectiveness
             result.effectiveness = self.type_chart.get_multiplier(move.type, target.types)
             
+            # Handle protean ability before damage calculation
+            protean_msg = attacker.check_protean(move)
+            if protean_msg:
+                result.messages.append(protean_msg)
+            
             # Calculate damage using the correct attacker
             damage = self._calculate_damage(move, attacker, target, result.critical_hit)
             result.damage_dealt = target.take_damage(
@@ -382,8 +387,7 @@ class Battle:
         damage = ((2 * attacker.level / 5 + 2) * move.power * attack / defense / 50 + 2)
         
         # Apply STAB (Same Type Attack Bonus)
-        if move.type in attacker.types:
-            damage *= 1.5
+        damage *= attacker.get_stab_multiplier(move)
             
         # Apply type effectiveness
         damage *= self.type_chart.get_multiplier(move.type, defender.types)
