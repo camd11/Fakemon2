@@ -104,20 +104,136 @@ python src/main.py
 - `docs/`: Design documentation and changelog
 - `tests/`: Test suite (future addition)
 
-## Development
+## Development Status
 
-See [DESIGN.md](docs/DESIGN.md) for detailed architecture and implementation plans.
+### Completed Features
+- Core battle system with type effectiveness and status effects
+- Pokemon management with stats and moves
+- Basic roguelike progression system
+- Terminal-based UI using Rich library
+- Comprehensive test suite (52 tests, 90%+ coverage for core/services)
 
+### Current Focus
+- UI layer testing implementation
+- Item system design and development
+- Battle system enhancements
+
+See [DESIGN.md](docs/DESIGN.md) for detailed architecture and current status.
 Changes are tracked in [CHANGELOG.md](docs/CHANGELOG.md).
 
-## Future Plans
+## Development Workflow
 
-1. Item system with rewards after battles
-2. More Pokemon and moves
-3. Advanced battle mechanics
-4. Save/Load system
-5. Browser-based UI
-6. Achievement system
+### Setting Up Development Environment
+
+1. Install Python dependencies:
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+2. Run tests to verify setup:
+```bash
+python3 -m pytest
+```
+
+3. Start the game:
+```bash
+python3 src/main.py
+```
+
+### Development Process
+
+1. Check current issues and project board
+2. Create a new branch for your feature
+3. Write tests first (TDD approach)
+4. Implement the feature
+5. Ensure tests pass and coverage maintains
+6. Update documentation
+7. Create pull request
+
+### Code Organization
+
+- `src/core/`: Core game mechanics (Pokemon, moves, battles)
+- `src/services/`: Game state and business logic
+- `src/data/`: JSON data files
+- `src/ui/`: Terminal interface components
+- `tests/`: Test suite organized by component
+- `docs/`: Design docs and changelog
+
+### Testing
+
+Run different test configurations:
+```bash
+# Run all tests with coverage
+python3 -m pytest
+
+# Run specific test file
+python3 -m pytest tests/core/test_pokemon.py
+
+# Run tests matching pattern
+python3 -m pytest -k "battle"
+```
+
+Coverage reports are generated in `htmlcov/`.
+
+### Documentation
+
+Keep these up to date when making changes:
+1. Update docstrings for new code
+2. Modify DESIGN.md for architectural changes
+3. Add significant changes to CHANGELOG.md
+4. Update JSON schemas if data structure changes
+
+## Roadmap
+
+### Phase 1 (Current)
+- ✅ Core battle system
+- ✅ Basic game progression
+- ✅ Terminal UI
+- 🔄 UI testing
+- 🔄 Item system
+
+### Phase 2 (Planned)
+- Advanced battle mechanics
+- Save/Load system
+- More Pokemon and moves
+- Achievement system
+
+### Phase 3 (Future)
+- Browser-based UI
+- Online features
+- Custom Pokemon creation
+
+## Common Development Tasks
+
+### Adding a New Pokemon
+1. Add entry to `src/data/pokemon.json`
+2. Update type effectiveness if needed
+3. Add new moves if required
+4. Update tests
+5. Verify in game
+
+### Implementing New Features
+1. Start with core domain in `src/core/`
+2. Add necessary data files
+3. Implement service layer integration
+4. Add UI components
+5. Write comprehensive tests
+6. Update documentation
+
+### Debugging
+1. Check test coverage for affected area
+2. Use Rich library's console.print for debugging
+3. Verify JSON data integrity
+4. Check game state transitions
+
+## Getting Help
+
+1. Check existing tests for examples
+2. Review DESIGN.md for architecture
+3. Examine JSON files for data structures
+4. Look for similar implementations in codebase
 
 ## Contributing
 
