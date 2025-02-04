@@ -22,7 +22,12 @@ class AbilityType(Enum):
     COLOR_CHANGE = auto()   # Changes type based on damage
     TRACE = auto()          # Copies opponent's ability
     MOLD_BREAKER = auto()   # Ignores other abilities
+    SIMPLE = auto()         # Doubles stat stage changes
     OTHER = auto()           # Other effects
+
+class SimpleType(Enum):
+    """Types of simple effects."""
+    DOUBLE = auto()      # Doubles stat stage changes
 
 class MoldBreakerType(Enum):
     """Types of mold breaker effects."""
@@ -116,6 +121,14 @@ class Ability:
             immune_statuses: Set of status effects this ability prevents
             weather_effect: Weather condition to set
             stat_boost: (stat_name, multiplier, required_weather)
+
+# Define simple abilities
+SIMPLE = Ability(
+    name="Simple",
+    type_=AbilityType.SIMPLE,
+    description="Doubles all stat stage changes.",
+    simple_type=SimpleType.DOUBLE
+)
 
 # Define mold breaker abilities
 MOLD_BREAKER = Ability(

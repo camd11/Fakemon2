@@ -712,6 +712,32 @@ def test_color_change():
     assert msg == "Test Pokemon became WATER-type!"
     assert pokemon.types == (Type.WATER,)
 
+def test_simple():
+    """Test that Simple doubles stat stage changes."""
+    # Create Pokemon with Simple
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=SIMPLE
+    )
+    
+    # Test positive stat changes
+    assert pokemon.modify_stat("attack", 1)
+    assert pokemon.stat_stages["attack"] == 2  # Should be doubled
+    
+    # Test negative stat changes
+    assert pokemon.modify_stat("defense", -1)
+    assert pokemon.stat_stages["defense"] == -2  # Should be doubled
+    
+    # Test max/min bounds
+    assert pokemon.modify_stat("speed", 4)
+    assert pokemon.stat_stages["speed"] == 6  # Should be capped at +6
+    
+    assert pokemon.modify_stat("special_attack", -4)
+    assert pokemon.stat_stages["special_attack"] == -6  # Should be capped at -6
+
 def test_mold_breaker():
     """Test that Mold Breaker ignores other Pokemon's abilities."""
     # Create Pokemon with Mold Breaker

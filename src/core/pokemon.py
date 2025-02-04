@@ -430,6 +430,10 @@ class Pokemon:
         if stat not in self.stat_stages:
             return False
             
+        # Double stat changes if Pokemon has Simple
+        if self.ability and self.ability.type == AbilityType.SIMPLE:
+            stages *= 2
+            
         old_stage = self.stat_stages[stat]
         new_stage = max(-6, min(6, old_stage + stages))
         self.stat_stages[stat] = new_stage

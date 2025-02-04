@@ -1,5 +1,11 @@
 # Changelog
 
+## [2024-02-04] Simple Abilities
+- Added simple system:
+  - Simple: Doubles all stat stage changes
+- Enhanced Pokemon class to handle stat stage doubling
+- Added comprehensive tests for simple functionality
+
 ## [2024-02-04] Mold Breaker Abilities
 - Added mold breaker system:
   - Mold Breaker: Ignores other Pokemon's abilities
