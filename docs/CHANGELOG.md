@@ -1,5 +1,16 @@
 # Changelog
 
+## [2024-02-04] Status-Curing Items
+- Added status-curing items:
+  - Full Heal: Cures all status conditions
+  - Antidote: Cures poison
+  - Burn Heal: Cures burn
+  - Paralyze Heal: Cures paralysis
+  - Awakening: Cures sleep
+  - Ice Heal: Cures freeze
+- Enhanced Item class to support specific status curing
+- Added comprehensive tests for status item functionality
+
 ## [2024-02-04] Status Effect Abilities
 - Added ability system with status-related abilities:
   - Immunity: Prevents all status conditions

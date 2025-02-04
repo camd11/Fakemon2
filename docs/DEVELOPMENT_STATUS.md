@@ -82,19 +82,41 @@ Status-related abilities have been implemented:
    - Verification of ability-type immunity interactions
    - Edge case testing for ability-less Pokemon
 
+### Item System
+
+Status-curing items have been implemented:
+
+1. **Core Components**
+   - Enhanced ItemEffect with status-specific curing
+   - Integration with Pokemon status system
+   - Validation of item usage based on status
+
+2. **Implemented Items**
+   - Full Heal: Cures all status conditions
+   - Antidote: Cures poison
+   - Burn Heal: Cures burn
+   - Paralyze Heal: Cures paralysis
+   - Awakening: Cures sleep
+   - Ice Heal: Cures freeze
+
+3. **Testing**
+   - Verification of item-specific status curing
+   - Validation of item usage restrictions
+   - Edge case testing for status-less Pokemon
+
 ### Future Improvements
 
 Potential areas for expansion:
 1. Additional status effects (Freeze)
 2. Additional ability types (Weather, Stats, etc.)
-3. Items to cure specific status effects
+3. Additional item types (Held items, Battle items)
 4. Moves that have increased effect chance on status-afflicted Pokemon
 
 ## Next Steps
 
 1. Implement remaining status effects (Freeze)
-2. Create status-curing items
-3. Add additional ability types (Weather, Stats)
+2. Add additional ability types (Weather, Stats)
+3. Add held item functionality
 
 ## Previous Updates
 
