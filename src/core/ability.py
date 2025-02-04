@@ -4,6 +4,8 @@ from enum import Enum, auto
 from typing import Optional, Set
 from .move import StatusEffect
 
+from .battle import Weather
+
 class AbilityType(Enum):
     """Types of abilities that can affect battle."""
     STATUS_IMMUNITY = auto()  # Prevents specific status effects
@@ -20,7 +22,8 @@ class Ability:
         name: str,
         type_: AbilityType,
         description: str,
-        immune_statuses: Optional[Set[StatusEffect]] = None
+        immune_statuses: Optional[Set[StatusEffect]] = None,
+        weather_effect: Optional[Weather] = None
     ) -> None:
         """Initialize an ability.
         
@@ -34,6 +37,7 @@ class Ability:
         self.type = type_
         self.description = description
         self.immune_statuses = immune_statuses or set()
+        self.weather_effect = weather_effect
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -58,6 +62,35 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define weather-related abilities
+DRIZZLE = Ability(
+    name="Drizzle",
+    type_=AbilityType.WEATHER,
+    description="Summons rain when entering battle.",
+    weather_effect=Weather.RAIN
+)
+
+DROUGHT = Ability(
+    name="Drought",
+    type_=AbilityType.WEATHER,
+    description="Summons harsh sunlight when entering battle.",
+    weather_effect=Weather.SUN
+)
+
+SAND_STREAM = Ability(
+    name="Sand Stream",
+    type_=AbilityType.WEATHER,
+    description="Summons a sandstorm when entering battle.",
+    weather_effect=Weather.SANDSTORM
+)
+
+SNOW_WARNING = Ability(
+    name="Snow Warning",
+    type_=AbilityType.WEATHER,
+    description="Summons hail when entering battle.",
+    weather_effect=Weather.HAIL
 )
 
 LIMBER = Ability(

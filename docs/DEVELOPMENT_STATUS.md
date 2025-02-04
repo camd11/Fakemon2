@@ -63,23 +63,31 @@ All status effect functionality is verified by tests in `tests/core/test_battle_
 
 ### Ability System
 
-Status-related abilities have been implemented:
+The ability system has been expanded with both status and weather effects:
 
 1. **Core Components**
    - Ability class with type and effect tracking
    - Integration with Pokemon class
    - Status immunity checking in set_status
+   - Weather effect handling in Battle class
 
-2. **Implemented Abilities**
+2. **Status-Related Abilities**
    - Immunity: Prevents all status conditions
    - Limber: Prevents paralysis
    - Water Veil: Prevents burns
    - Vital Spirit: Prevents sleep
    - Magma Armor: Prevents freezing
 
-3. **Testing**
-   - Comprehensive tests for each ability
+3. **Weather-Related Abilities**
+   - Drizzle: Summons rain
+   - Drought: Summons sun
+   - Sand Stream: Summons sandstorm
+   - Snow Warning: Summons hail
+
+4. **Testing**
+   - Comprehensive tests for each ability type
    - Verification of ability-type immunity interactions
+   - Weather ability interaction testing
    - Edge case testing for ability-less Pokemon
 
 ### Item System
@@ -107,16 +115,16 @@ Status-curing items have been implemented:
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional status effects (Freeze)
-2. Additional ability types (Weather, Stats, etc.)
-3. Additional item types (Held items, Battle items)
-4. Moves that have increased effect chance on status-afflicted Pokemon
+1. Additional ability types (Stats, Entry Hazards)
+2. Additional item types (Held items, Battle items)
+3. Moves that have increased effect chance on status-afflicted Pokemon
+4. Weather-boosted moves and abilities
 
 ## Next Steps
 
-1. Implement remaining status effects (Freeze)
-2. Add additional ability types (Weather, Stats)
-3. Add held item functionality
+1. Add stat-boosting abilities
+2. Add held item functionality
+3. Add weather-boosted moves
 
 ## Previous Updates
 

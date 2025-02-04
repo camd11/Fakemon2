@@ -8,11 +8,16 @@ from src.core.ability import (
     LIMBER,
     WATER_VEIL,
     VITAL_SPIRIT,
-    MAGMA_ARMOR
+    MAGMA_ARMOR,
+    DRIZZLE,
+    DROUGHT,
+    SAND_STREAM,
+    SNOW_WARNING
 )
 from src.core.pokemon import Pokemon, Stats
-from src.core.types import Type
+from src.core.types import Type, TypeEffectiveness
 from src.core.move import StatusEffect
+from src.core.battle import Battle, Weather
 
 @pytest.fixture
 def test_pokemon():
@@ -139,3 +144,84 @@ def test_no_ability(test_pokemon):
     
     assert test_pokemon.set_status(StatusEffect.BURN)
     assert test_pokemon.status == StatusEffect.BURN
+
+def test_drizzle_ability(test_pokemon):
+    """Test that Drizzle sets rain weather."""
+    test_pokemon.ability = DRIZZLE
+    
+    # Create battle with clear weather
+    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
+    
+    # Weather should be changed to rain
+    assert battle.weather == Weather.RAIN
+    assert battle.weather_duration is None  # Should last indefinitely
+
+def test_drought_ability(test_pokemon):
+    """Test that Drought sets sun weather."""
+    test_pokemon.ability = DROUGHT
+    
+    # Create battle with clear weather
+    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
+    
+    # Weather should be changed to sun
+    assert battle.weather == Weather.SUN
+    assert battle.weather_duration is None
+
+def test_sand_stream_ability(test_pokemon):
+    """Test that Sand Stream sets sandstorm weather."""
+    test_pokemon.ability = SAND_STREAM
+    
+    # Create battle with clear weather
+    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
+    
+    # Weather should be changed to sandstorm
+    assert battle.weather == Weather.SANDSTORM
+    assert battle.weather_duration is None
+
+def test_snow_warning_ability(test_pokemon):
+    """Test that Snow Warning sets hail weather."""
+    test_pokemon.ability = SNOW_WARNING
+    
+    # Create battle with clear weather
+    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
+    
+    # Weather should be changed to hail
+    assert battle.weather == Weather.HAIL
+    assert battle.weather_duration is None
+
+def test_multiple_weather_abilities(test_pokemon):
+    """Test that multiple weather abilities interact correctly."""
+    # Create two Pokemon with different weather abilities
+    enemy_pokemon = Pokemon(
+        name="Enemy Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=DRIZZLE  # Sets rain
+    )
+    
+    test_pokemon.ability = DROUGHT  # Sets sun
+    
+    # Create battle - player's Pokemon should set weather last
+    battle = Battle(test_pokemon, enemy_pokemon, TypeEffectiveness())
+    
+    # Weather should be sun (player's Pokemon checked last)
+    assert battle.weather == Weather.SUN
+    assert battle.weather_duration is None
+
+def test_weather_ability_overrides_temporary_weather(test_pokemon):
+    """Test that weather abilities override temporary weather."""
+    test_pokemon.ability = DRIZZLE
+    
+    # Create battle with temporary sun
+    battle = Battle(
+        test_pokemon,
+        test_pokemon,
+        TypeEffectiveness(),
+        weather=Weather.SUN,
+        weather_duration=5
+    )
+    
+    # Weather should be changed to rain with no duration
+    assert battle.weather == Weather.RAIN
+    assert battle.weather_duration is None

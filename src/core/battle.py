@@ -80,6 +80,18 @@ class Battle:
         self.turn_count = 0
         self.is_trainer_battle = is_trainer_battle
         
+        # Check for weather abilities
+        self._check_weather_abilities()
+        
+    def _check_weather_abilities(self) -> None:
+        """Check and apply weather effects from Pokemon abilities."""
+        # Check both Pokemon for weather abilities
+        for pokemon in (self.player_pokemon, self.enemy_pokemon):
+            if pokemon.ability and pokemon.ability.type == AbilityType.WEATHER:
+                if pokemon.ability.weather_effect:
+                    self.weather = pokemon.ability.weather_effect
+                    self.weather_duration = None  # Weather from abilities lasts indefinitely
+        
     def can_move(self, pokemon: Pokemon) -> Tuple[bool, Optional[str]]:
         """Check if a Pokemon can move this turn.
         

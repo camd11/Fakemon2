@@ -1,5 +1,14 @@
 # Changelog
 
+## [2024-02-04] Weather Abilities
+- Added weather-related abilities:
+  - Drizzle: Summons rain
+  - Drought: Summons sun
+  - Sand Stream: Summons sandstorm
+  - Snow Warning: Summons hail
+- Enhanced Battle class to handle weather abilities
+- Added comprehensive tests for weather ability functionality
+
 ## [2024-02-04] Status-Curing Items
 - Added status-curing items:
   - Full Heal: Cures all status conditions
