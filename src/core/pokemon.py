@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 from .types import Type
 from .move import Move, StatusEffect
-from .ability import Ability, IMMUNITY
+from .ability import Ability, AbilityType
+from .item import Item, HeldItemTrigger, ItemEffect
 
 @dataclass
 class Stats:
@@ -26,7 +27,7 @@ class Pokemon:
         base_stats: Stats,
         level: int,
         moves: List[Move] = None,
-        held_item: Optional[str] = None,  # Placeholder for future item system
+        held_item: Optional[Item] = None,
         ability: Optional[Ability] = None
     ) -> None:
         """Initialize a Pokemon.
@@ -54,6 +55,7 @@ class Pokemon:
         self.level = max(1, min(100, level))
         self.moves = moves or []
         self.held_item = held_item
+        self._used_held_item = False  # Track if single-use held item was used
         self.ability = ability
         
         # Calculate actual stats based on level
@@ -131,6 +133,67 @@ class Pokemon:
                         multiplier *= boost_value
             
         return multiplier
+        
+    def equip_item(self, item: Item) -> bool:
+        """Equip a held item.
+        
+        Args:
+            item: The item to equip
+            
+        Returns:
+            bool: True if item was equipped, False if already has item
+        """
+        if self.held_item is not None:
+            return False
+        self.held_item = item
+        self._used_held_item = False
+        return True
+        
+    def unequip_item(self) -> Optional[Item]:
+        """Unequip the currently held item.
+        
+        Returns:
+            Optional[Item]: The unequipped item, or None if no item held
+        """
+        item = self.held_item
+        self.held_item = None
+        self._used_held_item = False
+        return item
+        
+    def check_held_item(self, trigger: HeldItemTrigger, **kwargs) -> Optional[ItemEffect]:
+        """Check if held item should activate.
+        
+        Args:
+            trigger: The trigger type to check
+            **kwargs: Additional trigger parameters:
+                - hp_percent: Current HP percentage for LOW_HP trigger
+                - move_effectiveness: Move effectiveness for SUPER_EFFECTIVE trigger
+                
+        Returns:
+            Optional[ItemEffect]: The item effect if triggered, None otherwise
+        """
+        if not self.held_item or self._used_held_item:
+            return None
+            
+        if self.held_item.trigger != trigger:
+            return None
+            
+        # Check trigger conditions
+        if trigger == HeldItemTrigger.LOW_HP:
+            hp_percent = kwargs.get("hp_percent", 1.0)
+            if hp_percent > self.held_item.trigger_threshold:
+                return None
+                
+        elif trigger == HeldItemTrigger.SUPER_EFFECTIVE:
+            effectiveness = kwargs.get("move_effectiveness", 1.0)
+            if effectiveness <= 1.0:
+                return None
+                
+        # Mark single-use items as used
+        if self.held_item.single_use:
+            self._used_held_item = True
+            
+        return self.held_item.effect
         
     def modify_stat(self, stat: str, stages: int) -> bool:
         """Modify a stat stage.

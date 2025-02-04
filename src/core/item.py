@@ -7,12 +7,21 @@ from .move import StatusEffect
 
 class ItemType(Enum):
     """Types of items in the game."""
-    HEALING = auto()  # Restores HP
-    POKEBALL = auto()  # For catching Pokemon
-    HELD = auto()     # Can be held by Pokemon
-    STATUS = auto()   # Cures status conditions
-    PP = auto()       # Restores move PP
-    BOOST = auto()    # Temporarily boosts stats
+    HEALING = auto()      # Restores HP
+    POKEBALL = auto()     # For catching Pokemon
+    HELD = auto()         # Can be held by Pokemon
+    STATUS = auto()       # Cures status conditions
+    PP = auto()          # Restores move PP
+    BOOST = auto()       # Temporarily boosts stats
+    BERRY = auto()       # Consumable held items
+    STAT_BOOST = auto()  # Permanent stat boost items
+
+class HeldItemTrigger(Enum):
+    """When a held item's effect activates."""
+    PASSIVE = auto()      # Always active
+    LOW_HP = auto()       # When HP is low
+    STATUS = auto()       # When status is applied
+    SUPER_EFFECTIVE = auto()  # When hit by super effective move
 
 @dataclass
 class ItemEffect:
@@ -32,7 +41,9 @@ class Item:
         description: str,
         effect: ItemEffect,
         price: int,
-        single_use: bool = True
+        single_use: bool = True,
+        trigger: Optional[HeldItemTrigger] = None,
+        trigger_threshold: Optional[float] = None  # e.g., 0.25 for 25% HP
     ) -> None:
         """Initialize an item.
         
@@ -42,12 +53,16 @@ class Item:
             effect: The ItemEffect that defines the item's behavior
             price: The cost of the item in shops
             single_use: Whether the item is consumed on use
+            trigger: When the held item's effect activates
+            trigger_threshold: Threshold for trigger (e.g., HP percentage)
         """
         self.name = name
         self.description = description
         self.effect = effect
         self.price = price
         self.single_use = single_use
+        self.trigger = trigger
+        self.trigger_threshold = trigger_threshold
         
     def can_use(self, target: Any) -> bool:
         """Check if the item can be used on the target.
@@ -226,4 +241,86 @@ ICE_HEAL = Item(
     ),
     price=250,
     single_use=True
+)
+
+# Define common held items
+LEFTOVERS = Item(
+    name="Leftovers",
+    description="Restores a little HP each turn.",
+    effect=ItemEffect(
+        type=ItemType.HELD,
+        value=int(1/16 * 100)  # 1/16 max HP
+    ),
+    price=200,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+ORAN_BERRY = Item(
+    name="Oran Berry",
+    description="Restores 10 HP when HP is low.",
+    effect=ItemEffect(
+        type=ItemType.BERRY,
+        value=10
+    ),
+    price=100,
+    single_use=True,
+    trigger=HeldItemTrigger.LOW_HP,
+    trigger_threshold=0.25  # 25% HP
+)
+
+LUM_BERRY = Item(
+    name="Lum Berry",
+    description="Cures any status condition.",
+    effect=ItemEffect(
+        type=ItemType.BERRY,
+        value=0,
+        cures_status={
+            StatusEffect.POISON,
+            StatusEffect.BURN,
+            StatusEffect.PARALYSIS,
+            StatusEffect.SLEEP,
+            StatusEffect.FREEZE
+        }
+    ),
+    price=150,
+    single_use=True,
+    trigger=HeldItemTrigger.STATUS
+)
+
+MUSCLE_BAND = Item(
+    name="Muscle Band",
+    description="Boosts physical moves by 10%.",
+    effect=ItemEffect(
+        type=ItemType.STAT_BOOST,
+        value=10  # 10% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+WISE_GLASSES = Item(
+    name="Wise Glasses",
+    description="Boosts special moves by 10%.",
+    effect=ItemEffect(
+        type=ItemType.STAT_BOOST,
+        value=10  # 10% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+FOCUS_SASH = Item(
+    name="Focus Sash",
+    description="Survives a one-hit KO with 1 HP.",
+    effect=ItemEffect(
+        type=ItemType.HELD,
+        value=1  # 1 HP
+    ),
+    price=2000,
+    single_use=True,
+    trigger=HeldItemTrigger.LOW_HP,
+    trigger_threshold=0  # 0% HP (would be KO)
 )

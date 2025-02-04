@@ -1,5 +1,17 @@
 # Changelog
 
+## [2024-02-04] Held Items
+- Added held item system:
+  - Leftovers: Restores HP each turn
+  - Oran Berry: Restores HP at low health
+  - Lum Berry: Cures any status condition
+  - Focus Sash: Survives a one-hit KO
+  - Muscle Band: Boosts physical moves
+  - Wise Glasses: Boosts special moves
+- Enhanced Pokemon class with held item support
+- Enhanced Battle class to handle held item effects
+- Added comprehensive tests for held item functionality
+
 ## [2024-02-04] Stat-Boosting Abilities
 - Added stat-boosting abilities:
   - Guts: Boosts Attack when status-afflicted

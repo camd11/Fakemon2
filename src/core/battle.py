@@ -7,7 +7,8 @@ import random
 from .pokemon import Pokemon
 from .move import Move, MoveCategory, StatusEffect
 from .types import Type, TypeEffectiveness
-from .item import Item, ItemType
+from .item import Item, ItemType, HeldItemTrigger
+from .ability import AbilityType
 
 class Weather(Enum):
     """Weather conditions that can affect battle."""
@@ -175,8 +176,25 @@ class Battle:
                 result.messages.append("A critical hit!")
             if result.effectiveness > 1:
                 result.messages.append("It's super effective!")
+                # Check for super effective held items
+                effect = target.check_held_item(HeldItemTrigger.SUPER_EFFECTIVE, move_effectiveness=result.effectiveness)
+                if effect and effect.type == ItemType.BERRY:
+                    target.heal(effect.value)
+                    result.messages.append(f"{target.name}'s {target.held_item.name} restored some HP!")
             elif result.effectiveness < 1:
                 result.messages.append("It's not very effective...")
+                
+            # Check for low HP held items
+            if target.current_hp > 0:  # Only if not fainted
+                hp_percent = target.current_hp / target.stats.hp
+                effect = target.check_held_item(HeldItemTrigger.LOW_HP, hp_percent=hp_percent)
+                if effect:
+                    if effect.type == ItemType.BERRY:
+                        target.heal(effect.value)
+                        result.messages.append(f"{target.name}'s {target.held_item.name} restored some HP!")
+                    elif effect.type == ItemType.HELD and target.held_item.name == "Focus Sash":
+                        if target.current_hp == 1:
+                            result.messages.append(f"{target.name} hung on using its Focus Sash!")
             
         # Apply move effects
         for effect in move.effects:
@@ -343,6 +361,25 @@ class Battle:
         """
         result = TurnResult()
         
+        # Check passive held items
+        for pokemon in (self.player_pokemon, self.enemy_pokemon):
+            if pokemon.is_fainted:
+                continue
+                
+            effect = pokemon.check_held_item(HeldItemTrigger.PASSIVE)
+            if effect:
+                if effect.type == ItemType.HELD:
+                    # Leftovers healing
+                    heal_amount = min(
+                        pokemon.stats.hp // 16,  # 1/16 max HP
+                        pokemon.stats.hp - pokemon.current_hp
+                    )
+                    if heal_amount > 0:
+                        pokemon.heal(heal_amount)
+                        result.messages.append(
+                            f"{pokemon.name} restored a little HP due to its {pokemon.held_item.name}!"
+                        )
+        
         if self.weather == Weather.CLEAR:
             return result
             
@@ -388,8 +425,23 @@ class Battle:
         
         # Apply status effects
         for pokemon in (self.player_pokemon, self.enemy_pokemon):
+            if pokemon.is_fainted:
+                continue
+                
             # Store current status
             current_status = pokemon.status
+            
+            # Check for status-triggered items
+            if current_status:
+                effect = pokemon.check_held_item(HeldItemTrigger.STATUS)
+                if effect:
+                    if effect.type == ItemType.BERRY:
+                        if effect.cures_status and current_status in effect.cures_status:
+                            pokemon.set_status(None)
+                            result.messages.append(
+                                f"{pokemon.name}'s {pokemon.held_item.name} cured its {current_status.name.lower()}!"
+                            )
+                            continue
             
             # Check for freeze thaw (20% chance) before updating duration
             if current_status == StatusEffect.FREEZE:

@@ -100,14 +100,16 @@ The ability system has been expanded with both status and weather effects:
 
 ### Item System
 
-Status-curing items have been implemented:
+The item system has been expanded with both status-curing and held items:
 
 1. **Core Components**
    - Enhanced ItemEffect with status-specific curing
    - Integration with Pokemon status system
    - Validation of item usage based on status
+   - Held item trigger system
+   - Single-use item tracking
 
-2. **Implemented Items**
+2. **Status-Curing Items**
    - Full Heal: Cures all status conditions
    - Antidote: Cures poison
    - Burn Heal: Cures burn
@@ -115,24 +117,34 @@ Status-curing items have been implemented:
    - Awakening: Cures sleep
    - Ice Heal: Cures freeze
 
-3. **Testing**
+3. **Held Items**
+   - Leftovers: Restores HP each turn
+   - Oran Berry: Restores HP at low health
+   - Lum Berry: Cures any status condition
+   - Focus Sash: Survives a one-hit KO
+   - Muscle Band: Boosts physical moves
+   - Wise Glasses: Boosts special moves
+
+4. **Testing**
    - Verification of item-specific status curing
    - Validation of item usage restrictions
-   - Edge case testing for status-less Pokemon
+   - Held item trigger testing
+   - Single-use item verification
+   - Edge case testing for various conditions
 
 ### Future Improvements
 
 Potential areas for expansion:
 1. Additional ability types (Entry Hazards, Terrain)
-2. Additional item types (Held items, Battle items)
+2. Additional item types (Type-enhancing items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Weather-boosted moves
 
 ## Next Steps
 
-1. Add held item functionality
-2. Add weather-boosted moves
-3. Add entry hazard abilities
+1. Add weather-boosted moves
+2. Add entry hazard abilities
+3. Add type-enhancing items
 
 ## Previous Updates
 
