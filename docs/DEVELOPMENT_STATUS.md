@@ -205,18 +205,47 @@ Type-enhancing items have been implemented:
    - Wrong type testing
    - Comprehensive testing for all types
 
+### Terrain System
+
+Terrain effects have been implemented:
+
+1. **Core Components**
+   - Terrain tracking and duration
+   - Move power modification
+   - Status prevention
+   - Grounded Pokemon handling
+
+2. **Terrain Types**
+   - Grassy: Heals grounded Pokemon, boosts Grass moves
+   - Misty: Prevents status conditions, weakens Dragon moves
+   - Electric: Prevents sleep, boosts Electric moves
+   - Psychic: Boosts Psychic moves, prevents priority moves
+
+3. **Terrain Abilities**
+   - Grassy Surge: Sets Grassy Terrain
+   - Misty Surge: Sets Misty Terrain
+   - Electric Surge: Sets Electric Terrain
+   - Psychic Surge: Sets Psychic Terrain
+
+4. **Testing**
+   - Terrain setting verification
+   - Move power modification testing
+   - Status prevention validation
+   - Healing effect testing
+   - Duration tracking testing
+
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Terrain, Aura)
+1. Additional ability types (Aura, Form Change)
 2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add terrain abilities
-2. Add aura abilities
+1. Add aura abilities
+2. Add form change abilities
 3. Add evolution items
 
 ## Previous Updates

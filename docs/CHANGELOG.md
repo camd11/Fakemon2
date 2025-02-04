@@ -1,5 +1,19 @@
 # Changelog
 
+## [2024-02-04] Terrain Abilities
+- Added terrain system:
+  - Grassy Terrain: Heals grounded Pokemon, boosts Grass moves
+  - Misty Terrain: Prevents status conditions, weakens Dragon moves
+  - Electric Terrain: Prevents sleep, boosts Electric moves
+  - Psychic Terrain: Boosts Psychic moves, prevents priority moves
+- Added terrain-setting abilities:
+  - Grassy Surge: Sets Grassy Terrain
+  - Misty Surge: Sets Misty Terrain
+  - Electric Surge: Sets Electric Terrain
+  - Psychic Surge: Sets Psychic Terrain
+- Enhanced Battle class to handle terrain effects
+- Added comprehensive tests for terrain functionality
+
 ## [2024-02-04] Type-Enhancing Items
 - Added type-enhancing items:
   - Charcoal: Powers up Fire moves

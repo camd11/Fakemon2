@@ -8,7 +8,7 @@ from .pokemon import Pokemon
 from .move import Move, MoveCategory, StatusEffect
 from .types import Type, TypeEffectiveness
 from .item import Item, ItemType, HeldItemTrigger
-from .ability import AbilityType, HazardType
+from .ability import AbilityType, HazardType, TerrainType
 
 class Weather(Enum):
     """Weather conditions that can affect battle."""
@@ -64,7 +64,9 @@ class Battle:
         type_chart: TypeEffectiveness,
         is_trainer_battle: bool = True,
         weather: Weather = Weather.CLEAR,
-        weather_duration: int = 0
+        weather_duration: int = 0,
+        terrain: Optional[TerrainType] = None,
+        terrain_duration: int = 5
     ) -> None:
         """Initialize a battle.
         
@@ -93,8 +95,13 @@ class Battle:
             HazardType.STEALTH_ROCK: False
         }
         
-        # Check for weather abilities
+        # Track terrain
+        self.terrain = terrain
+        self.terrain_duration = terrain_duration
+        
+        # Check for weather and terrain abilities
         self._check_weather_abilities()
+        self._check_terrain_abilities()
         
     def _check_weather_abilities(self) -> None:
         """Check and apply weather effects from Pokemon abilities."""
@@ -150,6 +157,15 @@ class Battle:
                     messages.append(f"{pokemon.name} was poisoned!")
                     
         return messages
+        
+    def _check_terrain_abilities(self) -> None:
+        """Check and apply terrain effects from Pokemon abilities."""
+        # Check both Pokemon for terrain abilities
+        for pokemon in (self.player_pokemon, self.enemy_pokemon):
+            if pokemon.ability and pokemon.ability.type == AbilityType.TERRAIN:
+                if pokemon.ability.terrain_effect:
+                    self.terrain = pokemon.ability.terrain_effect
+                    self.terrain_duration = 5  # Terrain lasts 5 turns
         
     def can_move(self, pokemon: Pokemon) -> Tuple[bool, Optional[str]]:
         """Check if a Pokemon can move this turn.
@@ -345,6 +361,21 @@ class Battle:
             if attacker.held_item.trigger == HeldItemTrigger.PASSIVE:
                 damage *= (1 + attacker.held_item.effect.value / 100)  # Convert percentage to multiplier
                 
+        # Apply terrain boost
+        if self.terrain:
+            # Skip if Pokemon is not grounded
+            is_grounded = Type.FLYING not in attacker.types
+            
+            if is_grounded:
+                if self.terrain == TerrainType.GRASSY and move.type == Type.GRASS:
+                    damage *= 1.3  # 30% boost to Grass moves
+                elif self.terrain == TerrainType.ELECTRIC and move.type == Type.ELECTRIC:
+                    damage *= 1.3  # 30% boost to Electric moves
+                elif self.terrain == TerrainType.PSYCHIC and move.type == Type.PSYCHIC:
+                    damage *= 1.3  # 30% boost to Psychic moves
+                elif self.terrain == TerrainType.MISTY and move.type == Type.DRAGON:
+                    damage *= 0.5  # 50% reduction to Dragon moves
+                
         return int(damage)
         
     @property
@@ -522,6 +553,27 @@ class Battle:
         weather_result = self.apply_weather_effects()
         result.messages.extend(weather_result.messages)
         
+        # Apply terrain healing
+        if self.terrain == TerrainType.GRASSY:
+            for pokemon in (self.player_pokemon, self.enemy_pokemon):
+                if pokemon.is_fainted:
+                    continue
+                    
+                # Skip if Pokemon is not grounded
+                if Type.FLYING in pokemon.types:
+                    continue
+                    
+                # Heal 1/16 max HP
+                heal_amount = min(
+                    pokemon.stats.hp // 16,
+                    pokemon.stats.hp - pokemon.current_hp
+                )
+                if heal_amount > 0:
+                    pokemon.heal(heal_amount)
+                    result.messages.append(
+                        f"{pokemon.name} was healed by the grassy terrain!"
+                    )
+        
         # Decrease weather duration
         if self.weather_duration > 0:
             self.weather_duration -= 1
@@ -531,6 +583,14 @@ class Battle:
                     weather_name = "harsh sunlight"
                 result.messages.append(f"The {weather_name} subsided.")
                 self.weather = Weather.CLEAR
+                
+        # Decrease terrain duration
+        if self.terrain_duration > 0:
+            self.terrain_duration -= 1
+            if self.terrain_duration == 0:
+                terrain_name = self.terrain.name.lower()
+                result.messages.append(f"The {terrain_name} terrain faded!")
+                self.terrain = None
                 
         return result
         

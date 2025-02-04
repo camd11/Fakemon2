@@ -13,7 +13,15 @@ class AbilityType(Enum):
     STAT_BOOST = auto()       # Boosts stats in certain conditions
     BATTLE_ENTRY = auto()     # Triggers when entering battle
     HAZARD = auto()          # Sets entry hazards
+    TERRAIN = auto()         # Sets terrain effects
     OTHER = auto()           # Other effects
+
+class TerrainType(Enum):
+    """Types of terrain that can be set."""
+    GRASSY = auto()    # Heals grounded Pokemon, boosts Grass moves
+    MISTY = auto()     # Prevents status conditions, weakens Dragon moves
+    ELECTRIC = auto()  # Prevents sleep, boosts Electric moves
+    PSYCHIC = auto()   # Boosts Psychic moves, prevents priority moves
 
 class HazardType(Enum):
     """Types of entry hazards that can be set."""
@@ -35,7 +43,8 @@ class Ability:
         boost_condition: Optional[str] = None,
         hazard_type: Optional[HazardType] = None,
         hazard_damage: Optional[int] = None,  # Base damage or number of layers
-        hazard_status: Optional[StatusEffect] = None  # For toxic spikes
+        hazard_status: Optional[StatusEffect] = None,  # For toxic spikes
+        terrain_effect: Optional[TerrainType] = None
     ) -> None:
         """Initialize an ability.
         
@@ -61,6 +70,7 @@ class Ability:
         self.hazard_type = hazard_type
         self.hazard_damage = hazard_damage
         self.hazard_status = hazard_status
+        self.terrain_effect = terrain_effect
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -85,6 +95,35 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define terrain-setting abilities
+GRASSY_SURGE = Ability(
+    name="Grassy Surge",
+    type_=AbilityType.TERRAIN,
+    description="Sets Grassy Terrain when entering battle.",
+    terrain_effect=TerrainType.GRASSY
+)
+
+MISTY_SURGE = Ability(
+    name="Misty Surge",
+    type_=AbilityType.TERRAIN,
+    description="Sets Misty Terrain when entering battle.",
+    terrain_effect=TerrainType.MISTY
+)
+
+ELECTRIC_SURGE = Ability(
+    name="Electric Surge",
+    type_=AbilityType.TERRAIN,
+    description="Sets Electric Terrain when entering battle.",
+    terrain_effect=TerrainType.ELECTRIC
+)
+
+PSYCHIC_SURGE = Ability(
+    name="Psychic Surge",
+    type_=AbilityType.TERRAIN,
+    description="Sets Psychic Terrain when entering battle.",
+    terrain_effect=TerrainType.PSYCHIC
 )
 
 # Define stat-boosting abilities
