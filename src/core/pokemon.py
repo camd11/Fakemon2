@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict
 from .types import Type
 from .move import Move, StatusEffect
-from .ability import Ability, AbilityType, FormChangeType
+from .ability import Ability, AbilityType, FormChangeType, IllusionType, TerrainType
 from .item import Item, HeldItemTrigger, ItemEffect
 
 @dataclass
@@ -29,7 +29,8 @@ class Pokemon:
         moves: List[Move] = None,
         held_item: Optional[Item] = None,
         ability: Optional[Ability] = None,
-        current_form: str = "normal"  # Default form name
+        current_form: str = "normal",  # Default form name
+        disguise_pokemon: Optional['Pokemon'] = None  # Pokemon to appear as
     ) -> None:
         """Initialize a Pokemon.
         
@@ -42,6 +43,7 @@ class Pokemon:
             held_item: Name of held item (future feature)
             ability: Pokemon's ability
             current_form: Current form name
+            disguise_pokemon: Pokemon to appear as for Illusion ability
         
         Raises:
             ValueError: If types is empty or has more than 2 types,
@@ -61,6 +63,17 @@ class Pokemon:
         self._used_held_item = False  # Track if single-use held item was used
         self.ability = ability
         self.current_form = current_form
+        self.disguise_pokemon = disguise_pokemon
+        self.disguise_hp = None
+        self.transformed_stats = None
+        self.transformed_types = None
+        self.transformed_moves = None
+        
+        # Set up disguise HP if needed
+        if (self.ability and self.ability.type == AbilityType.ILLUSION and 
+            self.ability.illusion_effect == IllusionType.DISGUISE and 
+            self.ability.disguise_hp):
+            self.disguise_hp = self.ability.disguise_hp
         
         # Calculate actual stats based on level
         self.stats = self._calculate_stats()
@@ -85,8 +98,11 @@ class Pokemon:
         Returns:
             Stats: The calculated stats at the current level
         """
+        # Use transformed stats if available
+        if self.transformed_stats:
+            base_stats = self.transformed_stats
         # Get form-specific stats if available
-        if (self.ability and self.ability.type == AbilityType.FORM_CHANGE and 
+        elif (self.ability and self.ability.type == AbilityType.FORM_CHANGE and 
             self.current_form in self.ability.form_stats):
             base_stats = self.ability.form_stats[self.current_form]
         else:
@@ -103,6 +119,76 @@ class Pokemon:
         speed = int((2 * base_stats.speed * self.level / 100) + 5)
         
         return Stats(hp, attack, defense, special_attack, special_defense, speed)
+        
+    def transform(self, target: 'Pokemon') -> Optional[str]:
+        """Transform into another Pokemon.
+        
+        Args:
+            target: The Pokemon to transform into
+            
+        Returns:
+            Optional[str]: Message about transformation if successful, None if failed
+        """
+        if not self.ability or self.ability.type != AbilityType.ILLUSION:
+            return None
+            
+        if self.ability.illusion_effect != IllusionType.TRANSFORM:
+            return None
+            
+        # Store old HP percentage
+        old_hp_percent = self.current_hp / self.stats.hp
+        
+        # Copy target's stats, types, and moves
+        self.transformed_stats = target.base_stats
+        self.transformed_types = target.types
+        self.transformed_moves = target.moves.copy()
+        
+        # Recalculate stats with transformed stats
+        self.stats = self._calculate_stats()
+        
+        # Keep same HP percentage
+        self.current_hp = int(self.stats.hp * old_hp_percent)
+        
+        return f"{self.name} transformed into {target.name}!"
+        
+    def check_type_mimicry(self, terrain: Optional[TerrainType]) -> Optional[str]:
+        """Check if type should change based on terrain.
+        
+        Args:
+            terrain: Current terrain effect
+            
+        Returns:
+            Optional[str]: Message about type change if successful, None if failed
+        """
+        if not self.ability or self.ability.type != AbilityType.ILLUSION:
+            return None
+            
+        if self.ability.illusion_effect != IllusionType.MIMIC:
+            return None
+            
+        # Reset types if no terrain
+        if not terrain:
+            if self.transformed_types:
+                self.transformed_types = None
+                return f"{self.name} returned to its original type!"
+            return None
+            
+        # Change type based on terrain
+        new_type = None
+        if terrain == TerrainType.GRASSY:
+            new_type = Type.GRASS
+        elif terrain == TerrainType.MISTY:
+            new_type = Type.FAIRY
+        elif terrain == TerrainType.ELECTRIC:
+            new_type = Type.ELECTRIC
+        elif terrain == TerrainType.PSYCHIC:
+            new_type = Type.PSYCHIC
+            
+        if new_type:
+            self.transformed_types = (new_type,)
+            return f"{self.name} became {new_type.name}-type!"
+            
+        return None
         
     def change_form(self, new_form: str) -> Optional[str]:
         """Change to a different form.
@@ -325,10 +411,22 @@ class Pokemon:
         old_hp = self.current_hp
         self.current_hp = max(0, self.current_hp - amount)
         
+        # Handle disguise HP
+        if self.disguise_hp is not None:
+            if amount > 0:
+                self.disguise_hp = None  # Break disguise on first hit
+                self.current_hp = old_hp  # Prevent actual damage
+                return 0
+                
         # Check for form change based on HP
         if self.current_hp > 0:
             hp_percent = self.current_hp / self.stats.hp
             self.check_form_change("hp_changed", hp_percent=hp_percent)
+            
+            # Handle type mimicry
+            if (self.ability and self.ability.type == AbilityType.ILLUSION and 
+                self.ability.illusion_effect == IllusionType.MIMIC):
+                self.check_type_mimicry(kwargs.get("terrain"))
             
         return old_hp - self.current_hp
         

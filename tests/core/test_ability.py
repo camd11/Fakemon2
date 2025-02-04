@@ -7,6 +7,7 @@ from src.core.ability import (
     TerrainType,
     AuraType,
     FormChangeType,
+    IllusionType,
     IMMUNITY,
     LIMBER,
     WATER_VEIL,
@@ -30,7 +31,10 @@ from src.core.ability import (
     AURA_BREAK,
     STANCE_CHANGE,
     BATTLE_BOND,
-    POWER_CONSTRUCT
+    POWER_CONSTRUCT,
+    ILLUSION,
+    IMPOSTER,
+    MIMICRY
 )
 from src.core.pokemon import Pokemon, Stats
 from src.core.types import Type, TypeEffectiveness
@@ -479,3 +483,105 @@ def test_power_construct():
     
     # HP percentage should be preserved
     assert pokemon.current_hp == pokemon.stats.hp // 2
+
+def test_illusion_disguise():
+    """Test that Illusion's disguise HP works correctly."""
+    # Create Pokemon with Illusion ability and disguise HP
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.GHOST,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=Ability(
+            name="Illusion",
+            type_=AbilityType.ILLUSION,
+            description="Protects from first hit.",
+            illusion_effect=IllusionType.DISGUISE,
+            disguise_hp=1
+        )
+    )
+    
+    # First hit should be nullified
+    initial_hp = pokemon.current_hp
+    damage_dealt = pokemon.take_damage(50)
+    assert damage_dealt == 0  # No damage dealt
+    assert pokemon.current_hp == initial_hp  # HP unchanged
+    assert pokemon.disguise_hp is None  # Disguise broken
+    
+    # Second hit should deal damage normally
+    damage_dealt = pokemon.take_damage(50)
+    assert damage_dealt == 50  # Full damage dealt
+    assert pokemon.current_hp == initial_hp - 50  # HP reduced
+
+def test_transform():
+    """Test that transform copies target's stats and moves."""
+    target = Pokemon(
+        name="Target",
+        types=(Type.DRAGON,),
+        base_stats=Stats(150, 150, 150, 150, 150, 150),
+        level=50,
+        moves=[
+            Move(
+                name="Dragon Move",
+                type_=Type.DRAGON,
+                category=MoveCategory.SPECIAL,
+                power=100,
+                accuracy=100,
+                pp=10
+            )
+        ]
+    )
+    
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=IMPOSTER
+    )
+    
+    # Transform into target
+    msg = pokemon.transform(target)
+    assert msg == "Test Pokemon transformed into Target!"
+    
+    # Stats should match target's
+    assert pokemon.stats.attack == target.stats.attack
+    assert pokemon.stats.defense == target.stats.defense
+    assert pokemon.stats.special_attack == target.stats.special_attack
+    assert pokemon.stats.special_defense == target.stats.special_defense
+    assert pokemon.stats.speed == target.stats.speed
+    
+    # Types should match target's
+    assert pokemon.transformed_types == target.types
+    
+    # Moves should match target's
+    assert len(pokemon.transformed_moves) == len(target.moves)
+    assert pokemon.transformed_moves[0].name == target.moves[0].name
+
+def test_type_mimicry():
+    """Test that type mimicry changes type based on terrain."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=MIMICRY
+    )
+    
+    # Test each terrain type
+    terrains = {
+        TerrainType.GRASSY: Type.GRASS,
+        TerrainType.MISTY: Type.FAIRY,
+        TerrainType.ELECTRIC: Type.ELECTRIC,
+        TerrainType.PSYCHIC: Type.PSYCHIC
+    }
+    
+    for terrain, expected_type in terrains.items():
+        msg = pokemon.check_type_mimicry(terrain)
+        assert msg == f"Test Pokemon became {expected_type.name}-type!"
+        assert pokemon.transformed_types == (expected_type,)
+        
+    # Test clearing terrain
+    msg = pokemon.check_type_mimicry(None)
+    assert msg == "Test Pokemon returned to its original type!"
+    assert pokemon.transformed_types is None

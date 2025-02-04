@@ -16,7 +16,14 @@ class AbilityType(Enum):
     TERRAIN = auto()         # Sets terrain effects
     AURA = auto()           # Provides aura effects
     FORM_CHANGE = auto()    # Changes Pokemon form
+    ILLUSION = auto()       # Changes Pokemon appearance
     OTHER = auto()           # Other effects
+
+class IllusionType(Enum):
+    """Types of illusion effects."""
+    DISGUISE = auto()    # Appears as another Pokemon
+    TRANSFORM = auto()   # Copies opponent's Pokemon
+    MIMIC = auto()       # Changes type based on terrain
 
 class FormChangeType(Enum):
     """Types of form changes."""
@@ -62,7 +69,9 @@ class Ability:
         aura_effect: Optional[AuraType] = None,
         form_change: Optional[FormChangeType] = None,
         form_stats: Optional[Dict[str, Stats]] = None,  # Stats for each form
-        form_types: Optional[Dict[str, Tuple[Type, ...]]] = None  # Types for each form
+        form_types: Optional[Dict[str, Tuple[Type, ...]]] = None,  # Types for each form
+        illusion_effect: Optional[IllusionType] = None,
+        disguise_hp: Optional[int] = None  # Extra HP for disguise
     ) -> None:
         """Initialize an ability.
         
@@ -93,6 +102,8 @@ class Ability:
         self.form_change = form_change
         self.form_stats = form_stats or {}
         self.form_types = form_types or {}
+        self.illusion_effect = illusion_effect
+        self.disguise_hp = disguise_hp
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -117,6 +128,28 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define illusion abilities
+ILLUSION = Ability(
+    name="Illusion",
+    type_=AbilityType.ILLUSION,
+    description="Makes Pokemon appear as another Pokemon.",
+    illusion_effect=IllusionType.DISGUISE
+)
+
+IMPOSTER = Ability(
+    name="Imposter",
+    type_=AbilityType.ILLUSION,
+    description="Transforms into the opponent's Pokemon.",
+    illusion_effect=IllusionType.TRANSFORM
+)
+
+MIMICRY = Ability(
+    name="Mimicry",
+    type_=AbilityType.ILLUSION,
+    description="Changes type based on terrain.",
+    illusion_effect=IllusionType.MIMIC
 )
 
 # Define form change abilities

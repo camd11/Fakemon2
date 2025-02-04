@@ -103,10 +103,11 @@ class Battle:
         self.active_auras = set()  # Set of active AuraTypes
         self.aura_break_active = False  # Whether Aura Break is active
         
-        # Check for weather, terrain, and aura abilities
+        # Check for weather, terrain, aura, and illusion abilities
         self._check_weather_abilities()
         self._check_terrain_abilities()
         self._check_aura_abilities()
+        self._check_illusion_abilities()
         
     def _check_weather_abilities(self) -> None:
         """Check and apply weather effects from Pokemon abilities."""
@@ -163,6 +164,23 @@ class Battle:
                     
         return messages
         
+    def _check_illusion_abilities(self) -> None:
+        """Check and apply illusion effects from Pokemon abilities."""
+        # Check both Pokemon for illusion abilities
+        for pokemon in (self.player_pokemon, self.enemy_pokemon):
+            if pokemon.ability and pokemon.ability.type == AbilityType.ILLUSION:
+                if pokemon.ability.illusion_effect == IllusionType.TRANSFORM:
+                    # Transform into opponent
+                    other = self.enemy_pokemon if pokemon == self.player_pokemon else self.player_pokemon
+                    msg = pokemon.transform(other)
+                    if msg:
+                        print(msg)  # TODO: Add to battle messages
+                elif pokemon.ability.illusion_effect == IllusionType.MIMIC:
+                    # Change type based on terrain
+                    msg = pokemon.check_type_mimicry(self.terrain)
+                    if msg:
+                        print(msg)  # TODO: Add to battle messages
+                        
     def _check_aura_abilities(self) -> None:
         """Check and apply aura effects from Pokemon abilities."""
         # Reset aura tracking
@@ -552,6 +570,41 @@ class Battle:
         if form_change_msg:
             messages.append(form_change_msg)
             
+        return messages
+        
+    def change_terrain(self, new_terrain: Optional[TerrainType], duration: int = 5) -> List[str]:
+        """Change the battle terrain.
+        
+        Args:
+            new_terrain: The new terrain to set, or None to clear
+            duration: How many turns the terrain should last
+            
+        Returns:
+            List[str]: Messages about terrain changes and effects
+        """
+        messages = []
+        
+        # Clear old terrain
+        if self.terrain:
+            terrain_name = self.terrain.name.lower()
+            messages.append(f"The {terrain_name} terrain faded!")
+            
+        # Set new terrain
+        self.terrain = new_terrain
+        self.terrain_duration = duration if new_terrain else 0
+        
+        if new_terrain:
+            terrain_name = new_terrain.name.lower()
+            messages.append(f"The battlefield became {terrain_name} terrain!")
+            
+            # Check for type mimicry
+            for pokemon in (self.player_pokemon, self.enemy_pokemon):
+                if (pokemon.ability and pokemon.ability.type == AbilityType.ILLUSION and 
+                    pokemon.ability.illusion_effect == IllusionType.MIMIC):
+                    msg = pokemon.check_type_mimicry(new_terrain)
+                    if msg:
+                        messages.append(msg)
+                        
         return messages
         
     def end_turn(self) -> TurnResult:

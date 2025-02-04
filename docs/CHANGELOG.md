@@ -1,5 +1,14 @@
 # Changelog
 
+## [2024-02-04] Illusion Abilities
+- Added illusion system:
+  - Illusion: Makes Pokemon appear as another Pokemon
+  - Imposter: Transforms into opponent's Pokemon
+  - Mimicry: Changes type based on terrain
+- Enhanced Pokemon class to handle illusions
+- Enhanced Battle class to handle illusion triggers
+- Added comprehensive tests for illusion functionality
+
 ## [2024-02-04] Form Change Abilities
 - Added form change system:
   - Stance Change: Changes form based on move used
