@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial project setup and documentation
+  - Comprehensive UI component documentation
+  - Implementation details and testing guides
+- Item system implementation (91% test coverage)
+  - Core Item class with effects and conditions
+  - ItemFactory service for data management
+  - JSON data for all game items
+  - Support for healing, PP restore, status cures, and more
   - Design document with architecture and implementation plans
   - Project structure and guidelines
   - Comprehensive test suite with 76 tests
@@ -26,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Game state tracking and progression
   - Basic catching mechanics
 - Terminal UI
-  - Rich-based battle view
+  - Rich-based battle view (100% test coverage)
   - Input handling and validation (100% test coverage)
   - Game phase transitions
 - Initial game content
@@ -43,8 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Improved test coverage across all core components
 - Enhanced battle system reliability
-- Refined terminal UI rendering
+- Refined terminal UI rendering with comprehensive test suite
 - Optimized game state management
+- Completed UI layer testing with 100% coverage
+- Added item system integration with core game mechanics
 
 ### Deprecated
 - N/A

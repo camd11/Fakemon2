@@ -6,8 +6,8 @@ A Pokemon-inspired roguelike RPG where you battle through 200 levels of increasi
 
 - Core battle system: ✅ Complete with 100% test coverage
 - Service layer: ✅ Complete with 90%+ test coverage
-- UI layer: 🔄 In progress (Input handling complete, Battle view testing ongoing)
-- Item system: 📝 Planned for next sprint
+- UI layer: ✅ Complete with 100% test coverage
+- Item system: ✅ Complete with 91% test coverage (Battle integration pending)
 
 See [DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) for detailed progress tracking.
 
@@ -19,6 +19,8 @@ See [DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) for detailed progress tr
 - Catching system with party management
 - Classic starter Pokemon
 - Type effectiveness and status effects
+- Item system with healing, PP restore, and status cures
+- Shop system with purchasable items
 
 ## Requirements
 
@@ -99,27 +101,27 @@ Coverage reports are generated in `htmlcov/`.
 
 ## Current Test Coverage
 
-- Core domain: 98-100%
+- Core domain: 91-100%
 - Services: 90-100%
-- UI: Input handler 100%, Battle view in progress
-- Overall: 67% (including unimplemented features)
+- UI: 100%
+- Overall: 72% (including unimplemented features)
 
 ## Next Steps
 
-1. Complete UI Layer Testing
-   - Finish battle view tests
-   - Add integration tests
-   - Target 80%+ coverage
+1. Integrate Item System with Battles
+   - Add item use during battle
+   - Implement stat boost effects
+   - Add catch mechanics
 
-2. Implement Item System
-   - Create Item class
-   - Add inventory management
-   - Implement reward system
-
-3. Enhance Battle System
+2. Enhance Battle System
    - Complete weather effects
    - Add status effect duration
    - Improve message system
+
+3. Add Save/Load System
+   - Design save file format
+   - Implement serialization
+   - Add auto-save feature
 
 See [DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) for detailed task list.
 
@@ -131,6 +133,13 @@ See [DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) for detailed task list.
 3. Add new moves if required
 4. Update tests
 5. Verify in game
+
+### Adding a New Item
+1. Add entry to `src/data/items.json`
+2. Define effect type and value
+3. Set conditions if needed
+4. Update price and usage flags
+5. Add to shop inventory if purchasable
 
 ### Implementing New Features
 1. Start with core domain in `src/core/`

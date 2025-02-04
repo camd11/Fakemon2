@@ -1,0 +1,184 @@
+{
+    "potion": {
+        "name": "Potion",
+        "description": "Restores 20 HP to a Pokemon",
+        "effect": {
+            "type": "HEALING",
+            "value": 20
+        },
+        "price": 300,
+        "single_use": true
+    },
+    "super_potion": {
+        "name": "Super Potion",
+        "description": "Restores 50 HP to a Pokemon",
+        "effect": {
+            "type": "HEALING",
+            "value": 50
+        },
+        "price": 700,
+        "single_use": true
+    },
+    "hyper_potion": {
+        "name": "Hyper Potion",
+        "description": "Restores 120 HP to a Pokemon",
+        "effect": {
+            "type": "HEALING",
+            "value": 120
+        },
+        "price": 1200,
+        "single_use": true
+    },
+    "max_potion": {
+        "name": "Max Potion",
+        "description": "Fully restores a Pokemon's HP",
+        "effect": {
+            "type": "HEALING",
+            "value": 999
+        },
+        "price": 2500,
+        "single_use": true
+    },
+    "ether": {
+        "name": "Ether",
+        "description": "Restores 10 PP to a move",
+        "effect": {
+            "type": "PP",
+            "value": 10
+        },
+        "price": 1200,
+        "single_use": true
+    },
+    "max_ether": {
+        "name": "Max Ether",
+        "description": "Fully restores PP to a move",
+        "effect": {
+            "type": "PP",
+            "value": 999
+        },
+        "price": 2000,
+        "single_use": true
+    },
+    "antidote": {
+        "name": "Antidote",
+        "description": "Cures a Pokemon of poison",
+        "effect": {
+            "type": "STATUS",
+            "value": 1
+        },
+        "price": 100,
+        "single_use": true
+    },
+    "awakening": {
+        "name": "Awakening",
+        "description": "Wakes up a sleeping Pokemon",
+        "effect": {
+            "type": "STATUS",
+            "value": 1
+        },
+        "price": 250,
+        "single_use": true
+    },
+    "burn_heal": {
+        "name": "Burn Heal",
+        "description": "Heals a Pokemon's burn",
+        "effect": {
+            "type": "STATUS",
+            "value": 1
+        },
+        "price": 250,
+        "single_use": true
+    },
+    "ice_heal": {
+        "name": "Ice Heal",
+        "description": "Thaws out a frozen Pokemon",
+        "effect": {
+            "type": "STATUS",
+            "value": 1
+        },
+        "price": 250,
+        "single_use": true
+    },
+    "full_heal": {
+        "name": "Full Heal",
+        "description": "Heals all status conditions",
+        "effect": {
+            "type": "STATUS",
+            "value": 1
+        },
+        "price": 600,
+        "single_use": true
+    },
+    "x_attack": {
+        "name": "X Attack",
+        "description": "Raises Attack in battle",
+        "effect": {
+            "type": "BOOST",
+            "value": 1,
+            "duration": 5
+        },
+        "price": 500,
+        "single_use": true
+    },
+    "x_defense": {
+        "name": "X Defense",
+        "description": "Raises Defense in battle",
+        "effect": {
+            "type": "BOOST",
+            "value": 1,
+            "duration": 5
+        },
+        "price": 550,
+        "single_use": true
+    },
+    "x_speed": {
+        "name": "X Speed",
+        "description": "Raises Speed in battle",
+        "effect": {
+            "type": "BOOST",
+            "value": 1,
+            "duration": 5
+        },
+        "price": 350,
+        "single_use": true
+    },
+    "poke_ball": {
+        "name": "Poke Ball",
+        "description": "A device for catching wild Pokemon",
+        "effect": {
+            "type": "POKEBALL",
+            "value": 1,
+            "conditions": {
+                "is_trainer_battle": false
+            }
+        },
+        "price": 200,
+        "single_use": true
+    },
+    "great_ball": {
+        "name": "Great Ball",
+        "description": "A good Ball with a higher catch rate",
+        "effect": {
+            "type": "POKEBALL",
+            "value": 1.5,
+            "conditions": {
+                "is_trainer_battle": false
+            }
+        },
+        "price": 600,
+        "single_use": true
+    },
+    "ultra_ball": {
+        "name": "Ultra Ball",
+        "description": "An ultra-performance Ball",
+        "effect": {
+            "type": "POKEBALL",
+            "value": 2,
+            "conditions": {
+                "is_trainer_battle": false
+            }
+        },
+        "price": 1200,
+        "single_use": true
+    }
+}
