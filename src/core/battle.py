@@ -7,6 +7,7 @@ import random
 from .pokemon import Pokemon
 from .move import Move, MoveCategory, StatusEffect
 from .types import Type, TypeEffectiveness
+from .item import Item, ItemType
 
 class Weather(Enum):
     """Weather conditions that can affect battle."""
@@ -22,6 +23,17 @@ class BattleAction(Enum):
     SWITCH = auto()
     ITEM = auto()
     RUN = auto()
+
+@dataclass
+class ItemResult:
+    """Result of using an item in battle."""
+    success: bool = False
+    messages: List[str] = None
+    
+    def __post_init__(self):
+        """Initialize empty lists."""
+        if self.messages is None:
+            self.messages = []
 
 @dataclass
 class TurnResult:
@@ -48,7 +60,8 @@ class Battle:
         self,
         player_pokemon: Pokemon,
         enemy_pokemon: Pokemon,
-        type_chart: TypeEffectiveness
+        type_chart: TypeEffectiveness,
+        is_trainer_battle: bool = True
     ) -> None:
         """Initialize a battle.
         
@@ -62,6 +75,7 @@ class Battle:
         self.type_chart = type_chart
         self.weather = Weather.CLEAR
         self.turn_count = 0
+        self.is_trainer_battle = is_trainer_battle
         
     def execute_turn(self, move: Move, target: Pokemon) -> TurnResult:
         """Execute a turn using the selected move.
@@ -193,6 +207,61 @@ class Battle:
     def is_over(self) -> bool:
         """Check if the battle is over."""
         return self.player_pokemon.is_fainted or self.enemy_pokemon.is_fainted
+        
+    def use_item(self, item: Item, target: Pokemon) -> ItemResult:
+        """Use an item on a target Pokemon.
+        
+        Args:
+            item: The item to use
+            target: The target Pokemon
+            
+        Returns:
+            ItemResult: The result of using the item
+        """
+        result = ItemResult()
+        
+        # Check if target is fainted
+        if target.is_fainted:
+            result.messages.append("Can't use items on fainted Pokemon!")
+            return result
+            
+        # Check if item can be used
+        if not item.can_use(target):
+            if item.effect.type == ItemType.HEALING:
+                result.messages.append(f"{target.name} is already at full HP!")
+            elif item.effect.type == ItemType.PP:
+                result.messages.append(f"{target.name}'s moves are at full PP!")
+            elif item.effect.type == ItemType.STATUS:
+                result.messages.append(f"{target.name} has no status condition!")
+            elif item.effect.type == ItemType.POKEBALL:
+                result.messages.append("Can't use Poke Ball in a trainer battle!")
+            return result
+            
+        # Handle status items separately to store status before clearing
+        if item.effect.type == ItemType.STATUS:
+            old_status = target.status.lower() if isinstance(target.status, str) else "status condition"
+            if item.use(target):
+                result.success = True
+                result.messages.append(f"{target.name} was cured of {old_status}!")
+            return result
+            
+        # Use other items
+        if item.use(target):
+            result.success = True
+            
+            # Add appropriate message
+            if item.effect.type == ItemType.HEALING:
+                result.messages.append(f"{target.name} was healed for {item.effect.value} HP!")
+            elif item.effect.type == ItemType.PP:
+                result.messages.append(f"{target.name}'s move PP was restored!")
+            elif item.effect.type == ItemType.BOOST:
+                # Get stat name from conditions or default to Attack
+                stat_name = next(iter(item.effect.conditions)) if item.effect.conditions else "Attack"
+                # Apply stat boost
+                target.modify_stat(stat_name.lower(), item.effect.value)
+                result.messages.append(f"{target.name}'s {stat_name} rose!")
+                
+        return result
         
     @property
     def winner(self) -> Optional[Pokemon]:
