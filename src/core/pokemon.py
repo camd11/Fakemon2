@@ -6,7 +6,7 @@ from .types import Type
 from .move import Move, StatusEffect, MoveCategory
 from .ability import (
     Ability, AbilityType, FormChangeType, IllusionType, TerrainType,
-    DisguiseType, ProteanType
+    DisguiseType, ProteanType, MoldBreakerType
 )
 from .item import Item, HeldItemTrigger, ItemEffect
 
@@ -573,12 +573,33 @@ class Pokemon:
             
         return None
         
-    def set_status(self, status: Optional[StatusEffect], duration: Optional[int] = None) -> bool:
+    def has_mold_breaker(self) -> bool:
+        """Check if this Pokemon has a mold breaker ability.
+        
+        Returns:
+            bool: True if the Pokemon has a mold breaker ability, False otherwise
+        """
+        return (self.ability and self.ability.type == AbilityType.MOLD_BREAKER and 
+                self.ability.mold_breaker_type == MoldBreakerType.IGNORE)
+                
+    def is_ability_ignored(self, attacker: Optional['Pokemon'] = None) -> bool:
+        """Check if this Pokemon's ability is ignored by mold breaker.
+        
+        Args:
+            attacker: The attacking Pokemon, if any
+            
+        Returns:
+            bool: True if the ability is ignored, False otherwise
+        """
+        return attacker is not None and attacker.has_mold_breaker()
+        
+    def set_status(self, status: Optional[StatusEffect], duration: Optional[int] = None, attacker: Optional['Pokemon'] = None) -> bool:
         """Set a status effect on the Pokemon.
         
         Args:
             status: The status effect to apply, or None to clear
             duration: How many turns the status should last, or None for indefinite
+            attacker: The Pokemon applying the status, if any
             
         Returns:
             bool: True if the status was applied, False if it couldn't be
@@ -592,9 +613,10 @@ class Pokemon:
             
         # Check immunities
         if status is not None:
-            # Check ability immunities
-            if self.ability and self.ability.prevents_status(status):
-                return False
+            # Check ability immunities (unless ignored by mold breaker)
+            if self.ability and not self.is_ability_ignored(attacker):
+                if self.ability.prevents_status(status):
+                    return False
                 
             # Check type immunities
             if status == StatusEffect.BURN and Type.FIRE in self.types:

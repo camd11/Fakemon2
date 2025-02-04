@@ -712,6 +712,93 @@ def test_color_change():
     assert msg == "Test Pokemon became WATER-type!"
     assert pokemon.types == (Type.WATER,)
 
+def test_mold_breaker():
+    """Test that Mold Breaker ignores other Pokemon's abilities."""
+    # Create Pokemon with Mold Breaker
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=MOLD_BREAKER
+    )
+    
+    # Create Pokemon with status immunity
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=IMMUNITY
+    )
+    
+    # Test that Mold Breaker ignores immunity
+    assert defender.set_status(StatusEffect.POISON, attacker=attacker)
+    assert defender.status == StatusEffect.POISON
+    
+    # Test that immunity works without Mold Breaker
+    defender.set_status(None)  # Clear status
+    assert not defender.set_status(StatusEffect.POISON)
+    assert defender.status is None
+
+def test_teravolt():
+    """Test that Teravolt ignores other Pokemon's abilities."""
+    # Create Pokemon with Teravolt
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=TERAVOLT
+    )
+    
+    # Create Pokemon with status immunity
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=IMMUNITY
+    )
+    
+    # Test that Teravolt ignores immunity
+    assert defender.set_status(StatusEffect.POISON, attacker=attacker)
+    assert defender.status == StatusEffect.POISON
+    
+    # Test that immunity works without Teravolt
+    defender.set_status(None)  # Clear status
+    assert not defender.set_status(StatusEffect.POISON)
+    assert defender.status is None
+
+def test_turboblaze():
+    """Test that Turboblaze ignores other Pokemon's abilities."""
+    # Create Pokemon with Turboblaze
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=TURBOBLAZE
+    )
+    
+    # Create Pokemon with status immunity
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=IMMUNITY
+    )
+    
+    # Test that Turboblaze ignores immunity
+    assert defender.set_status(StatusEffect.POISON, attacker=attacker)
+    assert defender.status == StatusEffect.POISON
+    
+    # Test that immunity works without Turboblaze
+    defender.set_status(None)  # Clear status
+    assert not defender.set_status(StatusEffect.POISON)
+    assert defender.status is None
+
 def test_forecast():
     """Test that Forecast changes type based on weather."""
     pokemon = Pokemon(

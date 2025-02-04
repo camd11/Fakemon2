@@ -21,7 +21,12 @@ class AbilityType(Enum):
     PROTEAN = auto()        # Changes type based on moves
     COLOR_CHANGE = auto()   # Changes type based on damage
     TRACE = auto()          # Copies opponent's ability
+    MOLD_BREAKER = auto()   # Ignores other abilities
     OTHER = auto()           # Other effects
+
+class MoldBreakerType(Enum):
+    """Types of mold breaker effects."""
+    IGNORE = auto()      # Ignores other abilities
 
 class TraceType(Enum):
     """Types of trace effects."""
@@ -99,7 +104,8 @@ class Ability:
         disguise_hp: Optional[int] = None,  # Extra HP for disguise
         protean_type: Optional[ProteanType] = None,  # Type of protean effect
         color_change_type: Optional[ColorChangeType] = None,  # Type of color change effect
-        trace_type: Optional[TraceType] = None  # Type of trace effect
+        trace_type: Optional[TraceType] = None,  # Type of trace effect
+        mold_breaker_type: Optional[MoldBreakerType] = None  # Type of mold breaker effect
     ) -> None:
         """Initialize an ability.
         
@@ -110,6 +116,28 @@ class Ability:
             immune_statuses: Set of status effects this ability prevents
             weather_effect: Weather condition to set
             stat_boost: (stat_name, multiplier, required_weather)
+
+# Define mold breaker abilities
+MOLD_BREAKER = Ability(
+    name="Mold Breaker",
+    type_=AbilityType.MOLD_BREAKER,
+    description="Moves can be used regardless of abilities.",
+    mold_breaker_type=MoldBreakerType.IGNORE
+)
+
+TERAVOLT = Ability(
+    name="Teravolt",
+    type_=AbilityType.MOLD_BREAKER,
+    description="Moves can be used regardless of abilities.",
+    mold_breaker_type=MoldBreakerType.IGNORE
+)
+
+TURBOBLAZE = Ability(
+    name="Turboblaze",
+    type_=AbilityType.MOLD_BREAKER,
+    description="Moves can be used regardless of abilities.",
+    mold_breaker_type=MoldBreakerType.IGNORE
+)
             boost_condition: Condition for stat boost (e.g., "status")
             hazard_type: Type of entry hazard to set
             hazard_damage: Base damage or number of layers for hazard
@@ -125,6 +153,7 @@ class Ability:
             protean_type: Type of protean effect
             color_change_type: Type of color change effect
             trace_type: Type of trace effect
+            mold_breaker_type: Type of mold breaker effect
         """
         self.name = name
         self.type = type_
@@ -147,6 +176,7 @@ class Ability:
         self.protean_type = protean_type
         self.color_change_type = color_change_type
         self.trace_type = trace_type
+        self.mold_breaker_type = mold_breaker_type
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.

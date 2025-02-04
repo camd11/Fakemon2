@@ -1,5 +1,13 @@
 # Changelog
 
+## [2024-02-04] Mold Breaker Abilities
+- Added mold breaker system:
+  - Mold Breaker: Ignores other Pokemon's abilities
+  - Teravolt: Ignores other Pokemon's abilities
+  - Turboblaze: Ignores other Pokemon's abilities
+- Enhanced Pokemon class to handle ability ignoring
+- Added comprehensive tests for mold breaker functionality
+
 ## [2024-02-04] Trace Abilities
 - Added trace system:
   - Trace: Copies opponent's ability when entering battle

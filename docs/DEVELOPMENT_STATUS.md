@@ -362,6 +362,31 @@ Protean abilities have been implemented:
    - Move type matching
    - Type restoration testing
 
+### Mold Breaker System
+
+Mold breaker abilities have been implemented:
+
+1. **Core Components**
+   - Ability ignoring
+   - Original ability preservation
+   - Status effect handling
+   - Mold breaker checking
+
+2. **Mold Breaker Types**
+   - Ignore: Ignores other Pokemon's abilities
+
+3. **Mold Breaker Features**
+   - Dynamic ability ignoring
+   - Status effect bypass
+   - Ability immunity bypass
+   - Mold breaker messages
+
+4. **Testing**
+   - Ability ignore verification
+   - Status effect testing
+   - Immunity bypass testing
+   - Message verification
+
 ### Trace System
 
 Trace abilities have been implemented:
@@ -416,15 +441,15 @@ Color change abilities have been implemented:
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Mold Breaker, Simple)
+1. Additional ability types (Simple, Unaware)
 2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add mold breaker abilities
-2. Add simple abilities
+1. Add simple abilities
+2. Add unaware abilities
 3. Add evolution items
 
 ## Previous Updates
