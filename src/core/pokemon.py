@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 from .types import Type
 from .move import Move, StatusEffect
+from .ability import Ability, IMMUNITY
 
 @dataclass
 class Stats:
@@ -25,7 +26,8 @@ class Pokemon:
         base_stats: Stats,
         level: int,
         moves: List[Move] = None,
-        held_item: Optional[str] = None  # Placeholder for future item system
+        held_item: Optional[str] = None,  # Placeholder for future item system
+        ability: Optional[Ability] = None
     ) -> None:
         """Initialize a Pokemon.
         
@@ -52,6 +54,7 @@ class Pokemon:
         self.level = max(1, min(100, level))
         self.moves = moves or []
         self.held_item = held_item
+        self.ability = ability
         
         # Calculate actual stats based on level
         self.stats = self._calculate_stats()
@@ -175,18 +178,19 @@ class Pokemon:
         if old_status is not None and status is not None:
             return False
             
-        # Check type immunities
+        # Check immunities
         if status is not None:
-            # Fire types immune to burn
+            # Check ability immunities
+            if self.ability and self.ability.prevents_status(status):
+                return False
+                
+            # Check type immunities
             if status == StatusEffect.BURN and Type.FIRE in self.types:
                 return False
-            # Steel types immune to poison
             elif status == StatusEffect.POISON and Type.STEEL in self.types:
                 return False
-            # Electric types immune to paralysis
             elif status == StatusEffect.PARALYSIS and Type.ELECTRIC in self.types:
                 return False
-            # Ice types immune to freeze
             elif status == StatusEffect.FREEZE and Type.ICE in self.types:
                 return False
             

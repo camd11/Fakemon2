@@ -1,5 +1,15 @@
 # Changelog
 
+## [2024-02-04] Status Effect Abilities
+- Added ability system with status-related abilities:
+  - Immunity: Prevents all status conditions
+  - Limber: Prevents paralysis
+  - Water Veil: Prevents burns
+  - Vital Spirit: Prevents sleep
+  - Magma Armor: Prevents freezing
+- Added ability support to Pokemon class
+- Added comprehensive tests for ability functionality
+
 ## [2024-02-04] Status Effect Type Immunities
 - Added type-based immunity system for status effects:
   - Fire types immune to burn

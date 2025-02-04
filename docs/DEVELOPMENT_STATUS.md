@@ -61,20 +61,40 @@ All status effect functionality is verified by tests in `tests/core/test_battle_
 - `test_sleep_prevents_moves`: Verifies sleep prevents all moves
 - `test_sleep_duration`: Validates random sleep duration (1-3 turns)
 
+### Ability System
+
+Status-related abilities have been implemented:
+
+1. **Core Components**
+   - Ability class with type and effect tracking
+   - Integration with Pokemon class
+   - Status immunity checking in set_status
+
+2. **Implemented Abilities**
+   - Immunity: Prevents all status conditions
+   - Limber: Prevents paralysis
+   - Water Veil: Prevents burns
+   - Vital Spirit: Prevents sleep
+   - Magma Armor: Prevents freezing
+
+3. **Testing**
+   - Comprehensive tests for each ability
+   - Verification of ability-type immunity interactions
+   - Edge case testing for ability-less Pokemon
+
 ### Future Improvements
 
 Potential areas for expansion:
 1. Additional status effects (Freeze)
-2. Status effect resistance abilities
+2. Additional ability types (Weather, Stats, etc.)
 3. Items to cure specific status effects
 4. Moves that have increased effect chance on status-afflicted Pokemon
 
 ## Next Steps
 
 1. Implement remaining status effects (Freeze)
-2. Add status-related abilities
-3. Create status-curing items
-4. Add status-related abilities
+2. Create status-curing items
+3. Add additional ability types (Weather, Stats)
 
 ## Previous Updates
 
