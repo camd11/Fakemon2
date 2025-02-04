@@ -3,16 +3,17 @@
 ## Current Sprint Status
 
 ### Completed
-- ✅ Core battle system implementation with 100% test coverage
+- ✅ Core battle system implementation (100% test coverage)
   - Pokemon system with stats, moves, and battle state
   - Move system with PP management and effects
   - Type system with effectiveness calculations
   - Battle mechanics with damage calculation
-- ✅ Service layer implementation with 90%+ test coverage
+  - Weather system with duration and effects
+- ✅ Service layer implementation (90%+ test coverage)
   - PokemonFactory for entity creation
   - BattleManager for battle flow
   - GameState for progression tracking
-- ✅ Terminal UI implementation
+- ✅ Terminal UI implementation (100% test coverage)
   - Battle view with Rich library integration
   - Input handling system
   - Game phase transitions
@@ -27,7 +28,6 @@
 
 ### In Progress
 - 🔄 Battle System Enhancement
-  - Weather effects implementation
   - Status effect duration tracking
   - Message system improvements
   - Catch mechanics integration
@@ -59,8 +59,8 @@
 None currently.
 
 ### High Priority
-1. Battle weather effects not fully implemented
-2. Status effect duration not tracked
+1. Status effect duration not tracked
+2. Catch mechanics not implemented
 3. Missing test coverage for battle edge cases
 
 ### Medium Priority
@@ -78,7 +78,7 @@ None currently.
 ### Code
 1. Battle class has some complex methods needing refactoring
 2. GameState class handling too many responsibilities
-3. Weather effects need implementation
+3. Status effect duration needs implementation
 
 ### Testing
 1. UI layer needs complete test coverage
@@ -99,7 +99,6 @@ None currently.
    - Coverage target: 80%+
 
 2. Complete Battle System
-   - Implement weather effects
    - Add status effect duration
    - Add catch mechanics
    - Improve message system
@@ -142,4 +141,4 @@ None currently.
 - Game startup: <2s
 - Battle calculation: <0.2s
 
-Last updated: 2/4/2025 6:52 AM EST
+Last updated: 2/4/2025 7:08 AM EST
