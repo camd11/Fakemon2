@@ -15,7 +15,14 @@ class AbilityType(Enum):
     HAZARD = auto()          # Sets entry hazards
     TERRAIN = auto()         # Sets terrain effects
     AURA = auto()           # Provides aura effects
+    FORM_CHANGE = auto()    # Changes Pokemon form
     OTHER = auto()           # Other effects
+
+class FormChangeType(Enum):
+    """Types of form changes."""
+    STANCE = auto()      # Changes based on move used
+    BATTLE_BOND = auto() # Changes after defeating Pokemon
+    CONSTRUCT = auto()   # Changes at low HP
 
 class AuraType(Enum):
     """Types of aura effects."""
@@ -52,7 +59,10 @@ class Ability:
         hazard_damage: Optional[int] = None,  # Base damage or number of layers
         hazard_status: Optional[StatusEffect] = None,  # For toxic spikes
         terrain_effect: Optional[TerrainType] = None,
-        aura_effect: Optional[AuraType] = None
+        aura_effect: Optional[AuraType] = None,
+        form_change: Optional[FormChangeType] = None,
+        form_stats: Optional[Dict[str, Stats]] = None,  # Stats for each form
+        form_types: Optional[Dict[str, Tuple[Type, ...]]] = None  # Types for each form
     ) -> None:
         """Initialize an ability.
         
@@ -80,6 +90,9 @@ class Ability:
         self.hazard_status = hazard_status
         self.terrain_effect = terrain_effect
         self.aura_effect = aura_effect
+        self.form_change = form_change
+        self.form_stats = form_stats or {}
+        self.form_types = form_types or {}
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -103,6 +116,52 @@ IMMUNITY = Ability(
         StatusEffect.PARALYSIS,
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
+    }
+)
+
+# Define form change abilities
+STANCE_CHANGE = Ability(
+    name="Stance Change",
+    type_=AbilityType.FORM_CHANGE,
+    description="Changes form based on move used.",
+    form_change=FormChangeType.STANCE,
+    form_stats={
+        "blade": Stats(60, 150, 50, 150, 50, 60),  # Offensive form
+        "shield": Stats(60, 50, 150, 50, 150, 60)  # Defensive form
+    },
+    form_types={
+        "blade": (Type.STEEL, Type.GHOST),
+        "shield": (Type.STEEL, Type.GHOST)
+    }
+)
+
+BATTLE_BOND = Ability(
+    name="Battle Bond",
+    type_=AbilityType.FORM_CHANGE,
+    description="Changes form after defeating a Pokemon.",
+    form_change=FormChangeType.BATTLE_BOND,
+    form_stats={
+        "normal": Stats(72, 95, 67, 103, 71, 122),  # Base form
+        "bond": Stats(72, 110, 67, 145, 71, 132)    # Bond form
+    },
+    form_types={
+        "normal": (Type.WATER, Type.DARK),
+        "bond": (Type.WATER, Type.DARK)
+    }
+)
+
+POWER_CONSTRUCT = Ability(
+    name="Power Construct",
+    type_=AbilityType.FORM_CHANGE,
+    description="Changes form at low HP.",
+    form_change=FormChangeType.CONSTRUCT,
+    form_stats={
+        "cell": Stats(54, 100, 71, 61, 85, 109),    # Cell form
+        "complete": Stats(216, 100, 121, 91, 95, 85) # Complete form
+    },
+    form_types={
+        "cell": (Type.DRAGON, Type.GROUND),
+        "complete": (Type.DRAGON, Type.GROUND)
     }
 )
 

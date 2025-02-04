@@ -1,5 +1,14 @@
 # Changelog
 
+## [2024-02-04] Form Change Abilities
+- Added form change system:
+  - Stance Change: Changes form based on move used
+  - Battle Bond: Changes form after defeating Pokemon
+  - Power Construct: Changes form at low HP
+- Enhanced Pokemon class to handle form changes
+- Enhanced Battle class to handle form change triggers
+- Added comprehensive tests for form change functionality
+
 ## [2024-02-04] Aura Abilities
 - Added aura system:
   - Fairy Aura: Powers up Fairy moves by 33%

@@ -1,10 +1,10 @@
 """Pokemon implementation for battles."""
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from .types import Type
 from .move import Move, StatusEffect
-from .ability import Ability, AbilityType
+from .ability import Ability, AbilityType, FormChangeType
 from .item import Item, HeldItemTrigger, ItemEffect
 
 @dataclass
@@ -28,7 +28,8 @@ class Pokemon:
         level: int,
         moves: List[Move] = None,
         held_item: Optional[Item] = None,
-        ability: Optional[Ability] = None
+        ability: Optional[Ability] = None,
+        current_form: str = "normal"  # Default form name
     ) -> None:
         """Initialize a Pokemon.
         
@@ -39,6 +40,8 @@ class Pokemon:
             level: Current level (1-100)
             moves: List of known moves (max 4)
             held_item: Name of held item (future feature)
+            ability: Pokemon's ability
+            current_form: Current form name
         
         Raises:
             ValueError: If types is empty or has more than 2 types,
@@ -57,6 +60,7 @@ class Pokemon:
         self.held_item = held_item
         self._used_held_item = False  # Track if single-use held item was used
         self.ability = ability
+        self.current_form = current_form
         
         # Calculate actual stats based on level
         self.stats = self._calculate_stats()
@@ -81,17 +85,100 @@ class Pokemon:
         Returns:
             Stats: The calculated stats at the current level
         """
+        # Get form-specific stats if available
+        if (self.ability and self.ability.type == AbilityType.FORM_CHANGE and 
+            self.current_form in self.ability.form_stats):
+            base_stats = self.ability.form_stats[self.current_form]
+        else:
+            base_stats = self.base_stats
+            
         # HP = ((2 * Base + IV + (EV/4)) * Level/100) + Level + 10
         # Other = ((2 * Base + IV + (EV/4)) * Level/100) + 5
         # Simplified version without IVs/EVs for now
-        hp = int((2 * self.base_stats.hp * self.level / 100) + self.level + 10)
-        attack = int((2 * self.base_stats.attack * self.level / 100) + 5)
-        defense = int((2 * self.base_stats.defense * self.level / 100) + 5)
-        special_attack = int((2 * self.base_stats.special_attack * self.level / 100) + 5)
-        special_defense = int((2 * self.base_stats.special_defense * self.level / 100) + 5)
-        speed = int((2 * self.base_stats.speed * self.level / 100) + 5)
+        hp = int((2 * base_stats.hp * self.level / 100) + self.level + 10)
+        attack = int((2 * base_stats.attack * self.level / 100) + 5)
+        defense = int((2 * base_stats.defense * self.level / 100) + 5)
+        special_attack = int((2 * base_stats.special_attack * self.level / 100) + 5)
+        special_defense = int((2 * base_stats.special_defense * self.level / 100) + 5)
+        speed = int((2 * base_stats.speed * self.level / 100) + 5)
         
         return Stats(hp, attack, defense, special_attack, special_defense, speed)
+        
+    def change_form(self, new_form: str) -> Optional[str]:
+        """Change to a different form.
+        
+        Args:
+            new_form: Name of the new form
+            
+        Returns:
+            Optional[str]: Message about form change if successful, None if failed
+        """
+        if not self.ability or self.ability.type != AbilityType.FORM_CHANGE:
+            return None
+            
+        if new_form not in self.ability.form_stats:
+            return None
+            
+        if new_form == self.current_form:
+            return None
+            
+        # Store old HP percentage
+        old_hp_percent = self.current_hp / self.stats.hp
+        
+        # Change form
+        self.current_form = new_form
+        
+        # Update types if form has different types
+        if new_form in self.ability.form_types:
+            self.types = self.ability.form_types[new_form]
+            
+        # Recalculate stats with new form
+        self.stats = self._calculate_stats()
+        
+        # Keep same HP percentage
+        self.current_hp = int(self.stats.hp * old_hp_percent)
+        
+        return f"{self.name} transformed into its {new_form} form!"
+        
+    def check_form_change(self, trigger: str, **kwargs) -> Optional[str]:
+        """Check if form should change based on trigger.
+        
+        Args:
+            trigger: What triggered the potential form change
+            **kwargs: Additional trigger parameters:
+                - move_type: Type of move used (for Stance Change)
+                - defeated_pokemon: Pokemon that was defeated (for Battle Bond)
+                - hp_percent: Current HP percentage (for Power Construct)
+                
+        Returns:
+            Optional[str]: Form change message if changed, None otherwise
+        """
+        if not self.ability or self.ability.type != AbilityType.FORM_CHANGE:
+            return None
+            
+        if self.ability.form_change == FormChangeType.STANCE:
+            # Change to blade form for attacking moves
+            if trigger == "move_used":
+                move_type = kwargs.get("move_type")
+                if move_type and move_type != Type.GHOST:  # Ghost = King's Shield
+                    return self.change_form("blade")
+                else:
+                    return self.change_form("shield")
+                    
+        elif self.ability.form_change == FormChangeType.BATTLE_BOND:
+            # Change to bond form after defeating a Pokemon
+            if trigger == "pokemon_defeated":
+                if self.current_form == "normal":
+                    return self.change_form("bond")
+                    
+        elif self.ability.form_change == FormChangeType.CONSTRUCT:
+            # Change to complete form at low HP
+            if trigger == "hp_changed":
+                hp_percent = kwargs.get("hp_percent", 1.0)
+                if hp_percent <= 0.5 and self.current_form == "cell":
+                    return self.change_form("complete")
+                    
+        return None
         
     def get_stat_multiplier(self, stat: str, weather: Optional['Weather'] = None) -> float:
         """Get the current multiplier for a stat based on its stage, status, and ability.
@@ -237,6 +324,12 @@ class Pokemon:
         """
         old_hp = self.current_hp
         self.current_hp = max(0, self.current_hp - amount)
+        
+        # Check for form change based on HP
+        if self.current_hp > 0:
+            hp_percent = self.current_hp / self.stats.hp
+            self.check_form_change("hp_changed", hp_percent=hp_percent)
+            
         return old_hp - self.current_hp
         
     def set_status(self, status: Optional[StatusEffect], duration: Optional[int] = None) -> bool:

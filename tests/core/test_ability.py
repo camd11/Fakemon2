@@ -6,6 +6,7 @@ from src.core.ability import (
     AbilityType,
     TerrainType,
     AuraType,
+    FormChangeType,
     IMMUNITY,
     LIMBER,
     WATER_VEIL,
@@ -26,7 +27,10 @@ from src.core.ability import (
     PSYCHIC_SURGE,
     FAIRY_AURA,
     DARK_AURA,
-    AURA_BREAK
+    AURA_BREAK,
+    STANCE_CHANGE,
+    BATTLE_BOND,
+    POWER_CONSTRUCT
 )
 from src.core.pokemon import Pokemon, Stats
 from src.core.types import Type, TypeEffectiveness
@@ -395,3 +399,83 @@ def test_multiple_auras():
     # Both moves should be boosted by 33%
     assert fairy_damage == int(fairy_damage * 1.33)
     assert dark_damage == int(dark_damage * 1.33)
+
+def test_stance_change():
+    """Test that Stance Change works correctly."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.STEEL, Type.GHOST),
+        base_stats=Stats(60, 50, 150, 50, 150, 60),  # Shield form stats
+        level=50,
+        ability=STANCE_CHANGE,
+        current_form="shield"
+    )
+    
+    # Create test moves
+    attack_move = Move(
+        name="Attack Move",
+        type_=Type.STEEL,
+        category=MoveCategory.PHYSICAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    shield_move = Move(
+        name="King's Shield",
+        type_=Type.GHOST,
+        category=MoveCategory.PHYSICAL,
+        power=0,
+        accuracy=100,
+        pp=10
+    )
+    
+    # Test form change to blade form
+    msg = pokemon.check_form_change("move_used", move_type=Type.STEEL)
+    assert msg == "Test Pokemon transformed into its blade form!"
+    assert pokemon.current_form == "blade"
+    assert pokemon.stats.attack == 150  # Blade form has higher attack
+    
+    # Test form change back to shield form
+    msg = pokemon.check_form_change("move_used", move_type=Type.GHOST)
+    assert msg == "Test Pokemon transformed into its shield form!"
+    assert pokemon.current_form == "shield"
+    assert pokemon.stats.defense == 150  # Shield form has higher defense
+
+def test_battle_bond():
+    """Test that Battle Bond works correctly."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.WATER, Type.DARK),
+        base_stats=Stats(72, 95, 67, 103, 71, 122),  # Normal form stats
+        level=50,
+        ability=BATTLE_BOND,
+        current_form="normal"
+    )
+    
+    # Test form change after defeating Pokemon
+    msg = pokemon.check_form_change("pokemon_defeated")
+    assert msg == "Test Pokemon transformed into its bond form!"
+    assert pokemon.current_form == "bond"
+    assert pokemon.stats.special_attack == 145  # Bond form has higher special attack
+
+def test_power_construct():
+    """Test that Power Construct works correctly."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.DRAGON, Type.GROUND),
+        base_stats=Stats(54, 100, 71, 61, 85, 109),  # Cell form stats
+        level=50,
+        ability=POWER_CONSTRUCT,
+        current_form="cell"
+    )
+    
+    # Damage Pokemon to 50% HP
+    pokemon.take_damage(pokemon.stats.hp // 2)
+    
+    # Test form change at low HP
+    assert pokemon.current_form == "complete"  # Should have changed automatically
+    assert pokemon.stats.hp == 216  # Complete form has higher HP
+    
+    # HP percentage should be preserved
+    assert pokemon.current_hp == pokemon.stats.hp // 2

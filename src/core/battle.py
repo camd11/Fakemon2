@@ -406,6 +406,11 @@ class Battle:
             elif AuraType.DARK in self.active_auras and move.type == Type.DARK:
                 damage *= (1 + aura_multiplier)
                 
+        # Check for form change based on move
+        form_change_msg = attacker.check_form_change("move_used", move_type=move.type)
+        if form_change_msg:
+            result.messages.append(form_change_msg)
+                
         return int(damage)
         
     @property
@@ -529,6 +534,25 @@ class Battle:
                 result.messages.append(f"{pokemon.name} is buffeted by the {weather_name}!")
                 
         return result
+        
+    def handle_faint(self, fainted_pokemon: Pokemon) -> List[str]:
+        """Handle a Pokemon fainting.
+        
+        Args:
+            fainted_pokemon: The Pokemon that fainted
+            
+        Returns:
+            List[str]: Messages about any form changes
+        """
+        messages = []
+        
+        # Check for Battle Bond form change
+        other_pokemon = self.player_pokemon if fainted_pokemon == self.enemy_pokemon else self.enemy_pokemon
+        form_change_msg = other_pokemon.check_form_change("pokemon_defeated")
+        if form_change_msg:
+            messages.append(form_change_msg)
+            
+        return messages
         
     def end_turn(self) -> TurnResult:
         """End the current turn and apply any effects.
