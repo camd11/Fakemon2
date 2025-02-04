@@ -72,12 +72,16 @@ class Pokemon:
         self.transformed_stats = None  # Stats when transformed
         self.transformed_types = None  # Types when transformed
         self.transformed_moves = None  # Moves when transformed
-        self.original_types = types  # Store original types for protean abilities
+        self.original_types = types  # Store original types for protean/color change abilities
         
         # Set up disguise protection if needed
-        if self.ability and self.ability.type == AbilityType.DISGUISE:
-            self.disguise_hp = self.ability.disguise_hp
-            self.disguise_type = self.ability.disguise_type
+        if self.ability:
+            if self.ability.type == AbilityType.DISGUISE:
+                self.disguise_hp = self.ability.disguise_hp
+                self.disguise_type = self.ability.disguise_type
+            elif self.ability.type == AbilityType.COLOR_CHANGE and self.ability.color_change_type == ColorChangeType.WEATHER:
+                # Set initial type based on weather
+                self.check_weather_type(Weather.CLEAR)
         
         # Calculate actual stats based on level
         self.stats = self._calculate_stats()
@@ -478,12 +482,54 @@ class Pokemon:
             hp_percent = self.current_hp / self.stats.hp
             self.check_form_change("hp_changed", hp_percent=hp_percent)
             
-            # Handle type mimicry
-            if (self.ability and self.ability.type == AbilityType.ILLUSION and 
-                self.ability.illusion_effect == IllusionType.MIMIC):
-                self.check_type_mimicry(kwargs.get("terrain"))
+            # Handle type changes
+            if self.ability:
+                if (self.ability.type == AbilityType.ILLUSION and 
+                    self.ability.illusion_effect == IllusionType.MIMIC):
+                    self.check_type_mimicry(kwargs.get("terrain"))
+                elif (self.ability.type == AbilityType.COLOR_CHANGE and 
+                    self.ability.color_change_type == ColorChangeType.DAMAGE):
+                    # Change type to match damaging move
+                    move_type = kwargs.get("move_type")
+                    if move_type:
+                        self.types = (move_type,)
+                        return f"{self.name} became {move_type.name}-type!"
             
         return old_hp - self.current_hp
+        
+    def check_weather_type(self, weather: Weather) -> Optional[str]:
+        """Check if type should change based on weather.
+        
+        Args:
+            weather: Current weather condition
+            
+        Returns:
+            Optional[str]: Message about type change if successful, None if failed
+        """
+        if not self.ability or self.ability.type != AbilityType.COLOR_CHANGE:
+            return None
+            
+        if self.ability.color_change_type != ColorChangeType.WEATHER:
+            return None
+            
+        # Change type based on weather
+        new_type = None
+        if weather == Weather.CLEAR:
+            new_type = Type.NORMAL
+        elif weather == Weather.SUN:
+            new_type = Type.FIRE
+        elif weather == Weather.RAIN:
+            new_type = Type.WATER
+        elif weather == Weather.SANDSTORM:
+            new_type = Type.ROCK
+        elif weather == Weather.HAIL:
+            new_type = Type.ICE
+            
+        if new_type:
+            self.types = (new_type,)
+            return f"{self.name} became {new_type.name}-type!"
+            
+        return None
         
     def set_status(self, status: Optional[StatusEffect], duration: Optional[int] = None) -> bool:
         """Set a status effect on the Pokemon.

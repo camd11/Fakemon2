@@ -707,6 +707,15 @@ class Battle:
                 result.messages.append(f"The {terrain_name} terrain faded!")
                 self.terrain = None
                 
+            # Check for weather-based type changes
+            for pokemon in (self.player_pokemon, self.enemy_pokemon):
+                if pokemon.is_fainted:
+                    continue
+                    
+                msg = pokemon.check_weather_type(self.weather)
+                if msg:
+                    result.messages.append(msg)
+                
         return result
         
     @property

@@ -692,3 +692,46 @@ def test_type_mimicry():
     msg = pokemon.check_type_mimicry(None)
     assert msg == "Test Pokemon returned to its original type!"
     assert pokemon.transformed_types is None
+
+def test_color_change():
+    """Test that Color Change changes type to match damaging move."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=COLOR_CHANGE
+    )
+    
+    # Take damage from different move types
+    msg = pokemon.take_damage(50, move_type=Type.FIRE)
+    assert msg == "Test Pokemon became FIRE-type!"
+    assert pokemon.types == (Type.FIRE,)
+    
+    msg = pokemon.take_damage(50, move_type=Type.WATER)
+    assert msg == "Test Pokemon became WATER-type!"
+    assert pokemon.types == (Type.WATER,)
+
+def test_forecast():
+    """Test that Forecast changes type based on weather."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=FORECAST
+    )
+    
+    # Test each weather type
+    weather_types = {
+        Weather.CLEAR: Type.NORMAL,
+        Weather.SUN: Type.FIRE,
+        Weather.RAIN: Type.WATER,
+        Weather.SANDSTORM: Type.ROCK,
+        Weather.HAIL: Type.ICE
+    }
+    
+    for weather, expected_type in weather_types.items():
+        msg = pokemon.check_weather_type(weather)
+        assert msg == f"Test Pokemon became {expected_type.name}-type!"
+        assert pokemon.types == (expected_type,)

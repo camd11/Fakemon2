@@ -1,5 +1,13 @@
 # Changelog
 
+## [2024-02-04] Color Change Abilities
+- Added color change system:
+  - Color Change: Changes type to match damaging move
+  - Forecast: Changes type based on weather
+- Enhanced Pokemon class to handle type changes
+- Enhanced Battle class to handle weather type changes
+- Added comprehensive tests for color change functionality
+
 ## [2024-02-04] Protean Abilities
 - Added protean system:
   - Protean: Changes type to match move being used

@@ -19,7 +19,13 @@ class AbilityType(Enum):
     ILLUSION = auto()       # Changes Pokemon appearance
     DISGUISE = auto()       # Protects from damage
     PROTEAN = auto()        # Changes type based on moves
+    COLOR_CHANGE = auto()   # Changes type based on damage
     OTHER = auto()           # Other effects
+
+class ColorChangeType(Enum):
+    """Types of color change effects."""
+    DAMAGE = auto()    # Changes type to match damaging move
+    WEATHER = auto()   # Changes type based on weather
 
 class ProteanType(Enum):
     """Types of protean effects."""
@@ -86,7 +92,8 @@ class Ability:
         illusion_effect: Optional[IllusionType] = None,
         disguise_type: Optional[DisguiseType] = None,  # Type of disguise protection
         disguise_hp: Optional[int] = None,  # Extra HP for disguise
-        protean_type: Optional[ProteanType] = None  # Type of protean effect
+        protean_type: Optional[ProteanType] = None,  # Type of protean effect
+        color_change_type: Optional[ColorChangeType] = None  # Type of color change effect
     ) -> None:
         """Initialize an ability.
         
@@ -110,6 +117,7 @@ class Ability:
             disguise_type: Type of disguise protection
             disguise_hp: Extra HP for disguise
             protean_type: Type of protean effect
+            color_change_type: Type of color change effect
         """
         self.name = name
         self.type = type_
@@ -130,6 +138,7 @@ class Ability:
         self.disguise_type = disguise_type
         self.disguise_hp = disguise_hp
         self.protean_type = protean_type
+        self.color_change_type = color_change_type
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -154,6 +163,21 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define color change abilities
+COLOR_CHANGE = Ability(
+    name="Color Change",
+    type_=AbilityType.COLOR_CHANGE,
+    description="Changes type to match the type of move that hit it.",
+    color_change_type=ColorChangeType.DAMAGE
+)
+
+FORECAST = Ability(
+    name="Forecast",
+    type_=AbilityType.COLOR_CHANGE,
+    description="Changes type based on weather.",
+    color_change_type=ColorChangeType.WEATHER
 )
 
 # Define protean abilities
