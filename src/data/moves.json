@@ -1,0 +1,136 @@
+{
+    "tackle": {
+        "name": "Tackle",
+        "type": "normal",
+        "category": "physical",
+        "power": 40,
+        "accuracy": 100,
+        "pp": 35,
+        "effects": []
+    },
+    "scratch": {
+        "name": "Scratch",
+        "type": "normal",
+        "category": "physical",
+        "power": 40,
+        "accuracy": 100,
+        "pp": 35,
+        "effects": []
+    },
+    "ember": {
+        "name": "Ember",
+        "type": "fire",
+        "category": "special",
+        "power": 40,
+        "accuracy": 100,
+        "pp": 25,
+        "effects": [
+            {
+                "status": "burn",
+                "status_chance": 10,
+                "stat_changes": {}
+            }
+        ]
+    },
+    "water_gun": {
+        "name": "Water Gun",
+        "type": "water",
+        "category": "special",
+        "power": 40,
+        "accuracy": 100,
+        "pp": 25,
+        "effects": []
+    },
+    "thundershock": {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "category": "special",
+        "power": 40,
+        "accuracy": 100,
+        "pp": 30,
+        "effects": [
+            {
+                "status": "paralysis",
+                "status_chance": 10,
+                "stat_changes": {}
+            }
+        ]
+    },
+    "vine_whip": {
+        "name": "Vine Whip",
+        "type": "grass",
+        "category": "physical",
+        "power": 45,
+        "accuracy": 100,
+        "pp": 25,
+        "effects": []
+    },
+    "growl": {
+        "name": "Growl",
+        "type": "normal",
+        "category": "status",
+        "power": 0,
+        "accuracy": 100,
+        "pp": 40,
+        "effects": [
+            {
+                "status": null,
+                "status_chance": 0,
+                "stat_changes": {
+                    "attack": -1
+                }
+            }
+        ]
+    },
+    "tail_whip": {
+        "name": "Tail Whip",
+        "type": "normal",
+        "category": "status",
+        "power": 0,
+        "accuracy": 100,
+        "pp": 30,
+        "effects": [
+            {
+                "status": null,
+                "status_chance": 0,
+                "stat_changes": {
+                    "defense": -1
+                }
+            }
+        ]
+    },
+    "leer": {
+        "name": "Leer",
+        "type": "normal",
+        "category": "status",
+        "power": 0,
+        "accuracy": 100,
+        "pp": 30,
+        "effects": [
+            {
+                "status": null,
+                "status_chance": 0,
+                "stat_changes": {
+                    "defense": -1
+                }
+            }
+        ]
+    },
+    "sand_attack": {
+        "name": "Sand Attack",
+        "type": "ground",
+        "category": "status",
+        "power": 0,
+        "accuracy": 100,
+        "pp": 15,
+        "effects": [
+            {
+                "status": null,
+                "status_chance": 0,
+                "stat_changes": {
+                    "accuracy": -1
+                }
+            }
+        ]
+    }
+}
