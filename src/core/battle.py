@@ -90,12 +90,15 @@ class Battle:
             Tuple[bool, Optional[str]]: Whether the Pokemon can move and any message
         """
         if pokemon.status == StatusEffect.PARALYSIS:
-            # 25% chance to be fully paralyzed
-            if random.random() < 0.25:
+            # 25% chance to be fully paralyzed (using randint for better distribution)
+            if random.randint(1, 4) == 1:
                 return False, f"{pokemon.name} is fully paralyzed!"
         elif pokemon.status == StatusEffect.SLEEP:
             # Cannot move while sleeping
             return False, f"{pokemon.name} is fast asleep!"
+        elif pokemon.status == StatusEffect.FREEZE:
+            # Cannot move while frozen
+            return False, f"{pokemon.name} is frozen solid!"
         return True, None
         
     def execute_turn(self, move: Move, target: Pokemon) -> TurnResult:
@@ -110,12 +113,16 @@ class Battle:
         """
         result = TurnResult()
         
-        # Set random sleep duration when applying sleep
-        if any(effect.status == StatusEffect.SLEEP for effect in move.effects):
-            move.effects[0].status_duration = random.randint(1, 3)
+        # No need to set sleep duration here since we set it when applying the status
         
         # Check if Pokemon can move (use the Pokemon making the move)
         attacker = self.player_pokemon if target == self.enemy_pokemon else self.enemy_pokemon
+        
+        # Fire moves thaw the user
+        if move.type == Type.FIRE and attacker.status == StatusEffect.FREEZE:
+            attacker.set_status(None)
+            result.messages.append(f"{attacker.name} thawed out!")
+        
         can_move, message = self.can_move(attacker)
         if not can_move:
             result.messages.append(message)
@@ -136,6 +143,11 @@ class Battle:
             
         # Calculate and deal damage for damaging moves
         if move.is_damaging:
+            # Fire moves thaw the user
+            if move.type == Type.FIRE and attacker.status == StatusEffect.FREEZE:
+                attacker.set_status(None)
+                result.messages.append(f"{attacker.name} thawed out!")
+                
             # Critical hit check (1/24 chance)
             result.critical_hit = random.random() < 1/24
             
@@ -159,9 +171,13 @@ class Battle:
             # Status effects
             if effect.status and random.random() * 100 <= effect.status_chance:
                 # Set duration based on status type
-                duration = 5  # Default duration
+                duration = None
                 if effect.status == StatusEffect.SLEEP:
-                    duration = random.randint(1, 3)
+                    duration = random.randint(1, 3)  # Initial duration 1-3 turns
+                elif effect.status == StatusEffect.FREEZE:
+                    duration = None  # Freeze has no duration
+                else:
+                    duration = 5  # Initial duration 5 turns
                 
                 if target.set_status(effect.status, duration=duration):
                     result.status_applied = effect.status
@@ -360,7 +376,14 @@ class Battle:
             # Store current status
             current_status = pokemon.status
             
-            # Check status duration first
+            # Check for freeze thaw (20% chance) before updating duration
+            if current_status == StatusEffect.FREEZE:
+                if random.random() < 0.20:  # 20% chance
+                    pokemon.set_status(None)
+                    result.messages.append(f"{pokemon.name} thawed out!")
+                    continue
+            
+            # Check status duration
             status_message = pokemon.update_status()
             if status_message:
                 result.messages.append(status_message)

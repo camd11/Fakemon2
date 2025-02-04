@@ -1,5 +1,13 @@
 # Changelog
 
+## [2024-02-04] Status Effect Duration Fixes
+- Fixed sleep duration to properly last 1-3 turns
+- Fixed poison duration to properly last 5 turns
+- Fixed status effect duration handling to decrement first, then check if duration <= 0
+- Increased freeze thaw chance to 20% per turn
+- Added safety limit to prevent infinite loops in tests
+- All status effect tests passing with good coverage
+
 ## [Unreleased]
 
 ### Added

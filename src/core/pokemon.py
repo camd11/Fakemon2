@@ -210,23 +210,16 @@ class Pokemon:
         if self.status_duration is None:
             return None
             
-        # Check if already at 0
-        if self.status_duration <= 0:
-            old_status = self.status
-            # Clear status without resetting stat stages
-            self.status = None
-            self.status_duration = None
-            return f"{self.name}'s {old_status.name.lower()} faded!"
-            
-        # Decrease duration and check if it reached 0
+        # Decrease duration
         self.status_duration -= 1
+        
+        # Check if duration reached 0
         if self.status_duration <= 0:
             old_status = self.status
             # Clear status without resetting stat stages
             self.status = None
             self.status_duration = None
             return f"{self.name}'s {old_status.name.lower()} faded!"
-            
         return None
         
     @property

@@ -25,6 +25,7 @@ class Effect:
     """Represents additional effects a move may have."""
     status: Optional[StatusEffect] = None
     status_chance: float = 0.0
+    status_duration: Optional[int] = None  # Duration in turns, None for indefinite
     stat_changes: dict[str, int] = None  # e.g., {"attack": -1} for lowering attack
     
     def __post_init__(self):
