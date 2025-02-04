@@ -293,6 +293,78 @@ def test_freeze_thaw_chance(battle):
         avg_thaw_turn = sum(thaw_turns) / len(thaw_turns)
         assert avg_thaw_turn <= 5  # Average thaw turn should be early
 
+def test_burn_damage(battle):
+    """Test that burn deals damage at end of turn."""
+    # Create a burn move
+    burn_move = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=15,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(burn_move)
+    
+    # Apply burn
+    battle.execute_turn(burn_move, battle.enemy_pokemon)
+    initial_hp = battle.enemy_pokemon.current_hp
+    
+    # End turn should deal burn damage
+    result = battle.end_turn()
+    assert battle.enemy_pokemon.current_hp < initial_hp
+    assert battle.enemy_pokemon.current_hp == initial_hp - (battle.enemy_pokemon.stats.hp // 16)
+    assert "Enemy Pokemon is hurt by its burn!" in result.messages
+
+def test_burn_attack_reduction(battle):
+    """Test that burn halves physical attack."""
+    # Create a burn move
+    burn_move = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=15,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(burn_move)
+    
+    # Apply burn
+    battle.execute_turn(burn_move, battle.enemy_pokemon)
+    
+    # Attack should be halved
+    original_attack = battle.enemy_pokemon.stats.attack
+    assert battle.enemy_pokemon.get_stat_multiplier("attack") == 0.5
+
+def test_burn_duration(battle):
+    """Test that burn lasts 5 turns."""
+    # Create a burn move
+    burn_move = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=15,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(burn_move)
+    
+    # Apply burn
+    battle.execute_turn(burn_move, battle.enemy_pokemon)
+    
+    # Status should persist for 5 turns
+    for i in range(5):
+        assert battle.enemy_pokemon.status == StatusEffect.BURN
+        battle.end_turn()
+        
+    # One more turn to clear it
+    result = battle.end_turn()
+    assert battle.enemy_pokemon.status is None
+    assert "Enemy Pokemon's burn faded!" in result.messages
+
 def test_fire_move_thaws_user(battle):
     """Test that using a fire move thaws the user."""
     # Create moves

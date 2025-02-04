@@ -109,6 +109,8 @@ class Pokemon:
         # Status effects
         if self.status == StatusEffect.PARALYSIS and stat == "speed":
             multiplier *= 0.25
+        elif self.status == StatusEffect.BURN and stat == "attack":
+            multiplier *= 0.5  # Burn halves physical attack
             
         return multiplier
         

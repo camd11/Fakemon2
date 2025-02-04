@@ -387,11 +387,15 @@ class Battle:
             status_message = pokemon.update_status()
             if status_message:
                 result.messages.append(status_message)
-            # Only apply poison damage if status wasn't cleared
+            # Apply damage over time effects if status wasn't cleared
             elif current_status == StatusEffect.POISON:
                 damage = pokemon.stats.hp // 8
                 pokemon.take_damage(damage)
                 result.messages.append(f"{pokemon.name} is hurt by poison!")
+            elif current_status == StatusEffect.BURN:
+                damage = pokemon.stats.hp // 16  # Burn does less damage than poison
+                pokemon.take_damage(damage)
+                result.messages.append(f"{pokemon.name} is hurt by its burn!")
                 
         # Apply weather effects
         weather_result = self.apply_weather_effects()

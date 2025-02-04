@@ -1,5 +1,16 @@
 # Changelog
 
+## [2024-02-04] Burn Status Implementation
+- Added burn status effect implementation
+  - Deals 1/16 max HP damage per turn
+  - Halves physical attack power
+  - Lasts 5 turns like other status effects
+- Added comprehensive tests for burn mechanics
+  - Damage calculation
+  - Attack reduction
+  - Duration handling
+  - Status messages
+
 ## [2024-02-04] Status Effect Duration Fixes
 - Fixed sleep duration to properly last 1-3 turns
 - Fixed poison duration to properly last 5 turns

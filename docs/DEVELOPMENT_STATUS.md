@@ -36,6 +36,12 @@ The status effect system has been fully implemented with the following features:
    - No stat modifications
    - Messages: "[Pokemon] fell asleep!", "[Pokemon] is fast asleep!"
 
+4. **Burn**
+   - Deals 1/16 max HP damage at end of turn
+   - Halves physical attack power
+   - Lasts 5 turns
+   - Messages: "[Pokemon] was burned!", "[Pokemon] is hurt by its burn!"
+
 ### Status Effect Duration
 
 - Status effects can be applied with an optional duration
@@ -66,8 +72,8 @@ Potential areas for expansion:
 
 ## Next Steps
 
-1. Implement remaining status effects
-2. Add status immunity system
+1. Implement remaining status effects (Freeze)
+2. Add status immunity system based on type (e.g. Fire types immune to burn)
 3. Create status-curing items
 4. Add status-related abilities
 
