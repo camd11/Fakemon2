@@ -8,7 +8,7 @@ from .pokemon import Pokemon
 from .move import Move, MoveCategory, StatusEffect
 from .types import Type, TypeEffectiveness
 from .item import Item, ItemType, HeldItemTrigger
-from .ability import AbilityType
+from .ability import AbilityType, HazardType
 
 class Weather(Enum):
     """Weather conditions that can affect battle."""
@@ -81,6 +81,18 @@ class Battle:
         self.turn_count = 0
         self.is_trainer_battle = is_trainer_battle
         
+        # Track hazards for each side
+        self.player_hazards = {
+            HazardType.SPIKES: 0,  # Number of layers
+            HazardType.TOXIC_SPIKES: 0,  # Number of layers
+            HazardType.STEALTH_ROCK: False  # Present or not
+        }
+        self.enemy_hazards = {
+            HazardType.SPIKES: 0,
+            HazardType.TOXIC_SPIKES: 0,
+            HazardType.STEALTH_ROCK: False
+        }
+        
         # Check for weather abilities
         self._check_weather_abilities()
         
@@ -92,6 +104,52 @@ class Battle:
                 if pokemon.ability.weather_effect:
                     self.weather = pokemon.ability.weather_effect
                     self.weather_duration = None  # Weather from abilities lasts indefinitely
+        
+    def apply_hazards(self, pokemon: Pokemon, is_player: bool) -> List[str]:
+        """Apply entry hazard effects when a Pokemon switches in.
+        
+        Args:
+            pokemon: The Pokemon switching in
+            is_player: Whether this is the player's Pokemon
+            
+        Returns:
+            List[str]: Messages about hazard effects
+        """
+        messages = []
+        hazards = self.enemy_hazards if is_player else self.player_hazards
+        
+        # Skip if Pokemon is Flying type or has Levitate
+        is_grounded = Type.FLYING not in pokemon.types
+        
+        # Apply Stealth Rock damage
+        if hazards[HazardType.STEALTH_ROCK]:
+            # Calculate damage based on type effectiveness
+            effectiveness = 1.0
+            for type_ in pokemon.types:
+                effectiveness *= self.type_chart.get_multiplier(Type.ROCK, (type_,))
+            damage = int(pokemon.stats.hp * effectiveness / 8)
+            pokemon.take_damage(damage)
+            messages.append(f"{pokemon.name} was hurt by stealth rocks!")
+            
+        # Apply Spikes damage (only to grounded Pokemon)
+        if is_grounded and hazards[HazardType.SPIKES] > 0:
+            # Damage increases with layers: 1/8, 1/6, 1/4
+            denominators = [8, 6, 4]
+            damage = pokemon.stats.hp // denominators[hazards[HazardType.SPIKES] - 1]
+            pokemon.take_damage(damage)
+            messages.append(f"{pokemon.name} was hurt by spikes!")
+            
+        # Apply Toxic Spikes effect (only to grounded Pokemon)
+        if is_grounded and hazards[HazardType.TOXIC_SPIKES] > 0:
+            # Second layer causes toxic instead of regular poison
+            if hazards[HazardType.TOXIC_SPIKES] >= 2:
+                if pokemon.set_status(StatusEffect.POISON, duration=None):  # Toxic is permanent
+                    messages.append(f"{pokemon.name} was badly poisoned!")
+            else:
+                if pokemon.set_status(StatusEffect.POISON, duration=5):
+                    messages.append(f"{pokemon.name} was poisoned!")
+                    
+        return messages
         
     def can_move(self, pokemon: Pokemon) -> Tuple[bool, Optional[str]]:
         """Check if a Pokemon can move this turn.

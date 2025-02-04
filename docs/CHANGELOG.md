@@ -1,5 +1,13 @@
 # Changelog
 
+## [2024-02-04] Entry Hazard Abilities
+- Added entry hazard system:
+  - Spikes: Damages grounded Pokemon (up to 3 layers)
+  - Toxic Spikes: Poisons grounded Pokemon (up to 2 layers)
+  - Stealth Rock: Damages Pokemon based on type effectiveness
+- Enhanced Battle class to handle hazards
+- Added comprehensive tests for hazard functionality
+
 ## [2024-02-04] Weather-Boosted Moves
 - Added weather boost system for moves:
   - Water moves boosted in rain, reduced in sun

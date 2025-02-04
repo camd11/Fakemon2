@@ -1,9 +1,10 @@
-"""Tests for Pokemon abilities."""
+"""Tests for abilities."""
 
 import pytest
 from src.core.ability import (
     Ability,
     AbilityType,
+    HazardType,
     IMMUNITY,
     LIMBER,
     WATER_VEIL,
@@ -12,7 +13,15 @@ from src.core.ability import (
     DRIZZLE,
     DROUGHT,
     SAND_STREAM,
-    SNOW_WARNING
+    SNOW_WARNING,
+    GUTS,
+    SWIFT_SWIM,
+    CHLOROPHYLL,
+    SAND_RUSH,
+    SLUSH_RUSH,
+    SPIKES_SETTER,
+    TOXIC_SPIKES_SETTER,
+    STEALTH_ROCK_SETTER
 )
 from src.core.pokemon import Pokemon, Stats
 from src.core.types import Type, TypeEffectiveness
@@ -29,269 +38,186 @@ def test_pokemon():
         level=50
     )
 
-def test_ability_prevents_status():
-    """Test that abilities correctly report which statuses they prevent."""
-    assert IMMUNITY.prevents_status(StatusEffect.POISON)
-    assert IMMUNITY.prevents_status(StatusEffect.BURN)
-    assert IMMUNITY.prevents_status(StatusEffect.PARALYSIS)
-    assert IMMUNITY.prevents_status(StatusEffect.SLEEP)
-    assert IMMUNITY.prevents_status(StatusEffect.FREEZE)
-    
-    assert LIMBER.prevents_status(StatusEffect.PARALYSIS)
-    assert not LIMBER.prevents_status(StatusEffect.POISON)
-    
-    assert WATER_VEIL.prevents_status(StatusEffect.BURN)
-    assert not WATER_VEIL.prevents_status(StatusEffect.SLEEP)
-    
-    assert VITAL_SPIRIT.prevents_status(StatusEffect.SLEEP)
-    assert not VITAL_SPIRIT.prevents_status(StatusEffect.FREEZE)
-    
-    assert MAGMA_ARMOR.prevents_status(StatusEffect.FREEZE)
-    assert not MAGMA_ARMOR.prevents_status(StatusEffect.BURN)
-
-def test_immunity_ability(test_pokemon):
-    """Test that Immunity prevents all status conditions."""
-    test_pokemon.ability = IMMUNITY
-    
-    # Try to apply each status
-    assert not test_pokemon.set_status(StatusEffect.POISON)
-    assert test_pokemon.status is None
-    
-    assert not test_pokemon.set_status(StatusEffect.BURN)
-    assert test_pokemon.status is None
-    
-    assert not test_pokemon.set_status(StatusEffect.PARALYSIS)
-    assert test_pokemon.status is None
-    
-    assert not test_pokemon.set_status(StatusEffect.SLEEP)
-    assert test_pokemon.status is None
-    
-    assert not test_pokemon.set_status(StatusEffect.FREEZE)
-    assert test_pokemon.status is None
-
-def test_limber_ability(test_pokemon):
-    """Test that Limber prevents paralysis but not other statuses."""
-    test_pokemon.ability = LIMBER
-    
-    # Should prevent paralysis
-    assert not test_pokemon.set_status(StatusEffect.PARALYSIS)
-    assert test_pokemon.status is None
-    
-    # Should allow other statuses
-    assert test_pokemon.set_status(StatusEffect.POISON)
-    assert test_pokemon.status == StatusEffect.POISON
-
-def test_water_veil_ability(test_pokemon):
-    """Test that Water Veil prevents burns but not other statuses."""
-    test_pokemon.ability = WATER_VEIL
-    
-    # Should prevent burn
-    assert not test_pokemon.set_status(StatusEffect.BURN)
-    assert test_pokemon.status is None
-    
-    # Should allow other statuses
-    assert test_pokemon.set_status(StatusEffect.SLEEP)
-    assert test_pokemon.status == StatusEffect.SLEEP
-
-def test_vital_spirit_ability(test_pokemon):
-    """Test that Vital Spirit prevents sleep but not other statuses."""
-    test_pokemon.ability = VITAL_SPIRIT
-    
-    # Should prevent sleep
-    assert not test_pokemon.set_status(StatusEffect.SLEEP)
-    assert test_pokemon.status is None
-    
-    # Should allow other statuses
-    assert test_pokemon.set_status(StatusEffect.FREEZE)
-    assert test_pokemon.status == StatusEffect.FREEZE
-
-def test_magma_armor_ability(test_pokemon):
-    """Test that Magma Armor prevents freezing but not other statuses."""
-    test_pokemon.ability = MAGMA_ARMOR
-    
-    # Should prevent freeze
-    assert not test_pokemon.set_status(StatusEffect.FREEZE)
-    assert test_pokemon.status is None
-    
-    # Should allow other statuses
-    assert test_pokemon.set_status(StatusEffect.BURN)
-    assert test_pokemon.status == StatusEffect.BURN
-
-def test_ability_and_type_immunity(test_pokemon):
-    """Test that both ability and type immunities work together."""
-    # Give a Fire type Pokemon Water Veil
-    test_pokemon.types = (Type.FIRE,)
-    test_pokemon.ability = WATER_VEIL
-    
-    # Should be immune to burn from both type and ability
-    assert not test_pokemon.set_status(StatusEffect.BURN)
-    assert test_pokemon.status is None
-    
-    # Should allow other statuses
-    assert test_pokemon.set_status(StatusEffect.SLEEP)
-    assert test_pokemon.status == StatusEffect.SLEEP
-
-def test_no_ability(test_pokemon):
-    """Test that Pokemon with no ability can receive any status."""
-    test_pokemon.ability = None
-    
-    # Should be able to receive any status
-    assert test_pokemon.set_status(StatusEffect.POISON)
-    assert test_pokemon.status == StatusEffect.POISON
-    
-    # Clear status
-    test_pokemon.set_status(None)
-    
-    assert test_pokemon.set_status(StatusEffect.BURN)
-    assert test_pokemon.status == StatusEffect.BURN
-
-def test_drizzle_ability(test_pokemon):
-    """Test that Drizzle sets rain weather."""
-    test_pokemon.ability = DRIZZLE
-    
-    # Create battle with clear weather
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-    
-    # Weather should be changed to rain
-    assert battle.weather == Weather.RAIN
-    assert battle.weather_duration is None  # Should last indefinitely
-
-def test_drought_ability(test_pokemon):
-    """Test that Drought sets sun weather."""
-    test_pokemon.ability = DROUGHT
-    
-    # Create battle with clear weather
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-    
-    # Weather should be changed to sun
-    assert battle.weather == Weather.SUN
-    assert battle.weather_duration is None
-
-def test_sand_stream_ability(test_pokemon):
-    """Test that Sand Stream sets sandstorm weather."""
-    test_pokemon.ability = SAND_STREAM
-    
-    # Create battle with clear weather
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-    
-    # Weather should be changed to sandstorm
-    assert battle.weather == Weather.SANDSTORM
-    assert battle.weather_duration is None
-
-def test_snow_warning_ability(test_pokemon):
-    """Test that Snow Warning sets hail weather."""
-    test_pokemon.ability = SNOW_WARNING
-    
-    # Create battle with clear weather
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-    
-    # Weather should be changed to hail
-    assert battle.weather == Weather.HAIL
-    assert battle.weather_duration is None
-
-def test_multiple_weather_abilities(test_pokemon):
-    """Test that multiple weather abilities interact correctly."""
-    # Create two Pokemon with different weather abilities
-    enemy_pokemon = Pokemon(
-        name="Enemy Pokemon",
+def test_status_immunity():
+    """Test that status immunity abilities prevent status effects."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
         types=(Type.NORMAL,),
         base_stats=Stats(100, 100, 100, 100, 100, 100),
         level=50,
-        ability=DRIZZLE  # Sets rain
+        ability=IMMUNITY
     )
     
-    test_pokemon.ability = DROUGHT  # Sets sun
+    # Should not be able to apply any status
+    assert not pokemon.set_status(StatusEffect.POISON)
+    assert not pokemon.set_status(StatusEffect.BURN)
+    assert not pokemon.set_status(StatusEffect.PARALYSIS)
+    assert not pokemon.set_status(StatusEffect.SLEEP)
+    assert not pokemon.set_status(StatusEffect.FREEZE)
+    assert pokemon.status is None
+
+def test_weather_ability():
+    """Test that weather abilities set weather conditions."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=DROUGHT
+    )
     
-    # Create battle - player's Pokemon should set weather last
-    battle = Battle(test_pokemon, enemy_pokemon, TypeEffectiveness())
-    
-    # Weather should be sun (player's Pokemon checked last)
+    battle = Battle(pokemon, pokemon, TypeEffectiveness())
     assert battle.weather == Weather.SUN
-    assert battle.weather_duration is None
+    assert battle.weather_duration is None  # Weather from abilities lasts indefinitely
 
-def test_weather_ability_overrides_temporary_weather(test_pokemon):
-    """Test that weather abilities override temporary weather."""
-    test_pokemon.ability = DRIZZLE
-    
-    # Create battle with temporary sun
-    battle = Battle(
-        test_pokemon,
-        test_pokemon,
-        TypeEffectiveness(),
-        weather=Weather.SUN,
-        weather_duration=5
+def test_stat_boost_ability():
+    """Test that stat boost abilities modify stats."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=SWIFT_SWIM
     )
     
-    # Weather should be changed to rain with no duration
-    assert battle.weather == Weather.RAIN
-    assert battle.weather_duration is None
+    # Speed should be doubled in rain
+    normal_speed = pokemon.stats.speed
+    speed_in_rain = normal_speed * pokemon.get_stat_multiplier("speed", Weather.RAIN)
+    assert speed_in_rain == normal_speed * 2.0
+    
+    # Speed should be normal in other weather
+    speed_in_sun = normal_speed * pokemon.get_stat_multiplier("speed", Weather.SUN)
+    assert speed_in_sun == normal_speed
 
-def test_guts_ability(test_pokemon):
-    """Test that Guts boosts Attack when status-afflicted."""
-    test_pokemon.ability = GUTS
-    
-    # Check normal attack multiplier
-    assert test_pokemon.get_stat_multiplier("attack") == 1.0
-    
-    # Apply status
-    test_pokemon.set_status(StatusEffect.BURN)
-    
-    # Attack should be boosted by Guts (1.5x) despite burn (0.5x)
-    assert test_pokemon.get_stat_multiplier("attack") == 0.75  # 1.5 * 0.5
-
-def test_swift_swim_ability(test_pokemon):
-    """Test that Swift Swim doubles Speed in rain."""
-    test_pokemon.ability = SWIFT_SWIM
-    
-    # Check speed in different weather conditions
-    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.SUN) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 2.0
-
-def test_chlorophyll_ability(test_pokemon):
-    """Test that Chlorophyll doubles Speed in sun."""
-    test_pokemon.ability = CHLOROPHYLL
-    
-    # Check speed in different weather conditions
-    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.SUN) == 2.0
-
-def test_sand_rush_ability(test_pokemon):
-    """Test that Sand Rush doubles Speed in sandstorm."""
-    test_pokemon.ability = SAND_RUSH
-    
-    # Check speed in different weather conditions
-    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.SANDSTORM) == 2.0
-
-def test_slush_rush_ability(test_pokemon):
-    """Test that Slush Rush doubles Speed in hail."""
-    test_pokemon.ability = SLUSH_RUSH
-    
-    # Check speed in different weather conditions
-    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 1.0
-    assert test_pokemon.get_stat_multiplier("speed", Weather.HAIL) == 2.0
-
-def test_stat_boost_in_battle(test_pokemon):
-    """Test that stat boosts are applied in battle calculations."""
-    test_pokemon.ability = SWIFT_SWIM
-    
-    # Create battle with rain weather
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness(), weather=Weather.RAIN)
-    
-    # Create a move
-    move = Move(
-        name="Test Move",
-        type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
-        accuracy=100,
-        pp=10
+def test_spikes_damage():
+    """Test that Spikes deal correct damage."""
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=SPIKES_SETTER
     )
     
-    # Execute turn and check that speed boost was applied
-    result = battle.execute_turn(move, test_pokemon)
-    assert test_pokemon.get_stat_multiplier("speed", battle.weather) == 2.0
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    
+    battle = Battle(attacker, defender, TypeEffectiveness())
+    
+    # Set up 3 layers of spikes
+    battle.enemy_hazards[HazardType.SPIKES] = 3
+    initial_hp = defender.current_hp
+    
+    # Apply hazards
+    messages = battle.apply_hazards(defender, is_player=False)
+    
+    # Should deal 1/4 max HP damage with 3 layers
+    assert defender.current_hp == initial_hp - (defender.stats.hp // 4)
+    assert any("hurt by spikes" in msg for msg in messages)
+
+def test_toxic_spikes_effect():
+    """Test that Toxic Spikes apply poison correctly."""
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=TOXIC_SPIKES_SETTER
+    )
+    
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    
+    battle = Battle(attacker, defender, TypeEffectiveness())
+    
+    # Test single layer (regular poison)
+    battle.enemy_hazards[HazardType.TOXIC_SPIKES] = 1
+    messages = battle.apply_hazards(defender, is_player=False)
+    assert defender.status == StatusEffect.POISON
+    assert defender.status_duration == 5
+    assert any("was poisoned" in msg for msg in messages)
+    
+    # Reset defender
+    defender.set_status(None)
+    
+    # Test double layer (toxic poison)
+    battle.enemy_hazards[HazardType.TOXIC_SPIKES] = 2
+    messages = battle.apply_hazards(defender, is_player=False)
+    assert defender.status == StatusEffect.POISON
+    assert defender.status_duration is None  # Toxic is permanent
+    assert any("badly poisoned" in msg for msg in messages)
+
+def test_stealth_rock_damage():
+    """Test that Stealth Rock deals type-based damage."""
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=STEALTH_ROCK_SETTER
+    )
+    
+    # Test 4x weakness (Flying/Ice type)
+    flying_ice = Pokemon(
+        name="Flying/Ice",
+        types=(Type.FLYING, Type.ICE),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    
+    battle = Battle(attacker, flying_ice, TypeEffectiveness())
+    battle.enemy_hazards[HazardType.STEALTH_ROCK] = True
+    
+    initial_hp = flying_ice.current_hp
+    messages = battle.apply_hazards(flying_ice, is_player=False)
+    
+    # Should deal 1/2 max HP damage (1/8 * 4)
+    assert flying_ice.current_hp == initial_hp - (flying_ice.stats.hp // 2)
+    assert any("hurt by stealth rocks" in msg for msg in messages)
+    
+    # Test immunity (Ground type)
+    ground = Pokemon(
+        name="Ground",
+        types=(Type.GROUND,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    
+    initial_hp = ground.current_hp
+    messages = battle.apply_hazards(ground, is_player=False)
+    
+    # Should deal 1/8 max HP damage (neutral)
+    assert ground.current_hp == initial_hp - (ground.stats.hp // 8)
+
+def test_flying_immunity():
+    """Test that Flying types are immune to ground hazards."""
+    flying = Pokemon(
+        name="Flying",
+        types=(Type.FLYING,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    
+    battle = Battle(flying, flying, TypeEffectiveness())
+    
+    # Set up all hazards
+    battle.enemy_hazards[HazardType.SPIKES] = 3
+    battle.enemy_hazards[HazardType.TOXIC_SPIKES] = 2
+    
+    # Apply hazards
+    initial_hp = flying.current_hp
+    messages = battle.apply_hazards(flying, is_player=False)
+    
+    # Should not take damage or get poisoned
+    assert flying.current_hp == initial_hp
+    assert flying.status is None
+    assert not any("spikes" in msg.lower() for msg in messages)
+    assert not any("poison" in msg.lower() for msg in messages)

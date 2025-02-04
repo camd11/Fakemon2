@@ -151,19 +151,40 @@ Weather-boosted moves have been implemented:
    - Validation of move type interactions
    - Edge case testing for various weather conditions
 
+### Entry Hazard System
+
+Entry hazards have been implemented:
+
+1. **Core Components**
+   - Hazard tracking for each battle side
+   - Layer system for stackable hazards
+   - Type-based damage calculations
+   - Flying-type immunity handling
+
+2. **Hazard Types**
+   - Spikes: 1/8, 1/6, 1/4 max HP damage (1-3 layers)
+   - Toxic Spikes: Poison vs toxic poison (1-2 layers)
+   - Stealth Rock: Type-based damage (1/8 base)
+
+3. **Testing**
+   - Verification of hazard damage calculations
+   - Layer stacking validation
+   - Type immunity testing
+   - Edge case testing for various conditions
+
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Entry Hazards, Terrain)
+1. Additional ability types (Terrain, Aura)
 2. Additional item types (Type-enhancing items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add entry hazard abilities
-2. Add type-enhancing items
-3. Add status-based move effects
+1. Add type-enhancing items
+2. Add terrain abilities
+3. Add aura abilities
 
 ## Previous Updates
 

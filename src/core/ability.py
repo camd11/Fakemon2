@@ -1,9 +1,9 @@
 """Ability implementation for Pokemon."""
 
 from enum import Enum, auto
-from typing import Optional, Set
+from typing import Optional, Set, Tuple, Dict
 from .move import StatusEffect
-
+from .types import Type
 from .battle import Weather
 
 class AbilityType(Enum):
@@ -12,7 +12,14 @@ class AbilityType(Enum):
     WEATHER = auto()          # Weather-related effects
     STAT_BOOST = auto()       # Boosts stats in certain conditions
     BATTLE_ENTRY = auto()     # Triggers when entering battle
-    OTHER = auto()            # Other effects
+    HAZARD = auto()          # Sets entry hazards
+    OTHER = auto()           # Other effects
+
+class HazardType(Enum):
+    """Types of entry hazards that can be set."""
+    SPIKES = auto()         # Damages grounded Pokemon
+    TOXIC_SPIKES = auto()   # Poisons grounded Pokemon
+    STEALTH_ROCK = auto()   # Damages Pokemon based on type effectiveness
 
 class Ability:
     """An ability that can affect battle mechanics."""
@@ -25,7 +32,10 @@ class Ability:
         immune_statuses: Optional[Set[StatusEffect]] = None,
         weather_effect: Optional[Weather] = None,
         stat_boost: Optional[Tuple[str, float, Optional[Weather]]] = None,
-        boost_condition: Optional[str] = None
+        boost_condition: Optional[str] = None,
+        hazard_type: Optional[HazardType] = None,
+        hazard_damage: Optional[int] = None,  # Base damage or number of layers
+        hazard_status: Optional[StatusEffect] = None  # For toxic spikes
     ) -> None:
         """Initialize an ability.
         
@@ -34,14 +44,23 @@ class Ability:
             type_: Type of ability effect
             description: Description of what the ability does
             immune_statuses: Set of status effects this ability prevents
+            weather_effect: Weather condition to set
+            stat_boost: (stat_name, multiplier, required_weather)
+            boost_condition: Condition for stat boost (e.g., "status")
+            hazard_type: Type of entry hazard to set
+            hazard_damage: Base damage or number of layers for hazard
+            hazard_status: Status effect for hazard (e.g., poison)
         """
         self.name = name
         self.type = type_
         self.description = description
         self.immune_statuses = immune_statuses or set()
         self.weather_effect = weather_effect
-        self.stat_boost = stat_boost  # (stat_name, multiplier, required_weather)
-        self.boost_condition = boost_condition  # e.g., "status" for Guts
+        self.stat_boost = stat_boost
+        self.boost_condition = boost_condition
+        self.hazard_type = hazard_type
+        self.hazard_damage = hazard_damage
+        self.hazard_status = hazard_status
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -134,6 +153,7 @@ SNOW_WARNING = Ability(
     weather_effect=Weather.HAIL
 )
 
+# Define status immunity abilities
 LIMBER = Ability(
     name="Limber",
     type_=AbilityType.STATUS_IMMUNITY,
@@ -160,4 +180,30 @@ MAGMA_ARMOR = Ability(
     type_=AbilityType.STATUS_IMMUNITY,
     description="Prevents freezing.",
     immune_statuses={StatusEffect.FREEZE}
+)
+
+# Define entry hazard abilities
+SPIKES_SETTER = Ability(
+    name="Spikes Setter",
+    type_=AbilityType.HAZARD,
+    description="Sets spikes that damage grounded Pokemon.",
+    hazard_type=HazardType.SPIKES,
+    hazard_damage=3  # Up to 3 layers of spikes
+)
+
+TOXIC_SPIKES_SETTER = Ability(
+    name="Toxic Spikes Setter",
+    type_=AbilityType.HAZARD,
+    description="Sets toxic spikes that poison grounded Pokemon.",
+    hazard_type=HazardType.TOXIC_SPIKES,
+    hazard_damage=2,  # Up to 2 layers (poison vs toxic)
+    hazard_status=StatusEffect.POISON
+)
+
+STEALTH_ROCK_SETTER = Ability(
+    name="Stealth Rock Setter",
+    type_=AbilityType.HAZARD,
+    description="Sets floating rocks that damage Pokemon based on type effectiveness.",
+    hazard_type=HazardType.STEALTH_ROCK,
+    hazard_damage=8  # Base damage (1/8 max HP, modified by type effectiveness)
 )
