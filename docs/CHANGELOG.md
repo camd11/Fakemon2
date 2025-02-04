@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial project setup and documentation
   - Design document with architecture and implementation plans
   - Project structure and guidelines
-  - Comprehensive test suite with 52 tests
+  - Comprehensive test suite with 76 tests
+  - Development status tracking
 - Core battle system implementation (100% test coverage)
   - Pokemon class with stats, moves, and battle state
   - Move class with effects and PP system
@@ -26,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Basic catching mechanics
 - Terminal UI
   - Rich-based battle view
-  - Input handling and validation
+  - Input handling and validation (100% test coverage)
   - Game phase transitions
 - Initial game content
   - Classic starter Pokemon (Bulbasaur, Charmander, Squirtle)
@@ -34,12 +35,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Status moves and effects
 - Testing infrastructure
   - pytest configuration with coverage reporting
-  - Core domain tests
+  - Core domain tests with 98%+ coverage
   - Service layer integration tests
+  - UI component tests
   - Mock battle scenarios and game progression tests
 
 ### Changed
-- N/A
+- Improved test coverage across all core components
+- Enhanced battle system reliability
+- Refined terminal UI rendering
+- Optimized game state management
 
 ### Deprecated
 - N/A
@@ -48,7 +53,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - N/A
 
 ### Fixed
-- N/A
+- Battle system edge cases
+- Type effectiveness calculations
+- Move PP management
+- Message history handling
 
 ### Security
 - N/A
+
+## [0.1.0] - 2025-02-04
+
+### Added
+- Initial project structure
+- Basic game mechanics
+- Test infrastructure
