@@ -61,7 +61,9 @@ class Battle:
         player_pokemon: Pokemon,
         enemy_pokemon: Pokemon,
         type_chart: TypeEffectiveness,
-        is_trainer_battle: bool = True
+        is_trainer_battle: bool = True,
+        weather: Weather = Weather.CLEAR,
+        weather_duration: int = 0
     ) -> None:
         """Initialize a battle.
         
@@ -73,7 +75,8 @@ class Battle:
         self.player_pokemon = player_pokemon
         self.enemy_pokemon = enemy_pokemon
         self.type_chart = type_chart
-        self.weather = Weather.CLEAR
+        self.weather = weather
+        self.weather_duration = weather_duration
         self.turn_count = 0
         self.is_trainer_battle = is_trainer_battle
         
@@ -260,6 +263,73 @@ class Battle:
                 # Apply stat boost
                 target.modify_stat(stat_name.lower(), item.effect.value)
                 result.messages.append(f"{target.name}'s {stat_name} rose!")
+                
+        return result
+        
+    def apply_weather_effects(self) -> TurnResult:
+        """Apply end-of-turn weather effects.
+        
+        Returns:
+            TurnResult: The result of applying weather effects
+        """
+        result = TurnResult()
+        
+        if self.weather == Weather.CLEAR:
+            return result
+            
+        # Add weather message
+        if self.weather == Weather.RAIN:
+            result.messages.append("Rain continues to fall.")
+        elif self.weather == Weather.SUN:
+            result.messages.append("The sunlight is strong.")
+        elif self.weather == Weather.SANDSTORM:
+            result.messages.append("The sandstorm rages!")
+        elif self.weather == Weather.HAIL:
+            result.messages.append("Hail continues to fall!")
+            
+        # Apply damage for sandstorm/hail
+        if self.weather in (Weather.SANDSTORM, Weather.HAIL):
+            for pokemon in (self.player_pokemon, self.enemy_pokemon):
+                # Skip Rock/Ground/Steel types in sandstorm
+                if (self.weather == Weather.SANDSTORM and 
+                    any(t in (Type.ROCK, Type.GROUND, Type.STEEL) for t in pokemon.types)):
+                    continue
+                    
+                # Skip Ice types in hail
+                if self.weather == Weather.HAIL and Type.ICE in pokemon.types:
+                    continue
+                    
+                # Deal 1/16 max HP damage
+                damage = pokemon.stats.hp // 16
+                pokemon.current_hp = max(0, pokemon.current_hp - damage)
+                
+                # Add damage message
+                weather_name = "sandstorm" if self.weather == Weather.SANDSTORM else "hail"
+                result.messages.append(f"{pokemon.name} is buffeted by the {weather_name}!")
+                
+        return result
+        
+    def end_turn(self) -> TurnResult:
+        """End the current turn and apply any effects.
+        
+        Returns:
+            TurnResult: The result of ending the turn
+        """
+        result = TurnResult()
+        
+        # Apply weather effects
+        weather_result = self.apply_weather_effects()
+        result.messages.extend(weather_result.messages)
+        
+        # Decrease weather duration
+        if self.weather_duration > 0:
+            self.weather_duration -= 1
+            if self.weather_duration == 0:
+                weather_name = self.weather.name.lower()
+                if weather_name == "sun":
+                    weather_name = "harsh sunlight"
+                result.messages.append(f"The {weather_name} subsided.")
+                self.weather = Weather.CLEAR
                 
         return result
         
