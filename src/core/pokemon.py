@@ -64,16 +64,16 @@ class Pokemon:
         self.ability = ability
         self.current_form = current_form
         self.disguise_pokemon = disguise_pokemon
-        self.disguise_hp = None
-        self.transformed_stats = None
-        self.transformed_types = None
-        self.transformed_moves = None
+        self.disguise_hp = None  # Extra HP for disguise abilities
+        self.disguise_type = None  # Type of disguise protection
+        self.transformed_stats = None  # Stats when transformed
+        self.transformed_types = None  # Types when transformed
+        self.transformed_moves = None  # Moves when transformed
         
-        # Set up disguise HP if needed
-        if (self.ability and self.ability.type == AbilityType.ILLUSION and 
-            self.ability.illusion_effect == IllusionType.DISGUISE and 
-            self.ability.disguise_hp):
+        # Set up disguise protection if needed
+        if self.ability and self.ability.type == AbilityType.DISGUISE:
             self.disguise_hp = self.ability.disguise_hp
+            self.disguise_type = self.ability.disguise_type
         
         # Calculate actual stats based on level
         self.stats = self._calculate_stats()
@@ -399,7 +399,7 @@ class Pokemon:
         self.current_hp = min(self.stats.hp, self.current_hp + amount)
         return self.current_hp - old_hp
         
-    def take_damage(self, amount: int) -> int:
+    def take_damage(self, amount: int, **kwargs) -> int:
         """Deal damage to the Pokemon.
         
         Args:
@@ -411,12 +411,26 @@ class Pokemon:
         old_hp = self.current_hp
         self.current_hp = max(0, self.current_hp - amount)
         
-        # Handle disguise HP
-        if self.disguise_hp is not None:
-            if amount > 0:
-                self.disguise_hp = None  # Break disguise on first hit
-                self.current_hp = old_hp  # Prevent actual damage
-                return 0
+        # Handle disguise protection
+        if self.disguise_type is not None:
+            if amount > 0:  # Only check for damage
+                if self.disguise_type == DisguiseType.ALL:
+                    # Protect from all damage once
+                    if self.disguise_hp is not None:
+                        self.disguise_hp = None  # Break disguise
+                        self.current_hp = old_hp  # Prevent damage
+                        return 0
+                elif self.disguise_type == DisguiseType.PHYSICAL:
+                    # Protect from physical moves once
+                    if self.disguise_hp is not None and kwargs.get("move_category") == MoveCategory.PHYSICAL:
+                        self.disguise_hp = None  # Break disguise
+                        self.current_hp = old_hp  # Prevent damage
+                        return 0
+                elif self.disguise_type == DisguiseType.WEAKNESS:
+                    # Only take damage from super effective moves
+                    if kwargs.get("effectiveness", 1.0) <= 1.0:
+                        self.current_hp = old_hp  # Prevent damage
+                        return 0
                 
         # Check for form change based on HP
         if self.current_hp > 0:

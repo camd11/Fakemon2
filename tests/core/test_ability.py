@@ -484,21 +484,14 @@ def test_power_construct():
     # HP percentage should be preserved
     assert pokemon.current_hp == pokemon.stats.hp // 2
 
-def test_illusion_disguise():
-    """Test that Illusion's disguise HP works correctly."""
-    # Create Pokemon with Illusion ability and disguise HP
+def test_disguise_all():
+    """Test that Disguise protects from all damage once."""
     pokemon = Pokemon(
         name="Test Pokemon",
         types=(Type.GHOST,),
         base_stats=Stats(100, 100, 100, 100, 100, 100),
         level=50,
-        ability=Ability(
-            name="Illusion",
-            type_=AbilityType.ILLUSION,
-            description="Protects from first hit.",
-            illusion_effect=IllusionType.DISGUISE,
-            disguise_hp=1
-        )
+        ability=DISGUISE
     )
     
     # First hit should be nullified
@@ -510,6 +503,59 @@ def test_illusion_disguise():
     
     # Second hit should deal damage normally
     damage_dealt = pokemon.take_damage(50)
+    assert damage_dealt == 50  # Full damage dealt
+    assert pokemon.current_hp == initial_hp - 50  # HP reduced
+
+def test_ice_face():
+    """Test that Ice Face protects from physical damage once."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.ICE,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=ICE_FACE
+    )
+    
+    # Physical hit should be nullified
+    initial_hp = pokemon.current_hp
+    damage_dealt = pokemon.take_damage(50, move_category=MoveCategory.PHYSICAL)
+    assert damage_dealt == 0  # No damage dealt
+    assert pokemon.current_hp == initial_hp  # HP unchanged
+    assert pokemon.disguise_hp is None  # Disguise broken
+    
+    # Special hit should deal damage normally
+    damage_dealt = pokemon.take_damage(50, move_category=MoveCategory.SPECIAL)
+    assert damage_dealt == 50  # Full damage dealt
+    assert pokemon.current_hp == initial_hp - 50  # HP reduced
+    
+    # Second physical hit should deal damage normally
+    damage_dealt = pokemon.take_damage(50, move_category=MoveCategory.PHYSICAL)
+    assert damage_dealt == 50  # Full damage dealt
+    assert pokemon.current_hp == initial_hp - 100  # HP reduced
+
+def test_wonder_guard():
+    """Test that Wonder Guard only takes super effective damage."""
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.BUG,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=WONDER_GUARD
+    )
+    
+    # Normal effectiveness should be nullified
+    initial_hp = pokemon.current_hp
+    damage_dealt = pokemon.take_damage(50, effectiveness=1.0)
+    assert damage_dealt == 0  # No damage dealt
+    assert pokemon.current_hp == initial_hp  # HP unchanged
+    
+    # Not very effective should be nullified
+    damage_dealt = pokemon.take_damage(50, effectiveness=0.5)
+    assert damage_dealt == 0  # No damage dealt
+    assert pokemon.current_hp == initial_hp  # HP unchanged
+    
+    # Super effective should deal damage normally
+    damage_dealt = pokemon.take_damage(50, effectiveness=2.0)
     assert damage_dealt == 50  # Full damage dealt
     assert pokemon.current_hp == initial_hp - 50  # HP reduced
 

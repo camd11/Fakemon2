@@ -17,7 +17,14 @@ class AbilityType(Enum):
     AURA = auto()           # Provides aura effects
     FORM_CHANGE = auto()    # Changes Pokemon form
     ILLUSION = auto()       # Changes Pokemon appearance
+    DISGUISE = auto()       # Protects from damage
     OTHER = auto()           # Other effects
+
+class DisguiseType(Enum):
+    """Types of disguise effects."""
+    ALL = auto()      # Protects from all damage
+    PHYSICAL = auto() # Protects from physical moves
+    WEAKNESS = auto() # Only takes super effective damage
 
 class IllusionType(Enum):
     """Types of illusion effects."""
@@ -71,6 +78,7 @@ class Ability:
         form_stats: Optional[Dict[str, Stats]] = None,  # Stats for each form
         form_types: Optional[Dict[str, Tuple[Type, ...]]] = None,  # Types for each form
         illusion_effect: Optional[IllusionType] = None,
+        disguise_type: Optional[DisguiseType] = None,  # Type of disguise protection
         disguise_hp: Optional[int] = None  # Extra HP for disguise
     ) -> None:
         """Initialize an ability.
@@ -86,6 +94,14 @@ class Ability:
             hazard_type: Type of entry hazard to set
             hazard_damage: Base damage or number of layers for hazard
             hazard_status: Status effect for hazard (e.g., poison)
+            terrain_effect: Terrain effect to set
+            aura_effect: Aura effect to apply
+            form_change: Form change type
+            form_stats: Stats for each form
+            form_types: Types for each form
+            illusion_effect: Illusion effect type
+            disguise_type: Type of disguise protection
+            disguise_hp: Extra HP for disguise
         """
         self.name = name
         self.type = type_
@@ -103,6 +119,7 @@ class Ability:
         self.form_stats = form_stats or {}
         self.form_types = form_types or {}
         self.illusion_effect = illusion_effect
+        self.disguise_type = disguise_type
         self.disguise_hp = disguise_hp
         
     def prevents_status(self, status: StatusEffect) -> bool:
@@ -128,6 +145,30 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define disguise abilities
+DISGUISE = Ability(
+    name="Disguise",
+    type_=AbilityType.DISGUISE,
+    description="Takes no damage from first hit.",
+    disguise_type=DisguiseType.ALL,
+    disguise_hp=1
+)
+
+ICE_FACE = Ability(
+    name="Ice Face",
+    type_=AbilityType.DISGUISE,
+    description="Takes no damage from first physical hit.",
+    disguise_type=DisguiseType.PHYSICAL,
+    disguise_hp=1
+)
+
+WONDER_GUARD = Ability(
+    name="Wonder Guard",
+    type_=AbilityType.DISGUISE,
+    description="Only takes damage from super effective moves.",
+    disguise_type=DisguiseType.WEAKNESS
 )
 
 # Define illusion abilities

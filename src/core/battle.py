@@ -280,7 +280,11 @@ class Battle:
             
             # Calculate damage using the correct attacker
             damage = self._calculate_damage(move, attacker, target, result.critical_hit)
-            result.damage_dealt = target.take_damage(damage)
+            result.damage_dealt = target.take_damage(
+                damage,
+                move_category=move.category,
+                effectiveness=result.effectiveness
+            )
             
             # Add damage message
             if result.critical_hit:

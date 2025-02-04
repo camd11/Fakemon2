@@ -1,5 +1,14 @@
 # Changelog
 
+## [2024-02-04] Disguise Abilities
+- Added disguise system:
+  - Disguise: Takes no damage from first hit
+  - Ice Face: Takes no damage from first physical hit
+  - Wonder Guard: Only takes super effective damage
+- Enhanced Pokemon class to handle disguise protection
+- Enhanced Battle class to handle disguise triggers
+- Added comprehensive tests for disguise functionality
+
 ## [2024-02-04] Illusion Abilities
 - Added illusion system:
   - Illusion: Makes Pokemon appear as another Pokemon

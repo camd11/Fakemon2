@@ -309,18 +309,45 @@ Illusion abilities have been implemented:
    - Type mimicry testing
    - Illusion trigger testing
 
+### Disguise System
+
+Disguise abilities have been implemented:
+
+1. **Core Components**
+   - Disguise HP tracking
+   - Move category checking
+   - Effectiveness checking
+   - Damage nullification
+
+2. **Disguise Types**
+   - All: Protects from first hit
+   - Physical: Protects from first physical hit
+   - Weakness: Only takes super effective damage
+
+3. **Disguise Features**
+   - One-time protection
+   - Category-specific protection
+   - Effectiveness-based protection
+   - Protection messages
+
+4. **Testing**
+   - Disguise HP verification
+   - Physical move protection
+   - Super effective protection
+   - Protection trigger testing
+
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Disguise, Protean)
+1. Additional ability types (Protean, Color Change)
 2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add disguise abilities
-2. Add protean abilities
+1. Add protean abilities
+2. Add color change abilities
 3. Add evolution items
 
 ## Previous Updates
