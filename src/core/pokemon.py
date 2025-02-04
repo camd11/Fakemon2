@@ -59,6 +59,7 @@ class Pokemon:
         
         # Battle state
         self.status: Optional[StatusEffect] = None
+        self.status_duration: Optional[int] = None
         self.stat_stages = {
             "attack": 0,
             "defense": 0,
@@ -88,7 +89,7 @@ class Pokemon:
         return Stats(hp, attack, defense, special_attack, special_defense, speed)
         
     def get_stat_multiplier(self, stat: str) -> float:
-        """Get the current multiplier for a stat based on its stage.
+        """Get the current multiplier for a stat based on its stage and status.
         
         Args:
             stat: The stat to get the multiplier for
@@ -96,10 +97,20 @@ class Pokemon:
         Returns:
             float: The multiplier to apply to the stat
         """
+        multiplier = 1.0
+        
+        # Stage multiplier
         stage = self.stat_stages[stat]
         if stat in ("accuracy", "evasion"):
-            return (3 + max(-3, min(3, stage))) / 3
-        return max(2, 2 + stage) / max(2, 2 - stage)
+            multiplier *= (3 + max(-3, min(3, stage))) / 3
+        else:
+            multiplier *= max(2, 2 + stage) / max(2, 2 - stage)
+            
+        # Status effects
+        if self.status == StatusEffect.PARALYSIS and stat == "speed":
+            multiplier *= 0.25
+            
+        return multiplier
         
     def modify_stat(self, stat: str, stages: int) -> bool:
         """Modify a stat stage.
@@ -144,6 +155,79 @@ class Pokemon:
         old_hp = self.current_hp
         self.current_hp = max(0, self.current_hp - amount)
         return old_hp - self.current_hp
+        
+    def set_status(self, status: Optional[StatusEffect], duration: Optional[int] = None) -> bool:
+        """Set a status effect on the Pokemon.
+        
+        Args:
+            status: The status effect to apply, or None to clear
+            duration: How many turns the status should last, or None for indefinite
+            
+        Returns:
+            bool: True if the status was applied, False if it couldn't be
+        """
+        # Store old status for message
+        old_status = self.status
+        
+        # Can't apply a new status if already has one
+        if old_status is not None and status is not None:
+            return False
+            
+        # Clear old status
+        self.status = None
+        self.status_duration = None
+        
+        # Apply new status if any
+        if status is not None:
+            self.status = status
+            self.status_duration = duration
+        
+        # Reset stat stages if status was cleared
+        if status is None:
+            self.stat_stages = {
+                "attack": 0,
+                "defense": 0,
+                "special_attack": 0,
+                "special_defense": 0,
+                "speed": 0,
+                "accuracy": 0,
+                "evasion": 0
+            }
+            
+        return True
+        
+    def update_status(self) -> Optional[str]:
+        """Update status duration and return any status clear message.
+        
+        Returns:
+            Optional[str]: Message if status was cleared, None otherwise
+        """
+        # No status to update
+        if self.status is None:
+            return None
+            
+        # No duration set
+        if self.status_duration is None:
+            return None
+            
+        # Check if already at 0
+        if self.status_duration <= 0:
+            old_status = self.status
+            # Clear status without resetting stat stages
+            self.status = None
+            self.status_duration = None
+            return f"{self.name}'s {old_status.name.lower()} faded!"
+            
+        # Decrease duration and check if it reached 0
+        self.status_duration -= 1
+        if self.status_duration <= 0:
+            old_status = self.status
+            # Clear status without resetting stat stages
+            self.status = None
+            self.status_duration = None
+            return f"{self.name}'s {old_status.name.lower()} faded!"
+            
+        return None
         
     @property
     def is_fainted(self) -> bool:

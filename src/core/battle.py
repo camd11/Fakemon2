@@ -80,6 +80,21 @@ class Battle:
         self.turn_count = 0
         self.is_trainer_battle = is_trainer_battle
         
+    def can_move(self, pokemon: Pokemon) -> Tuple[bool, Optional[str]]:
+        """Check if a Pokemon can move this turn.
+        
+        Args:
+            pokemon: The Pokemon trying to move
+            
+        Returns:
+            Tuple[bool, Optional[str]]: Whether the Pokemon can move and any message
+        """
+        if pokemon.status == StatusEffect.PARALYSIS:
+            # 25% chance to be fully paralyzed
+            if random.random() < 0.25:
+                return False, f"{pokemon.name} is fully paralyzed!"
+        return True, None
+        
     def execute_turn(self, move: Move, target: Pokemon) -> TurnResult:
         """Execute a turn using the selected move.
         
@@ -91,6 +106,12 @@ class Battle:
             TurnResult: The result of the turn
         """
         result = TurnResult()
+        
+        # Check if Pokemon can move
+        can_move, message = self.can_move(self.player_pokemon)
+        if not can_move:
+            result.messages.append(message)
+            return result
         
         # Check if move can be used
         if not move.use():
@@ -129,9 +150,9 @@ class Battle:
         for effect in move.effects:
             # Status effects
             if effect.status and random.random() * 100 <= effect.status_chance:
-                target.status = effect.status
-                result.status_applied = effect.status
-                result.messages.append(f"{target.name} was {effect.status.name.lower()}ed!")
+                if target.set_status(effect.status, duration=5):  # Status effects last 5 turns
+                    result.status_applied = effect.status
+                    result.messages.append(f"{target.name} was {effect.status.name.lower()}ed!")
                 
             # Stat changes
             for stat, stages in effect.stat_changes.items():
@@ -317,6 +338,21 @@ class Battle:
         """
         result = TurnResult()
         
+        # Apply status effects
+        for pokemon in (self.player_pokemon, self.enemy_pokemon):
+            # Store current status
+            current_status = pokemon.status
+            
+            # Check status duration first
+            status_message = pokemon.update_status()
+            if status_message:
+                result.messages.append(status_message)
+            # Only apply poison damage if status wasn't cleared
+            elif current_status == StatusEffect.POISON:
+                damage = pokemon.stats.hp // 8
+                pokemon.take_damage(damage)
+                result.messages.append(f"{pokemon.name} is hurt by poison!")
+                
         # Apply weather effects
         weather_result = self.apply_weather_effects()
         result.messages.extend(weather_result.messages)
