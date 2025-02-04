@@ -172,19 +172,52 @@ Entry hazards have been implemented:
    - Type immunity testing
    - Edge case testing for various conditions
 
+### Type Enhancement System
+
+Type-enhancing items have been implemented:
+
+1. **Core Components**
+   - Type-specific damage boost calculation
+   - Integration with Battle class damage system
+   - Passive trigger handling
+
+2. **Type Items**
+   - Fire: Charcoal
+   - Water: Mystic Water
+   - Grass: Miracle Seed
+   - Electric: Magnet
+   - Ice: Never-Melt Ice
+   - Fighting: Black Belt
+   - Poison: Poison Barb
+   - Ground: Soft Sand
+   - Flying: Sharp Beak
+   - Psychic: Twisted Spoon
+   - Bug: Silver Powder
+   - Rock: Hard Stone
+   - Ghost: Spell Tag
+   - Dragon: Dragon Fang
+   - Steel: Metal Coat
+   - Normal: Silk Scarf
+
+3. **Testing**
+   - Verification of type boost calculations
+   - Multiplier stacking validation
+   - Wrong type testing
+   - Comprehensive testing for all types
+
 ### Future Improvements
 
 Potential areas for expansion:
 1. Additional ability types (Terrain, Aura)
-2. Additional item types (Type-enhancing items)
+2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add type-enhancing items
-2. Add terrain abilities
-3. Add aura abilities
+1. Add terrain abilities
+2. Add aura abilities
+3. Add evolution items
 
 ## Previous Updates
 

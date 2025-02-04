@@ -15,6 +15,7 @@ class ItemType(Enum):
     BOOST = auto()       # Temporarily boosts stats
     BERRY = auto()       # Consumable held items
     STAT_BOOST = auto()  # Permanent stat boost items
+    TYPE_BOOST = auto()  # Type-enhancing items
 
 class HeldItemTrigger(Enum):
     """When a held item's effect activates."""
@@ -323,4 +324,197 @@ FOCUS_SASH = Item(
     single_use=True,
     trigger=HeldItemTrigger.LOW_HP,
     trigger_threshold=0  # 0% HP (would be KO)
+)
+
+# Define type-enhancing items
+CHARCOAL = Item(
+    name="Charcoal",
+    description="Powers up Fire-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+MYSTIC_WATER = Item(
+    name="Mystic Water",
+    description="Powers up Water-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+MIRACLE_SEED = Item(
+    name="Miracle Seed",
+    description="Powers up Grass-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+MAGNET = Item(
+    name="Magnet",
+    description="Powers up Electric-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+NEVER_MELT_ICE = Item(
+    name="Never-Melt Ice",
+    description="Powers up Ice-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+BLACK_BELT = Item(
+    name="Black Belt",
+    description="Powers up Fighting-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+POISON_BARB = Item(
+    name="Poison Barb",
+    description="Powers up Poison-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+SOFT_SAND = Item(
+    name="Soft Sand",
+    description="Powers up Ground-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+SHARP_BEAK = Item(
+    name="Sharp Beak",
+    description="Powers up Flying-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+TWISTED_SPOON = Item(
+    name="Twisted Spoon",
+    description="Powers up Psychic-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+SILVER_POWDER = Item(
+    name="Silver Powder",
+    description="Powers up Bug-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+HARD_STONE = Item(
+    name="Hard Stone",
+    description="Powers up Rock-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+SPELL_TAG = Item(
+    name="Spell Tag",
+    description="Powers up Ghost-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+DRAGON_FANG = Item(
+    name="Dragon Fang",
+    description="Powers up Dragon-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+METAL_COAT = Item(
+    name="Metal Coat",
+    description="Powers up Steel-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
+)
+
+SILK_SCARF = Item(
+    name="Silk Scarf",
+    description="Powers up Normal-type moves.",
+    effect=ItemEffect(
+        type=ItemType.TYPE_BOOST,
+        value=20  # 20% boost
+    ),
+    price=1000,
+    single_use=False,
+    trigger=HeldItemTrigger.PASSIVE
 )

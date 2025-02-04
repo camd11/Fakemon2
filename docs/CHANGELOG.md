@@ -1,5 +1,14 @@
 # Changelog
 
+## [2024-02-04] Type-Enhancing Items
+- Added type-enhancing items:
+  - Charcoal: Powers up Fire moves
+  - Mystic Water: Powers up Water moves
+  - Miracle Seed: Powers up Grass moves
+  - And many more for each type
+- Enhanced Battle class to handle type boosts
+- Added comprehensive tests for type boost functionality
+
 ## [2024-02-04] Entry Hazard Abilities
 - Added entry hazard system:
   - Spikes: Damages grounded Pokemon (up to 3 layers)

@@ -339,6 +339,11 @@ class Battle:
         
         # Apply weather boost
         damage *= move.get_weather_multiplier(self.weather)
+        
+        # Apply type-enhancing item boost
+        if attacker.held_item and attacker.held_item.effect.type == ItemType.TYPE_BOOST:
+            if attacker.held_item.trigger == HeldItemTrigger.PASSIVE:
+                damage *= (1 + attacker.held_item.effect.value / 100)  # Convert percentage to multiplier
                 
         return int(damage)
         
