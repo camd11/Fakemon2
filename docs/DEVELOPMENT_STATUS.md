@@ -30,6 +30,12 @@ The status effect system has been fully implemented with the following features:
    - Reduces speed to 1/4 of normal value
    - Persists until cured or duration expires
 
+3. **Sleep**
+   - Prevents moves completely with message "[Pokemon] is fast asleep!"
+   - Lasts 1-3 turns randomly
+   - No stat modifications
+   - Messages: "[Pokemon] fell asleep!", "[Pokemon] is fast asleep!"
+
 ### Status Effect Duration
 
 - Status effects can be applied with an optional duration
@@ -46,11 +52,13 @@ All status effect functionality is verified by tests in `tests/core/test_battle_
 - `test_status_duration`: Tests duration tracking and clearing
 - `test_status_messages`: Verifies message generation
 - `test_multiple_status_effects`: Ensures only one status at a time
+- `test_sleep_prevents_moves`: Verifies sleep prevents all moves
+- `test_sleep_duration`: Validates random sleep duration (1-3 turns)
 
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional status effects (Sleep, Freeze, Burn)
+1. Additional status effects (Freeze, Burn)
 2. Status immunity based on Pokemon type
 3. Status effect resistance abilities
 4. Items to cure specific status effects

@@ -160,3 +160,60 @@ def test_multiple_status_effects(battle):
     battle.execute_turn(battle.enemy_pokemon.moves[0], battle.enemy_pokemon)
     # Should still be poisoned
     assert battle.enemy_pokemon.status == StatusEffect.POISON
+
+def test_sleep_prevents_moves(battle):
+    """Test that sleep prevents moves completely."""
+    # Create a sleep move
+    sleep_move = Move(
+        name="Sleep Powder",
+        type_=Type.NORMAL,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=35,
+        effects=[Effect(status=StatusEffect.SLEEP, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(sleep_move)
+    
+    # Apply sleep
+    battle.execute_turn(sleep_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status == StatusEffect.SLEEP
+    
+    # Try to move while sleeping
+    result = battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
+    assert "Enemy Pokemon is fast asleep!" in result.messages
+    
+def test_sleep_duration(battle):
+    """Test that sleep lasts 1-3 turns."""
+    # Create a sleep move
+    sleep_move = Move(
+        name="Sleep Powder",
+        type_=Type.NORMAL,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=35,
+        effects=[Effect(status=StatusEffect.SLEEP, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(sleep_move)
+    
+    # Test multiple times to verify random duration
+    durations = set()
+    for _ in range(20):  # Run multiple trials
+        # Apply sleep
+        battle.execute_turn(sleep_move, battle.enemy_pokemon)
+        
+        # Count turns until wake up
+        turns = 0
+        while battle.enemy_pokemon.status == StatusEffect.SLEEP:
+            turns += 1
+            battle.end_turn()
+            
+        durations.add(turns)
+        
+        # Reset for next trial
+        battle.enemy_pokemon.set_status(None)
+    
+    # Sleep should last 1-3 turns
+    assert durations.issubset({1, 2, 3})
+    assert len(durations) > 1  # Should get different durations

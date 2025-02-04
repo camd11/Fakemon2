@@ -93,6 +93,9 @@ class Battle:
             # 25% chance to be fully paralyzed
             if random.random() < 0.25:
                 return False, f"{pokemon.name} is fully paralyzed!"
+        elif pokemon.status == StatusEffect.SLEEP:
+            # Cannot move while sleeping
+            return False, f"{pokemon.name} is fast asleep!"
         return True, None
         
     def execute_turn(self, move: Move, target: Pokemon) -> TurnResult:
@@ -107,8 +110,13 @@ class Battle:
         """
         result = TurnResult()
         
-        # Check if Pokemon can move
-        can_move, message = self.can_move(self.player_pokemon)
+        # Set random sleep duration when applying sleep
+        if any(effect.status == StatusEffect.SLEEP for effect in move.effects):
+            move.effects[0].status_duration = random.randint(1, 3)
+        
+        # Check if Pokemon can move (use the Pokemon making the move)
+        attacker = self.player_pokemon if target == self.enemy_pokemon else self.enemy_pokemon
+        can_move, message = self.can_move(attacker)
         if not can_move:
             result.messages.append(message)
             return result
@@ -118,8 +126,8 @@ class Battle:
             result.messages.append(f"{move.name} has no PP left!")
             return result
             
-        # Accuracy check
-        accuracy = move.accuracy * self.player_pokemon.get_stat_multiplier("accuracy")
+        # Accuracy check using the attacking Pokemon's accuracy and target's evasion
+        accuracy = move.accuracy * attacker.get_stat_multiplier("accuracy")
         evasion = target.get_stat_multiplier("evasion")
         if random.random() * 100 > accuracy / evasion:
             result.move_missed = True
@@ -134,8 +142,8 @@ class Battle:
             # Get type effectiveness
             result.effectiveness = self.type_chart.get_multiplier(move.type, target.types)
             
-            # Calculate damage
-            damage = self._calculate_damage(move, self.player_pokemon, target, result.critical_hit)
+            # Calculate damage using the correct attacker
+            damage = self._calculate_damage(move, attacker, target, result.critical_hit)
             result.damage_dealt = target.take_damage(damage)
             
             # Add damage message
@@ -150,9 +158,18 @@ class Battle:
         for effect in move.effects:
             # Status effects
             if effect.status and random.random() * 100 <= effect.status_chance:
-                if target.set_status(effect.status, duration=5):  # Status effects last 5 turns
+                # Set duration based on status type
+                duration = 5  # Default duration
+                if effect.status == StatusEffect.SLEEP:
+                    duration = random.randint(1, 3)
+                
+                if target.set_status(effect.status, duration=duration):
                     result.status_applied = effect.status
-                    result.messages.append(f"{target.name} was {effect.status.name.lower()}ed!")
+                    # Custom message for sleep
+                    if effect.status == StatusEffect.SLEEP:
+                        result.messages.append(f"{target.name} fell asleep!")
+                    else:
+                        result.messages.append(f"{target.name} was {effect.status.name.lower()}ed!")
                 
             # Stat changes
             for stat, stages in effect.stat_changes.items():

@@ -3,9 +3,10 @@
 ## [Unreleased]
 
 ### Added
-- Status effect system with support for Poison and Paralysis
+- Status effect system with support for Poison, Paralysis, and Sleep
   - Poison deals 1/8 max HP damage per turn
   - Paralysis has 25% chance to skip turn and reduces speed to 1/4
+  - Sleep prevents moves completely and lasts 1-3 turns randomly
   - Status duration tracking with automatic clearing
   - Status messages for application, damage, and clearing
   - Prevention of multiple status effects
