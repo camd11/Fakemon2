@@ -23,7 +23,9 @@ class Ability:
         type_: AbilityType,
         description: str,
         immune_statuses: Optional[Set[StatusEffect]] = None,
-        weather_effect: Optional[Weather] = None
+        weather_effect: Optional[Weather] = None,
+        stat_boost: Optional[Tuple[str, float, Optional[Weather]]] = None,
+        boost_condition: Optional[str] = None
     ) -> None:
         """Initialize an ability.
         
@@ -38,6 +40,8 @@ class Ability:
         self.description = description
         self.immune_statuses = immune_statuses or set()
         self.weather_effect = weather_effect
+        self.stat_boost = stat_boost  # (stat_name, multiplier, required_weather)
+        self.boost_condition = boost_condition  # e.g., "status" for Guts
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -62,6 +66,43 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define stat-boosting abilities
+GUTS = Ability(
+    name="Guts",
+    type_=AbilityType.STAT_BOOST,
+    description="Boosts Attack when status-afflicted.",
+    stat_boost=("attack", 1.5, None),
+    boost_condition="status"
+)
+
+SWIFT_SWIM = Ability(
+    name="Swift Swim",
+    type_=AbilityType.STAT_BOOST,
+    description="Doubles Speed in rain.",
+    stat_boost=("speed", 2.0, Weather.RAIN)
+)
+
+CHLOROPHYLL = Ability(
+    name="Chlorophyll",
+    type_=AbilityType.STAT_BOOST,
+    description="Doubles Speed in sun.",
+    stat_boost=("speed", 2.0, Weather.SUN)
+)
+
+SAND_RUSH = Ability(
+    name="Sand Rush",
+    type_=AbilityType.STAT_BOOST,
+    description="Doubles Speed in sandstorm.",
+    stat_boost=("speed", 2.0, Weather.SANDSTORM)
+)
+
+SLUSH_RUSH = Ability(
+    name="Slush Rush",
+    type_=AbilityType.STAT_BOOST,
+    description="Doubles Speed in hail.",
+    stat_boost=("speed", 2.0, Weather.HAIL)
 )
 
 # Define weather-related abilities

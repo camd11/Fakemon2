@@ -228,13 +228,13 @@ class Battle:
         Returns:
             int: The amount of damage to deal
         """
-        # Get attack and defense stats
+        # Get attack and defense stats with current weather
         if move.category == MoveCategory.PHYSICAL:
-            attack = attacker.stats.attack * attacker.get_stat_multiplier("attack")
-            defense = defender.stats.defense * defender.get_stat_multiplier("defense")
+            attack = attacker.stats.attack * attacker.get_stat_multiplier("attack", self.weather)
+            defense = defender.stats.defense * defender.get_stat_multiplier("defense", self.weather)
         else:  # Special
-            attack = attacker.stats.special_attack * attacker.get_stat_multiplier("special_attack")
-            defense = defender.stats.special_defense * defender.get_stat_multiplier("special_defense")
+            attack = attacker.stats.special_attack * attacker.get_stat_multiplier("special_attack", self.weather)
+            defense = defender.stats.special_defense * defender.get_stat_multiplier("special_defense", self.weather)
             
         # Critical hits ignore stat reductions and multiply by 1.5
         if critical:
@@ -257,6 +257,9 @@ class Battle:
         
         # Apply random factor (85-100%)
         damage *= random.randint(85, 100) / 100
+        
+        # Apply speed-based ability boosts for turn order
+        attacker_speed = attacker.stats.speed * attacker.get_stat_multiplier("speed", self.weather)
         
         # Weather effects
         if self.weather == Weather.RAIN:

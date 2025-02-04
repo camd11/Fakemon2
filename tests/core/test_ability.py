@@ -225,3 +225,73 @@ def test_weather_ability_overrides_temporary_weather(test_pokemon):
     # Weather should be changed to rain with no duration
     assert battle.weather == Weather.RAIN
     assert battle.weather_duration is None
+
+def test_guts_ability(test_pokemon):
+    """Test that Guts boosts Attack when status-afflicted."""
+    test_pokemon.ability = GUTS
+    
+    # Check normal attack multiplier
+    assert test_pokemon.get_stat_multiplier("attack") == 1.0
+    
+    # Apply status
+    test_pokemon.set_status(StatusEffect.BURN)
+    
+    # Attack should be boosted by Guts (1.5x) despite burn (0.5x)
+    assert test_pokemon.get_stat_multiplier("attack") == 0.75  # 1.5 * 0.5
+
+def test_swift_swim_ability(test_pokemon):
+    """Test that Swift Swim doubles Speed in rain."""
+    test_pokemon.ability = SWIFT_SWIM
+    
+    # Check speed in different weather conditions
+    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.SUN) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 2.0
+
+def test_chlorophyll_ability(test_pokemon):
+    """Test that Chlorophyll doubles Speed in sun."""
+    test_pokemon.ability = CHLOROPHYLL
+    
+    # Check speed in different weather conditions
+    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.SUN) == 2.0
+
+def test_sand_rush_ability(test_pokemon):
+    """Test that Sand Rush doubles Speed in sandstorm."""
+    test_pokemon.ability = SAND_RUSH
+    
+    # Check speed in different weather conditions
+    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.SANDSTORM) == 2.0
+
+def test_slush_rush_ability(test_pokemon):
+    """Test that Slush Rush doubles Speed in hail."""
+    test_pokemon.ability = SLUSH_RUSH
+    
+    # Check speed in different weather conditions
+    assert test_pokemon.get_stat_multiplier("speed", Weather.CLEAR) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.RAIN) == 1.0
+    assert test_pokemon.get_stat_multiplier("speed", Weather.HAIL) == 2.0
+
+def test_stat_boost_in_battle(test_pokemon):
+    """Test that stat boosts are applied in battle calculations."""
+    test_pokemon.ability = SWIFT_SWIM
+    
+    # Create battle with rain weather
+    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness(), weather=Weather.RAIN)
+    
+    # Create a move
+    move = Move(
+        name="Test Move",
+        type_=Type.NORMAL,
+        category=MoveCategory.PHYSICAL,
+        power=50,
+        accuracy=100,
+        pp=10
+    )
+    
+    # Execute turn and check that speed boost was applied
+    result = battle.execute_turn(move, test_pokemon)
+    assert test_pokemon.get_stat_multiplier("speed", battle.weather) == 2.0

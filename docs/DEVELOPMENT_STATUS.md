@@ -84,10 +84,18 @@ The ability system has been expanded with both status and weather effects:
    - Sand Stream: Summons sandstorm
    - Snow Warning: Summons hail
 
-4. **Testing**
+4. **Stat-Boosting Abilities**
+   - Guts: Boosts Attack when status-afflicted
+   - Swift Swim: Doubles Speed in rain
+   - Chlorophyll: Doubles Speed in sun
+   - Sand Rush: Doubles Speed in sandstorm
+   - Slush Rush: Doubles Speed in hail
+
+5. **Testing**
    - Comprehensive tests for each ability type
    - Verification of ability-type immunity interactions
    - Weather ability interaction testing
+   - Stat boost calculation testing
    - Edge case testing for ability-less Pokemon
 
 ### Item System
@@ -115,16 +123,16 @@ Status-curing items have been implemented:
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Stats, Entry Hazards)
+1. Additional ability types (Entry Hazards, Terrain)
 2. Additional item types (Held items, Battle items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
-4. Weather-boosted moves and abilities
+4. Weather-boosted moves
 
 ## Next Steps
 
-1. Add stat-boosting abilities
-2. Add held item functionality
-3. Add weather-boosted moves
+1. Add held item functionality
+2. Add weather-boosted moves
+3. Add entry hazard abilities
 
 ## Previous Updates
 

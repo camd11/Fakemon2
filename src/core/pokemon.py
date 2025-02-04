@@ -91,11 +91,12 @@ class Pokemon:
         
         return Stats(hp, attack, defense, special_attack, special_defense, speed)
         
-    def get_stat_multiplier(self, stat: str) -> float:
-        """Get the current multiplier for a stat based on its stage and status.
+    def get_stat_multiplier(self, stat: str, weather: Optional['Weather'] = None) -> float:
+        """Get the current multiplier for a stat based on its stage, status, and ability.
         
         Args:
             stat: The stat to get the multiplier for
+            weather: Current weather condition (for weather-based abilities)
             
         Returns:
             float: The multiplier to apply to the stat
@@ -114,6 +115,20 @@ class Pokemon:
             multiplier *= 0.25
         elif self.status == StatusEffect.BURN and stat == "attack":
             multiplier *= 0.5  # Burn halves physical attack
+            
+        # Ability boosts
+        if self.ability and self.ability.type == AbilityType.STAT_BOOST:
+            if self.ability.stat_boost and self.ability.stat_boost[0] == stat:
+                boost_stat, boost_value, required_weather = self.ability.stat_boost
+                
+                # Weather-based abilities
+                if required_weather is None or (weather and weather == required_weather):
+                    # Status-based abilities (like Guts)
+                    if self.ability.boost_condition == "status":
+                        if self.status is not None:
+                            multiplier *= boost_value
+                    else:
+                        multiplier *= boost_value
             
         return multiplier
         

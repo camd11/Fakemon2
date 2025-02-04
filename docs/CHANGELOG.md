@@ -1,5 +1,15 @@
 # Changelog
 
+## [2024-02-04] Stat-Boosting Abilities
+- Added stat-boosting abilities:
+  - Guts: Boosts Attack when status-afflicted
+  - Swift Swim: Doubles Speed in rain
+  - Chlorophyll: Doubles Speed in sun
+  - Sand Rush: Doubles Speed in sandstorm
+  - Slush Rush: Doubles Speed in hail
+- Enhanced Pokemon class to handle ability-based stat boosts
+- Added comprehensive tests for stat boost functionality
+
 ## [2024-02-04] Weather Abilities
 - Added weather-related abilities:
   - Drizzle: Summons rain
