@@ -20,7 +20,12 @@ class AbilityType(Enum):
     DISGUISE = auto()       # Protects from damage
     PROTEAN = auto()        # Changes type based on moves
     COLOR_CHANGE = auto()   # Changes type based on damage
+    TRACE = auto()          # Copies opponent's ability
     OTHER = auto()           # Other effects
+
+class TraceType(Enum):
+    """Types of trace effects."""
+    COPY = auto()      # Copies opponent's ability
 
 class ColorChangeType(Enum):
     """Types of color change effects."""
@@ -93,7 +98,8 @@ class Ability:
         disguise_type: Optional[DisguiseType] = None,  # Type of disguise protection
         disguise_hp: Optional[int] = None,  # Extra HP for disguise
         protean_type: Optional[ProteanType] = None,  # Type of protean effect
-        color_change_type: Optional[ColorChangeType] = None  # Type of color change effect
+        color_change_type: Optional[ColorChangeType] = None,  # Type of color change effect
+        trace_type: Optional[TraceType] = None  # Type of trace effect
     ) -> None:
         """Initialize an ability.
         
@@ -118,6 +124,7 @@ class Ability:
             disguise_hp: Extra HP for disguise
             protean_type: Type of protean effect
             color_change_type: Type of color change effect
+            trace_type: Type of trace effect
         """
         self.name = name
         self.type = type_
@@ -139,6 +146,7 @@ class Ability:
         self.disguise_hp = disguise_hp
         self.protean_type = protean_type
         self.color_change_type = color_change_type
+        self.trace_type = trace_type
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -150,6 +158,14 @@ class Ability:
             bool: True if the ability prevents this status, False otherwise
         """
         return status in self.immune_statuses
+
+# Define trace abilities
+TRACE = Ability(
+    name="Trace",
+    type_=AbilityType.TRACE,
+    description="Copies the opponent's ability when entering battle.",
+    trace_type=TraceType.COPY
+)
 
 # Define common status-related abilities
 IMMUNITY = Ability(

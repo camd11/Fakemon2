@@ -1,5 +1,12 @@
 # Changelog
 
+## [2024-02-04] Trace Abilities
+- Added trace system:
+  - Trace: Copies opponent's ability when entering battle
+- Enhanced Pokemon class to handle ability copying and restoration
+- Enhanced Battle class to handle trace triggers
+- Added comprehensive tests for trace functionality
+
 ## [2024-02-04] Color Change Abilities
 - Added color change system:
   - Color Change: Changes type to match damaging move

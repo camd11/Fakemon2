@@ -73,15 +73,19 @@ class Pokemon:
         self.transformed_types = None  # Types when transformed
         self.transformed_moves = None  # Moves when transformed
         self.original_types = types  # Store original types for protean/color change abilities
+        self.original_ability = ability  # Store original ability for trace abilities
         
         # Set up disguise protection if needed
         if self.ability:
             if self.ability.type == AbilityType.DISGUISE:
                 self.disguise_hp = self.ability.disguise_hp
                 self.disguise_type = self.ability.disguise_type
-            elif self.ability.type == AbilityType.COLOR_CHANGE and self.ability.color_change_type == ColorChangeType.WEATHER:
+            if self.ability.type == AbilityType.COLOR_CHANGE and self.ability.color_change_type == ColorChangeType.WEATHER:
                 # Set initial type based on weather
                 self.check_weather_type(Weather.CLEAR)
+            elif self.ability.type == AbilityType.TRACE and self.ability.trace_type == TraceType.COPY:
+                # Will copy opponent's ability when entering battle
+                self.traced_ability = None
         
         # Calculate actual stats based on level
         self.stats = self._calculate_stats()
@@ -496,6 +500,44 @@ class Pokemon:
                         return f"{self.name} became {move_type.name}-type!"
             
         return old_hp - self.current_hp
+        
+    def copy_ability(self, opponent: 'Pokemon') -> Optional[str]:
+        """Copy the opponent's ability if this Pokemon has Trace.
+        
+        Args:
+            opponent: The opponent Pokemon to copy from
+            
+        Returns:
+            Optional[str]: Message about ability copying if successful, None if failed
+        """
+        if not self.ability or self.ability.type != AbilityType.TRACE:
+            return None
+            
+        if self.ability.trace_type != TraceType.COPY:
+            return None
+            
+        # Don't copy if opponent has no ability or already copied
+        if not opponent.ability or self.traced_ability:
+            return None
+            
+        # Copy opponent's ability
+        self.ability = opponent.ability
+        self.traced_ability = opponent.ability
+        return f"{self.name} traced {opponent.name}'s {opponent.ability.name}!"
+        
+    def restore_ability(self) -> Optional[str]:
+        """Restore original ability if this Pokemon has traced another.
+        
+        Returns:
+            Optional[str]: Message about ability restoration if successful, None if failed
+        """
+        if not self.traced_ability:
+            return None
+            
+        # Restore original ability
+        self.ability = self.original_ability
+        self.traced_ability = None
+        return f"{self.name}'s {self.ability.name} was restored!"
         
     def check_weather_type(self, weather: Weather) -> Optional[str]:
         """Check if type should change based on weather.

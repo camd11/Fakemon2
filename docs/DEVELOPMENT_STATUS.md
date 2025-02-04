@@ -362,6 +362,31 @@ Protean abilities have been implemented:
    - Move type matching
    - Type restoration testing
 
+### Trace System
+
+Trace abilities have been implemented:
+
+1. **Core Components**
+   - Ability copying
+   - Original ability tracking
+   - Ability restoration
+   - Faint handling
+
+2. **Trace Types**
+   - Copy: Copies opponent's ability
+
+3. **Trace Features**
+   - Dynamic ability copying
+   - Original ability preservation
+   - Automatic restoration on faint
+   - Trace messages
+
+4. **Testing**
+   - Ability copy verification
+   - Ability restoration testing
+   - Faint handling testing
+   - Message verification
+
 ### Color Change System
 
 Color change abilities have been implemented:
@@ -391,15 +416,15 @@ Color change abilities have been implemented:
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Trace, Mold Breaker)
+1. Additional ability types (Mold Breaker, Simple)
 2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add trace abilities
-2. Add mold breaker abilities
+1. Add mold breaker abilities
+2. Add simple abilities
 3. Add evolution items
 
 ## Previous Updates

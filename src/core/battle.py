@@ -103,11 +103,11 @@ class Battle:
         self.active_auras = set()  # Set of active AuraTypes
         self.aura_break_active = False  # Whether Aura Break is active
         
-        # Check for weather, terrain, aura, and illusion abilities
+        # Check for weather, terrain, aura, and entry abilities
         self._check_weather_abilities()
         self._check_terrain_abilities()
         self._check_aura_abilities()
-        self._check_illusion_abilities()
+        self._check_entry_abilities()
         
     def _check_weather_abilities(self) -> None:
         """Check and apply weather effects from Pokemon abilities."""
@@ -164,11 +164,15 @@ class Battle:
                     
         return messages
         
-    def _check_illusion_abilities(self) -> None:
-        """Check and apply illusion effects from Pokemon abilities."""
-        # Check both Pokemon for illusion abilities
+    def _check_entry_abilities(self) -> None:
+        """Check and apply abilities that trigger on entering battle."""
+        # Check both Pokemon for entry abilities
         for pokemon in (self.player_pokemon, self.enemy_pokemon):
-            if pokemon.ability and pokemon.ability.type == AbilityType.ILLUSION:
+            if not pokemon.ability:
+                continue
+                
+            # Handle illusion abilities
+            if pokemon.ability.type == AbilityType.ILLUSION:
                 if pokemon.ability.illusion_effect == IllusionType.TRANSFORM:
                     # Transform into opponent
                     other = self.enemy_pokemon if pokemon == self.player_pokemon else self.player_pokemon
@@ -180,6 +184,14 @@ class Battle:
                     msg = pokemon.check_type_mimicry(self.terrain)
                     if msg:
                         print(msg)  # TODO: Add to battle messages
+                        
+            # Handle trace abilities
+            elif pokemon.ability.type == AbilityType.TRACE:
+                # Copy opponent's ability
+                other = self.enemy_pokemon if pokemon == self.player_pokemon else self.player_pokemon
+                msg = pokemon.copy_ability(other)
+                if msg:
+                    print(msg)  # TODO: Add to battle messages
                         
     def _check_aura_abilities(self) -> None:
         """Check and apply aura effects from Pokemon abilities."""
@@ -288,7 +300,8 @@ class Battle:
             result.damage_dealt = target.take_damage(
                 damage,
                 move_category=move.category,
-                effectiveness=result.effectiveness
+                effectiveness=result.effectiveness,
+                move_type=move.type  # Pass move type for Color Change
             )
             
             # Add damage message
@@ -577,6 +590,11 @@ class Battle:
         form_change_msg = other_pokemon.check_form_change("pokemon_defeated")
         if form_change_msg:
             messages.append(form_change_msg)
+            
+        # Restore traced ability if Pokemon faints
+        restore_msg = fainted_pokemon.restore_ability()
+        if restore_msg:
+            messages.append(restore_msg)
             
         return messages
         

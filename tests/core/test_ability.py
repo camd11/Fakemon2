@@ -735,3 +735,68 @@ def test_forecast():
         msg = pokemon.check_weather_type(weather)
         assert msg == f"Test Pokemon became {expected_type.name}-type!"
         assert pokemon.types == (expected_type,)
+
+def test_trace():
+    """Test that Trace copies opponent's ability."""
+    # Create Pokemon with Trace
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=TRACE
+    )
+    
+    # Create opponent with Guts
+    opponent = Pokemon(
+        name="Opponent",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=GUTS
+    )
+    
+    # Test ability copying
+    msg = pokemon.copy_ability(opponent)
+    assert msg == "Test Pokemon traced Opponent's Guts!"
+    assert pokemon.ability == GUTS
+    
+    # Test ability restoration
+    msg = pokemon.restore_ability()
+    assert msg == "Test Pokemon's Trace was restored!"
+    assert pokemon.ability == TRACE
+    
+def test_trace_faint():
+    """Test that traced ability is restored when Pokemon faints."""
+    # Create Pokemon with Trace
+    pokemon = Pokemon(
+        name="Test Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=TRACE
+    )
+    
+    # Create opponent with Guts
+    opponent = Pokemon(
+        name="Opponent",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=GUTS
+    )
+    
+    # Copy ability
+    pokemon.copy_ability(opponent)
+    assert pokemon.ability == GUTS
+    
+    # Create battle
+    battle = Battle(pokemon, opponent, TypeEffectiveness())
+    
+    # Faint Pokemon
+    pokemon.take_damage(pokemon.stats.hp)
+    messages = battle.handle_faint(pokemon)
+    
+    # Check ability restoration
+    assert any("Trace was restored" in msg for msg in messages)
+    assert pokemon.ability == TRACE
