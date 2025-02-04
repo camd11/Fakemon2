@@ -279,17 +279,8 @@ class Battle:
         # Apply speed-based ability boosts for turn order
         attacker_speed = attacker.stats.speed * attacker.get_stat_multiplier("speed", self.weather)
         
-        # Weather effects
-        if self.weather == Weather.RAIN:
-            if move.type == Type.WATER:
-                damage *= 1.5
-            elif move.type == Type.FIRE:
-                damage *= 0.5
-        elif self.weather == Weather.SUN:
-            if move.type == Type.FIRE:
-                damage *= 1.5
-            elif move.type == Type.WATER:
-                damage *= 0.5
+        # Apply weather boost
+        damage *= move.get_weather_multiplier(self.weather)
                 
         return int(damage)
         

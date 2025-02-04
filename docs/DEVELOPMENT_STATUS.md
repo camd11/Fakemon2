@@ -132,19 +132,38 @@ The item system has been expanded with both status-curing and held items:
    - Single-use item verification
    - Edge case testing for various conditions
 
+### Move System
+
+Weather-boosted moves have been implemented:
+
+1. **Core Components**
+   - Move class with weather multiplier calculation
+   - Integration with Battle class damage system
+   - Weather-specific damage modifiers
+
+2. **Weather Effects**
+   - Water moves: 1.5x in rain, 0.5x in sun
+   - Fire moves: 1.5x in sun, 0.5x in rain
+   - Other moves unaffected by weather
+
+3. **Testing**
+   - Verification of weather boost calculations
+   - Validation of move type interactions
+   - Edge case testing for various weather conditions
+
 ### Future Improvements
 
 Potential areas for expansion:
 1. Additional ability types (Entry Hazards, Terrain)
 2. Additional item types (Type-enhancing items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
-4. Weather-boosted moves
+4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add weather-boosted moves
-2. Add entry hazard abilities
-3. Add type-enhancing items
+1. Add entry hazard abilities
+2. Add type-enhancing items
+3. Add status-based move effects
 
 ## Previous Updates
 

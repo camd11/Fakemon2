@@ -88,7 +88,31 @@ class Move:
         else:
             self.current_pp = min(self.max_pp, self.current_pp + amount)
             
+    def get_weather_multiplier(self, weather: 'Weather') -> float:
+        """Get the damage multiplier based on weather conditions.
+        
+        Args:
+            weather: Current weather condition
+            
+        Returns:
+            float: Damage multiplier (1.5 for boost, 0.5 for reduction, 1.0 for no effect)
+        """
+        if weather == Weather.RAIN:
+            if self.type == Type.WATER:
+                return 1.5
+            elif self.type == Type.FIRE:
+                return 0.5
+        elif weather == Weather.SUN:
+            if self.type == Type.FIRE:
+                return 1.5
+            elif self.type == Type.WATER:
+                return 0.5
+        return 1.0
+            
     @property
     def is_damaging(self) -> bool:
         """Check if the move deals direct damage."""
         return self.category in (MoveCategory.PHYSICAL, MoveCategory.SPECIAL)
+
+# Import at bottom to avoid circular imports
+from .battle import Weather

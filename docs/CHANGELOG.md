@@ -1,5 +1,13 @@
 # Changelog
 
+## [2024-02-04] Weather-Boosted Moves
+- Added weather boost system for moves:
+  - Water moves boosted in rain, reduced in sun
+  - Fire moves boosted in sun, reduced in rain
+- Enhanced Move class with weather multiplier calculation
+- Enhanced Battle class to apply weather boosts
+- Added comprehensive tests for weather boost functionality
+
 ## [2024-02-04] Held Items
 - Added held item system:
   - Leftovers: Restores HP each turn
