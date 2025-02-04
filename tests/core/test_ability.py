@@ -5,6 +5,7 @@ from src.core.ability import (
     Ability,
     AbilityType,
     TerrainType,
+    AuraType,
     IMMUNITY,
     LIMBER,
     WATER_VEIL,
@@ -22,7 +23,10 @@ from src.core.ability import (
     GRASSY_SURGE,
     MISTY_SURGE,
     ELECTRIC_SURGE,
-    PSYCHIC_SURGE
+    PSYCHIC_SURGE,
+    FAIRY_AURA,
+    DARK_AURA,
+    AURA_BREAK
 )
 from src.core.pokemon import Pokemon, Stats
 from src.core.types import Type, TypeEffectiveness
@@ -253,3 +257,141 @@ def test_terrain_duration():
     result = battle.end_turn()
     assert battle.terrain is None
     assert any("terrain faded" in msg for msg in result.messages)
+
+def test_aura_boost():
+    """Test that aura abilities boost appropriate moves."""
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.FAIRY,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=FAIRY_AURA
+    )
+    
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    
+    # Create test move
+    fairy_move = Move(
+        name="Fairy Move",
+        type_=Type.FAIRY,
+        category=MoveCategory.SPECIAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    battle = Battle(attacker, defender, TypeEffectiveness())
+    
+    # Test without aura
+    battle.active_auras.clear()
+    attacker.moves = [fairy_move]
+    result = battle.execute_turn(fairy_move, defender)
+    base_damage = result.damage_dealt
+    
+    # Test with Fairy Aura
+    battle.active_auras.add(AuraType.FAIRY)
+    result = battle.execute_turn(fairy_move, defender)
+    
+    # Should deal 33% more damage
+    assert result.damage_dealt == int(base_damage * 1.33)
+
+def test_aura_break():
+    """Test that Aura Break reverses aura effects."""
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.FAIRY,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=FAIRY_AURA
+    )
+    
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=AURA_BREAK
+    )
+    
+    # Create test move
+    fairy_move = Move(
+        name="Fairy Move",
+        type_=Type.FAIRY,
+        category=MoveCategory.SPECIAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    battle = Battle(attacker, defender, TypeEffectiveness())
+    
+    # Test without aura break
+    battle.aura_break_active = False
+    attacker.moves = [fairy_move]
+    result = battle.execute_turn(fairy_move, defender)
+    base_damage = result.damage_dealt
+    
+    # Test with Aura Break
+    battle.aura_break_active = True
+    result = battle.execute_turn(fairy_move, defender)
+    
+    # Should deal 25% less damage instead of 33% more
+    assert result.damage_dealt == int(base_damage * 0.75)
+
+def test_multiple_auras():
+    """Test that multiple auras work independently."""
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.FAIRY, Type.DARK),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=FAIRY_AURA
+    )
+    
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=DARK_AURA
+    )
+    
+    battle = Battle(attacker, defender, TypeEffectiveness())
+    
+    # Create test moves
+    fairy_move = Move(
+        name="Fairy Move",
+        type_=Type.FAIRY,
+        category=MoveCategory.SPECIAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    dark_move = Move(
+        name="Dark Move",
+        type_=Type.DARK,
+        category=MoveCategory.SPECIAL,
+        power=100,
+        accuracy=100,
+        pp=10
+    )
+    
+    # Test Fairy move
+    attacker.moves = [fairy_move]
+    result = battle.execute_turn(fairy_move, defender)
+    fairy_damage = result.damage_dealt
+    
+    # Test Dark move
+    attacker.moves = [dark_move]
+    result = battle.execute_turn(dark_move, defender)
+    dark_damage = result.damage_dealt
+    
+    # Both moves should be boosted by 33%
+    assert fairy_damage == int(fairy_damage * 1.33)
+    assert dark_damage == int(dark_damage * 1.33)

@@ -14,7 +14,14 @@ class AbilityType(Enum):
     BATTLE_ENTRY = auto()     # Triggers when entering battle
     HAZARD = auto()          # Sets entry hazards
     TERRAIN = auto()         # Sets terrain effects
+    AURA = auto()           # Provides aura effects
     OTHER = auto()           # Other effects
+
+class AuraType(Enum):
+    """Types of aura effects."""
+    FAIRY = auto()  # Powers up Fairy moves
+    DARK = auto()   # Powers up Dark moves
+    BREAK = auto()  # Reverses other aura effects
 
 class TerrainType(Enum):
     """Types of terrain that can be set."""
@@ -44,7 +51,8 @@ class Ability:
         hazard_type: Optional[HazardType] = None,
         hazard_damage: Optional[int] = None,  # Base damage or number of layers
         hazard_status: Optional[StatusEffect] = None,  # For toxic spikes
-        terrain_effect: Optional[TerrainType] = None
+        terrain_effect: Optional[TerrainType] = None,
+        aura_effect: Optional[AuraType] = None
     ) -> None:
         """Initialize an ability.
         
@@ -71,6 +79,7 @@ class Ability:
         self.hazard_damage = hazard_damage
         self.hazard_status = hazard_status
         self.terrain_effect = terrain_effect
+        self.aura_effect = aura_effect
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a specific status effect.
@@ -95,6 +104,28 @@ IMMUNITY = Ability(
         StatusEffect.SLEEP,
         StatusEffect.FREEZE
     }
+)
+
+# Define aura abilities
+FAIRY_AURA = Ability(
+    name="Fairy Aura",
+    type_=AbilityType.AURA,
+    description="Powers up Fairy-type moves for all Pokemon.",
+    aura_effect=AuraType.FAIRY
+)
+
+DARK_AURA = Ability(
+    name="Dark Aura",
+    type_=AbilityType.AURA,
+    description="Powers up Dark-type moves for all Pokemon.",
+    aura_effect=AuraType.DARK
+)
+
+AURA_BREAK = Ability(
+    name="Aura Break",
+    type_=AbilityType.AURA,
+    description="Reverses the effects of other auras.",
+    aura_effect=AuraType.BREAK
 )
 
 # Define terrain-setting abilities

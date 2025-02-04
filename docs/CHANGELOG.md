@@ -1,5 +1,13 @@
 # Changelog
 
+## [2024-02-04] Aura Abilities
+- Added aura system:
+  - Fairy Aura: Powers up Fairy moves by 33%
+  - Dark Aura: Powers up Dark moves by 33%
+  - Aura Break: Reverses aura effects to -25%
+- Enhanced Battle class to handle aura effects
+- Added comprehensive tests for aura functionality
+
 ## [2024-02-04] Terrain Abilities
 - Added terrain system:
   - Grassy Terrain: Heals grounded Pokemon, boosts Grass moves

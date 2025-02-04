@@ -8,7 +8,7 @@ from .pokemon import Pokemon
 from .move import Move, MoveCategory, StatusEffect
 from .types import Type, TypeEffectiveness
 from .item import Item, ItemType, HeldItemTrigger
-from .ability import AbilityType, HazardType, TerrainType
+from .ability import AbilityType, HazardType, TerrainType, AuraType
 
 class Weather(Enum):
     """Weather conditions that can affect battle."""
@@ -99,9 +99,14 @@ class Battle:
         self.terrain = terrain
         self.terrain_duration = terrain_duration
         
-        # Check for weather and terrain abilities
+        # Track active auras
+        self.active_auras = set()  # Set of active AuraTypes
+        self.aura_break_active = False  # Whether Aura Break is active
+        
+        # Check for weather, terrain, and aura abilities
         self._check_weather_abilities()
         self._check_terrain_abilities()
+        self._check_aura_abilities()
         
     def _check_weather_abilities(self) -> None:
         """Check and apply weather effects from Pokemon abilities."""
@@ -158,6 +163,20 @@ class Battle:
                     
         return messages
         
+    def _check_aura_abilities(self) -> None:
+        """Check and apply aura effects from Pokemon abilities."""
+        # Reset aura tracking
+        self.active_auras.clear()
+        self.aura_break_active = False
+        
+        # Check both Pokemon for aura abilities
+        for pokemon in (self.player_pokemon, self.enemy_pokemon):
+            if pokemon.ability and pokemon.ability.type == AbilityType.AURA:
+                if pokemon.ability.aura_effect == AuraType.BREAK:
+                    self.aura_break_active = True
+                else:
+                    self.active_auras.add(pokemon.ability.aura_effect)
+                    
     def _check_terrain_abilities(self) -> None:
         """Check and apply terrain effects from Pokemon abilities."""
         # Check both Pokemon for terrain abilities
@@ -375,6 +394,17 @@ class Battle:
                     damage *= 1.3  # 30% boost to Psychic moves
                 elif self.terrain == TerrainType.MISTY and move.type == Type.DRAGON:
                     damage *= 0.5  # 50% reduction to Dragon moves
+                    
+        # Apply aura boost
+        if self.active_auras:
+            aura_multiplier = 0.33  # 33% boost
+            if self.aura_break_active:
+                aura_multiplier = -0.25  # 25% reduction instead
+                
+            if AuraType.FAIRY in self.active_auras and move.type == Type.FAIRY:
+                damage *= (1 + aura_multiplier)
+            elif AuraType.DARK in self.active_auras and move.type == Type.DARK:
+                damage *= (1 + aura_multiplier)
                 
         return int(damage)
         

@@ -234,18 +234,39 @@ Terrain effects have been implemented:
    - Healing effect testing
    - Duration tracking testing
 
+### Aura System
+
+Aura effects have been implemented:
+
+1. **Core Components**
+   - Aura tracking
+   - Move power modification
+   - Aura Break handling
+   - Multiple aura stacking
+
+2. **Aura Types**
+   - Fairy Aura: 33% boost to Fairy moves
+   - Dark Aura: 33% boost to Dark moves
+   - Aura Break: Reverses boosts to -25%
+
+3. **Testing**
+   - Aura boost verification
+   - Aura Break testing
+   - Multiple aura interaction
+   - Type specificity validation
+
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Aura, Form Change)
+1. Additional ability types (Form Change, Illusion)
 2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add aura abilities
-2. Add form change abilities
+1. Add form change abilities
+2. Add illusion abilities
 3. Add evolution items
 
 ## Previous Updates
