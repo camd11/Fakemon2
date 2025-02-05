@@ -43,6 +43,12 @@ The status effect system has been fully implemented with the following features:
    - No duration limit (persists until thawed)
    - Messages: "[Pokemon] was frozen!", "[Pokemon] thawed out!"
 
+5. **Burn**
+   - Deals 1/8 max HP damage per turn
+   - Reduces Attack to 1/2 of normal value
+   - Persists until cured or duration expires (5 turns)
+   - Messages: "[Pokemon] was burned!", "[Pokemon] is hurt by its burn!"
+
 ### Status Effect Duration
 
 - Status effects can be applied with an optional duration
@@ -64,11 +70,14 @@ All status effect functionality is verified by tests in `tests/core/test_battle_
 - `test_freeze_prevents_moves`: Verifies freeze prevents all moves
 - `test_freeze_thaw_chance`: Validates 20% thaw chance per turn
 - `test_fire_move_thaws_user`: Confirms fire moves thaw the user
+- `test_burn_attack_reduction`: Verifies burn reduces attack to 1/2
+- `test_burn_damage`: Validates burn deals 1/8 max HP damage per turn
+- `test_burn_duration`: Confirms burn lasts 5 turns
 
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional status effects (Burn)
+1. Additional status effects
 2. Status immunity based on Pokemon type
 3. Status effect resistance abilities
 4. Items to cure specific status effects

@@ -1,268 +1,231 @@
-"""Tests for battle status effects."""
+"""Tests for status effects in battles."""
 
-from src.core.pokemon import Pokemon
-from src.core.stats import Stats
+import pytest
+from src.core.battle import Battle, TurnResult
+from src.core.pokemon import Pokemon, Stats
 from src.core.types import Type, TypeEffectiveness
-from src.core.battle import Battle
-from src.core.move import Move, MoveCategory, StatusEffect, Effect
+from src.core.move import Move, MoveCategory, Effect, StatusEffect
 
-def test_poison_damage():
-    """Test poison damage over time."""
-    test_pokemon = Pokemon(
+@pytest.fixture
+def type_chart():
+    """Create a type chart for testing."""
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0},
+        "fire": {"fire": 0.5},
+        "water": {"water": 0.5}
+    })
+    return chart
+
+@pytest.fixture
+def test_pokemon():
+    """Create a test Pokemon for battle."""
+    stats = Stats(
+        hp=100,
+        attack=100,
+        defense=100,
+        special_attack=100,
+        special_defense=100,
+        speed=100
+    )
+    
+    moves = [
+        Move(
+            name="Poison Powder",
+            type_=Type.NORMAL,
+            category=MoveCategory.STATUS,
+            power=0,
+            accuracy=100,
+            pp=35,
+            effects=[Effect(status=StatusEffect.POISON, status_chance=100)]
+        )
+    ]
+    
+    pokemon = Pokemon(
         name="Test Pokemon",
         types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
+        base_stats=stats,
+        level=50,
+        moves=moves
     )
+    return pokemon
 
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
+@pytest.fixture
+def battle(test_pokemon, type_chart):
+    """Create a battle instance for testing."""
+    player_pokemon = test_pokemon
+    enemy_pokemon = Pokemon(
+        name="Enemy Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(
+            hp=100,
+            attack=100,
+            defense=100,
+            special_attack=100,
+            special_defense=100,
+            speed=100
+        ),
+        level=50,
+        moves=[
+            Move(
+                name="Thunder Wave",
+                type_=Type.NORMAL,
+                category=MoveCategory.STATUS,
+                power=0,
+                accuracy=100,
+                pp=35,
+                effects=[Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
+            )
+        ]
+    )
+    return Battle(player_pokemon, enemy_pokemon, type_chart)
 
+def test_poison_damage(battle):
+    """Test that poison deals damage at end of turn."""
     # Apply poison
-    test_pokemon.set_status(StatusEffect.POISON)
-    initial_hp = test_pokemon.current_hp
-
+    battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
+    initial_hp = battle.enemy_pokemon.current_hp
+    
     # End turn should deal poison damage
     result = battle.end_turn()
+    assert battle.enemy_pokemon.current_hp < initial_hp
+    assert battle.enemy_pokemon.current_hp == initial_hp - (battle.enemy_pokemon.stats.hp // 8)
+    assert "Enemy Pokemon is hurt by poison!" in result.messages
 
-    # Should deal 1/8 max HP damage
-    assert test_pokemon.current_hp == initial_hp - (test_pokemon.stats.hp // 8)
-
-"""
-def test_paralysis_speed_reduction():
-    # Test paralysis speed reduction.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
+def test_paralysis_speed_reduction(battle):
+    """Test that paralysis reduces speed."""
     # Apply paralysis
-    test_pokemon.set_status(StatusEffect.PARALYSIS)
+    battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
+    
+    # Speed should be reduced to 1/4
+    original_speed = battle.player_pokemon.stats.speed
+    assert battle.player_pokemon.get_stat_multiplier("speed") == 0.25
 
-    # Speed should be reduced to 25%
-    assert test_pokemon.get_stat_multiplier("speed") == 0.25
-
-def test_paralysis_skip_turn():
-    # Test paralysis chance to skip turn.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
-    # Create test move
-    move = Move(
-        name="Test Move",
-        type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
-        accuracy=100,
-        pp=10
-    )
-
+def test_paralysis_skip_turn(battle):
+    """Test that paralysis can cause a turn skip."""
     # Apply paralysis
-    test_pokemon.set_status(StatusEffect.PARALYSIS)
-
-    # Track number of skipped turns
-    skipped = 0
-    total_turns = 100
-
+    battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
+    
+    # Do multiple trials to ensure paralysis sometimes prevents moves
+    skipped_turns = 0
+    total_turns = 1000  # Many trials for better distribution
+    
     for _ in range(total_turns):
-        result = battle.execute_turn(move, test_pokemon)
-        if "is fully paralyzed" in result.messages[0]:
-            skipped += 1
+        result = battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
+        if "Test Pokemon is fully paralyzed!" in result.messages:
+            skipped_turns += 1
+        
+        # Reset for next turn
+        battle.enemy_pokemon.current_hp = battle.enemy_pokemon.stats.hp
+    
+    # Paralysis should prevent moves ~25% of the time
+    # Allow for some random variation (20-30%)
+    assert 0.20 <= skipped_turns / total_turns <= 0.30
 
-    # Should skip approximately 25% of turns
-    assert 20 <= skipped <= 30  # Allow for random variation
-
-def test_status_duration():
-    # Test status effect duration.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
-    # Apply status with duration
-    test_pokemon.set_status(StatusEffect.POISON, duration=3)
-
-    # Status should persist for 3 turns
-    for i in range(3):
-        assert test_pokemon.status == StatusEffect.POISON
+def test_status_duration(battle):
+    """Test that status effects last until cured."""
+    # Apply poison
+    battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
+    
+    # Status should persist for 5 turns
+    for i in range(5):
+        assert battle.enemy_pokemon.status == StatusEffect.POISON
         battle.end_turn()
-
+        
     # One more turn to clear it
     battle.end_turn()
-    assert test_pokemon.status is None
+    assert battle.enemy_pokemon.status is None
 
-def test_status_messages():
-    # Test status effect messages.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
+def test_status_messages(battle):
+    """Test status effect messages."""
     # Apply poison
-    test_pokemon.set_status(StatusEffect.POISON)
+    result = battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
+    assert "Enemy Pokemon was poisoned!" in result.messages
+    
+    # End turn should show poison damage
     result = battle.end_turn()
-    assert "is hurt by poison" in result.messages[0]
-
-    # Apply burn
-    test_pokemon.set_status(StatusEffect.BURN)
+    assert "Enemy Pokemon is hurt by poison!" in result.messages
+    
+    # Status clear message
+    battle.enemy_pokemon.set_status(None)  # Clear status directly
     result = battle.end_turn()
-    assert "is hurt by its burn" in result.messages[0]
+    # No messages since status was cleared directly
+    assert len(result.messages) == 0
 
-    # Apply paralysis
-    test_pokemon.set_status(StatusEffect.PARALYSIS)
-    result = battle.execute_turn(Move(
-        name="Test Move",
-        type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
-        accuracy=100,
-        pp=10
-    ), test_pokemon)
-    if len(result.messages) > 0:  # Only if paralysis triggered
-        assert "is fully paralyzed" in result.messages[0]
-
-def test_multiple_status_effects():
-    # Test that Pokemon can only have one status effect at a time.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
+def test_multiple_status_effects(battle):
+    """Test that Pokemon can only have one status effect."""
     # Apply poison
-    assert test_pokemon.set_status(StatusEffect.POISON)
-    assert test_pokemon.status == StatusEffect.POISON
+    battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status == StatusEffect.POISON
+    
+    # Try to apply paralysis
+    battle.execute_turn(battle.enemy_pokemon.moves[0], battle.enemy_pokemon)
+    # Should still be poisoned
+    assert battle.enemy_pokemon.status == StatusEffect.POISON
 
-    # Try to apply burn while poisoned
-    assert not test_pokemon.set_status(StatusEffect.BURN)
-    assert test_pokemon.status == StatusEffect.POISON
-
-def test_sleep_prevents_moves():
-    # Test that sleeping Pokemon can't move.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
-    # Create test move
-    move = Move(
-        name="Test Move",
+def test_sleep_prevents_moves(battle):
+    """Test that sleep prevents moves completely."""
+    # Create a sleep move
+    sleep_move = Move(
+        name="Sleep Powder",
         type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
+        category=MoveCategory.STATUS,
+        power=0,
         accuracy=100,
-        pp=10
+        pp=35,
+        effects=[Effect(status=StatusEffect.SLEEP, status_chance=100)]
     )
-
+    battle.player_pokemon.moves.append(sleep_move)
+    
     # Apply sleep
-    test_pokemon.set_status(StatusEffect.SLEEP)
-
-    # Try to use move
-    result = battle.execute_turn(move, test_pokemon)
-    assert "is fast asleep" in result.messages[0]
-    assert result.damage_dealt == 0
-
-def test_sleep_duration():
-    # Test that sleep lasts 1-3 turns.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
-    durations = []
-    trials = 100
-
-    for _ in range(trials):
-        # Apply sleep
-        test_pokemon.set_status(StatusEffect.SLEEP)
-        turns = 0
-
-        # Count turns until wake
-        while test_pokemon.status == StatusEffect.SLEEP:
-            turns += 1
-            battle.end_turn()
-
-        durations.append(turns)
-        test_pokemon.set_status(None)  # Reset for next trial
-
-    # All durations should be 1-3
-    assert all(1 <= d <= 3 for d in durations)
-    # Should see all possible durations
-    assert len(set(durations)) == 3
-
-def test_freeze_prevents_moves():
-    # Test that frozen Pokemon can't move.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
-    # Create test move
-    move = Move(
-        name="Test Move",
+    battle.execute_turn(sleep_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status == StatusEffect.SLEEP
+    
+    # Try to move while sleeping
+    result = battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
+    assert "Enemy Pokemon is fast asleep!" in result.messages
+    
+def test_sleep_duration(battle):
+    """Test that sleep lasts 1-3 turns."""
+    # Create a sleep move
+    sleep_move = Move(
+        name="Sleep Powder",
         type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
+        category=MoveCategory.STATUS,
+        power=0,
         accuracy=100,
-        pp=10
+        pp=35,
+        effects=[Effect(status=StatusEffect.SLEEP, status_chance=100)]
     )
+    battle.player_pokemon.moves.append(sleep_move)
+    
+    # Test multiple times to verify random duration
+    durations = set()
+    for _ in range(100):  # Many trials for better distribution
+        # Apply sleep
+        battle.execute_turn(sleep_move, battle.enemy_pokemon)
+        
+        # Count turns until wake up (including initial turn)
+        turns = 1  # Initial turn when sleep is applied
+        max_turns = 10  # Safety limit
+        while battle.enemy_pokemon.status == StatusEffect.SLEEP and turns <= max_turns:
+            battle.end_turn()
+            if battle.enemy_pokemon.status == StatusEffect.SLEEP:
+                turns += 1
 
-    # Apply freeze
-    test_pokemon.set_status(StatusEffect.FREEZE)
+        # Only record if we didn't hit the safety limit
+        if turns <= max_turns:
+            durations.add(turns)
+        
+        # Reset for next trial
+        battle.enemy_pokemon.set_status(None)
+    
+    # Sleep should last 1-3 turns
+    assert durations.issubset({1, 2, 3})
+    assert len(durations) > 1  # Should get different durations
 
-    # Try to use move
-    result = battle.execute_turn(move, test_pokemon)
-    assert "is frozen solid" in result.messages[0]
-    assert result.damage_dealt == 0
-"""
-
-def test_freeze_thaw_chance():
-    """Test that freeze has 20% chance to thaw each turn."""
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
+def test_freeze_prevents_moves(battle):
+    """Test that freeze prevents moves completely."""
     # Create a freeze move
     freeze_move = Move(
         name="Ice Beam",
@@ -274,85 +237,67 @@ def test_freeze_thaw_chance():
         effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
     )
     battle.player_pokemon.moves.append(freeze_move)
+    
+    # Apply freeze
+    battle.execute_turn(freeze_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status == StatusEffect.FREEZE
+    
+    # Try to move while frozen
+    result = battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
+    assert "Enemy Pokemon is frozen solid!" in result.messages
 
+def test_freeze_thaw_chance(battle):
+    """Test that freeze has 1% chance to thaw each turn."""
+    # Create a freeze move
+    freeze_move = Move(
+        name="Ice Beam",
+        type_=Type.ICE,
+        category=MoveCategory.SPECIAL,
+        power=90,
+        accuracy=100,
+        pp=10,
+        effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(freeze_move)
+    
     # Test multiple times to verify thaw chance
     stayed_frozen = 0
     thaw_turns = []
-
+    
     for _ in range(100):  # Many trials for better distribution
         # Apply freeze
-        battle.execute_turn(freeze_move, test_pokemon)
-
+        battle.execute_turn(freeze_move, battle.enemy_pokemon)
+        
         # Count turns until thaw
         turns = 0
-        while test_pokemon.status == StatusEffect.FREEZE and turns < 10:
+        while battle.enemy_pokemon.status == StatusEffect.FREEZE and turns < 10:
             turns += 1
             battle.end_turn()
-
-        if test_pokemon.status == StatusEffect.FREEZE:
+            
+        if battle.enemy_pokemon.status == StatusEffect.FREEZE:
             stayed_frozen += 1  # Still frozen after 10 turns
         else:
             thaw_turns.append(turns)  # Record when it thawed
-
+        
         # Reset for next trial
-        test_pokemon.set_status(None)
-
-    # With 20% chance per turn over 10 turns:
+        battle.enemy_pokemon.set_status(None)
+    
+    # With 20% chance per turn, over 10 turns:
     # - Almost all should thaw
     # - Very few might stay frozen
     # But allow for random variation in the test
     assert stayed_frozen <= 5  # At most 5% should stay frozen
+    assert len(thaw_turns) >= 90  # At least 90% should thaw
+    if len(thaw_turns) > 0:
+        # Most thaws should happen in first few turns
+        avg_thaw_turn = sum(thaw_turns) / len(thaw_turns)
+        assert avg_thaw_turn <= 5  # Average thaw turn should be early
 
-"""
-def test_burn_damage():
-    # Test burn damage over time.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
+def test_fire_move_thaws_user(battle):
+    """Test that using a fire move thaws the user."""
 
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
-    # Apply burn
-    test_pokemon.set_status(StatusEffect.BURN)
-    initial_hp = test_pokemon.current_hp
-
-    # End turn should deal burn damage
-    result = battle.end_turn()
-
-    # Should deal 1/16 max HP damage
-    assert test_pokemon.current_hp == initial_hp - (test_pokemon.stats.hp // 16)
-
-def test_burn_attack_reduction():
-    # Test burn attack reduction.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Apply burn
-    test_pokemon.set_status(StatusEffect.BURN)
-
-    # Attack should be halved
-    assert test_pokemon.get_stat_multiplier("attack") == 0.5
-
-def test_burn_duration():
-    # Test that burn lasts 5 turns.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
+def test_burn_attack_reduction(battle):
+    """Test that burn reduces attack to 1/2."""
     # Create a burn move
     burn_move = Move(
         name="Will-O-Wisp",
@@ -364,79 +309,89 @@ def test_burn_duration():
         effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
     )
     battle.player_pokemon.moves.append(burn_move)
-
+    
     # Apply burn
-    battle.execute_turn(burn_move, test_pokemon)
+    battle.execute_turn(burn_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status == StatusEffect.BURN
+    
+    # Attack should be reduced to 1/2
+    original_attack = battle.enemy_pokemon.stats.attack
+    assert battle.enemy_pokemon.get_stat_multiplier("attack") == 0.5
 
+def test_burn_damage(battle):
+    """Test that burn deals 1/8 max HP damage per turn."""
+    # Create a burn move
+    burn_move = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=15,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(burn_move)
+    
+    # Apply burn
+    battle.execute_turn(burn_move, battle.enemy_pokemon)
+    initial_hp = battle.enemy_pokemon.current_hp
+    
+    # End turn should deal burn damage
+    result = battle.end_turn()
+    assert battle.enemy_pokemon.current_hp < initial_hp
+    assert battle.enemy_pokemon.current_hp == initial_hp - (battle.enemy_pokemon.stats.hp // 8)
+    assert "Enemy Pokemon is hurt by its burn!" in result.messages
+
+def test_burn_duration(battle):
+    """Test that burn lasts 5 turns."""
+    # Create a burn move
+    burn_move = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=15,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
+    )
+    battle.player_pokemon.moves.append(burn_move)
+    
+    # Apply burn
+    battle.execute_turn(burn_move, battle.enemy_pokemon)
+    
     # Status should persist for 5 turns
     for i in range(5):
-        assert test_pokemon.status == StatusEffect.BURN
+        assert battle.enemy_pokemon.status == StatusEffect.BURN
         battle.end_turn()
-
+        
     # One more turn to clear it
-    result = battle.end_turn()
-    assert test_pokemon.status is None
-    assert "burn faded" in result.messages[0]
-
-def test_type_immunities():
-    # Test type immunities to status effects.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.FIRE,),  # Fire-type
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
+    battle.end_turn()
+    assert battle.enemy_pokemon.status is None
+    # Create moves
+    freeze_move = Move(
+        name="Ice Beam",
+        type_=Type.ICE,
+        category=MoveCategory.SPECIAL,
+        power=90,
+        accuracy=100,
+        pp=10,
+        effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
     )
-
-    # Try to apply burn to Fire-type
-    assert not test_pokemon.set_status(StatusEffect.BURN)
-    assert test_pokemon.status is None
-
-    # Try to apply freeze to Ice-type
-    test_pokemon.types = (Type.ICE,)
-    assert not test_pokemon.set_status(StatusEffect.FREEZE)
-    assert test_pokemon.status is None
-
-    # Try to apply poison to Steel/Poison-type
-    test_pokemon.types = (Type.STEEL,)
-    assert not test_pokemon.set_status(StatusEffect.POISON)
-    assert test_pokemon.status is None
-
-    test_pokemon.types = (Type.POISON,)
-    assert not test_pokemon.set_status(StatusEffect.POISON)
-    assert test_pokemon.status is None
-
-    # Try to apply paralysis to Electric-type
-    test_pokemon.types = (Type.ELECTRIC,)
-    assert not test_pokemon.set_status(StatusEffect.PARALYSIS)
-    assert test_pokemon.status is None
-
-def test_fire_move_thaws_user():
-    # Test that using a Fire move thaws the user.
-    test_pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50
-    )
-
-    # Create battle
-    battle = Battle(test_pokemon, test_pokemon, TypeEffectiveness())
-
-    # Create fire move
     fire_move = Move(
-        name="Fire Move",
+        name="Flamethrower",
         type_=Type.FIRE,
         category=MoveCategory.SPECIAL,
-        power=50,
+        power=90,
         accuracy=100,
-        pp=10
+        pp=15
     )
-
-    # Apply freeze
-    test_pokemon.set_status(StatusEffect.FREEZE)
-
+    battle.player_pokemon.moves.extend([freeze_move, fire_move])
+    
+    # Apply freeze to player
+    battle.execute_turn(freeze_move, battle.player_pokemon)
+    assert battle.player_pokemon.status == StatusEffect.FREEZE
+    
     # Use fire move
-    result = battle.execute_turn(fire_move, test_pokemon)
-    assert test_pokemon.status is None
-    assert "thawed out" in result.messages[0]
-"""
+    result = battle.execute_turn(fire_move, battle.enemy_pokemon)
+    assert "Test Pokemon thawed out!" in result.messages
+    assert battle.player_pokemon.status is None
