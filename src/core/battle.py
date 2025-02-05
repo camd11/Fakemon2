@@ -133,13 +133,14 @@ class Battle:
             result.messages.append(f"{move.name} has no PP left!")
             return result
             
-        # Accuracy check using the attacking Pokemon's accuracy and target's evasion
-        accuracy = move.accuracy * attacker.get_stat_multiplier("accuracy")
-        evasion = target.get_stat_multiplier("evasion")
-        if random.random() * 100 > accuracy / evasion:
-            result.move_missed = True
-            result.messages.append(f"{move.name} missed!")
-            return result
+        # Accuracy check for non-status moves
+        if move.category != MoveCategory.STATUS:
+            accuracy = move.accuracy * attacker.get_stat_multiplier("accuracy")
+            evasion = target.get_stat_multiplier("evasion")
+            if random.random() > (accuracy / evasion) / 100:  # Convert to decimal for comparison
+                result.move_missed = True
+                result.messages.append(f"{move.name} missed!")
+                return result
             
         # Calculate and deal damage for damaging moves
         if move.is_damaging:
@@ -169,23 +170,34 @@ class Battle:
         # Apply move effects
         for effect in move.effects:
             # Status effects
-            if effect.status and random.random() * 100 <= effect.status_chance:
-                # Set duration based on status type
-                duration = None
-                if effect.status == StatusEffect.SLEEP:
-                    duration = random.randint(1, 3)  # Initial duration 1-3 turns
-                elif effect.status == StatusEffect.FREEZE:
-                    duration = None  # Freeze has no duration
-                else:
-                    duration = 5  # Initial duration 5 turns
+            if effect.status:
+                # Keep status chance as percentage until final check
+                status_chance = effect.status_chance
                 
-                if target.set_status(effect.status, duration=duration):
-                    result.status_applied = effect.status
-                    # Custom message for sleep
+                # Apply resistance if any
+                if target.ability:
+                    resistance = target.ability.modifies_status_chance(effect.status)
+                    if resistance is not None:
+                        status_chance *= resistance
+                
+                # Random check (convert to decimal at the end)
+                if random.random() <= status_chance / 100:
+                    # Set duration based on status type
+                    duration = None
                     if effect.status == StatusEffect.SLEEP:
-                        result.messages.append(f"{target.name} fell asleep!")
+                        duration = random.randint(1, 3)  # Initial duration 1-3 turns
+                    elif effect.status == StatusEffect.FREEZE:
+                        duration = None  # Freeze has no duration
                     else:
-                        result.messages.append(f"{target.name} was {effect.status.name.lower()}ed!")
+                        duration = 5  # Initial duration 5 turns
+                    
+                    if target.set_status(effect.status, duration=duration):
+                        result.status_applied = effect.status
+                        # Custom message for sleep
+                        if effect.status == StatusEffect.SLEEP:
+                            result.messages.append(f"{target.name} fell asleep!")
+                        else:
+                            result.messages.append(f"{target.name} was {effect.status.name.lower()}ed!")
                 
             # Stat changes
             for stat, stages in effect.stat_changes.items():

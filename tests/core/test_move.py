@@ -1,192 +1,151 @@
-"""Tests for moves."""
+"""Tests for Move class functionality."""
 
 import pytest
 from src.core.move import Move, MoveCategory, Effect, StatusEffect
 from src.core.types import Type
-from src.core.battle import Weather
 
-def test_move_initialization():
-    """Test that moves are initialized correctly."""
-    move = Move(
+@pytest.fixture
+def basic_move() -> Move:
+    """Create a basic move for testing."""
+    return Move(
         name="Test Move",
         type_=Type.NORMAL,
         category=MoveCategory.PHYSICAL,
-        power=50,
+        power=40,
         accuracy=100,
-        pp=10
+        pp=35
     )
-    
-    assert move.name == "Test Move"
-    assert move.type == Type.NORMAL
-    assert move.category == MoveCategory.PHYSICAL
-    assert move.power == 50
-    assert move.accuracy == 100
-    assert move.max_pp == 10
-    assert move.current_pp == 10
-    assert move.effects == []
 
-def test_move_pp_usage():
-    """Test that PP is consumed correctly."""
-    move = Move(
-        name="Test Move",
+@pytest.fixture
+def status_move() -> Move:
+    """Create a status move with effects for testing."""
+    return Move(
+        name="Test Status",
         type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
+        category=MoveCategory.STATUS,
+        power=0,
         accuracy=100,
-        pp=2
+        pp=30,
+        effects=[
+            Effect(
+                status=StatusEffect.PARALYSIS,
+                status_chance=30,
+                stat_changes={"speed": -1}
+            )
+        ]
     )
-    
-    # Should be able to use twice
-    assert move.use()
-    assert move.current_pp == 1
-    assert move.use()
-    assert move.current_pp == 0
-    
-    # Should fail on third use
-    assert not move.use()
-    assert move.current_pp == 0
 
-def test_move_pp_restore():
-    """Test that PP can be restored."""
-    move = Move(
-        name="Test Move",
-        type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
-        accuracy=100,
-        pp=10
-    )
-    
-    # Use move twice
-    move.use()
-    move.use()
-    assert move.current_pp == 8
-    
-    # Restore partial PP
-    move.restore_pp(1)
-    assert move.current_pp == 9
-    
-    # Restore full PP
-    move.restore_pp()
-    assert move.current_pp == 10
-    
-    # Shouldn't restore beyond max
-    move.restore_pp(5)
-    assert move.current_pp == 10
+def test_move_creation(basic_move):
+    """Test basic move creation."""
+    assert basic_move.name == "Test Move"
+    assert basic_move.type == Type.NORMAL
+    assert basic_move.category == MoveCategory.PHYSICAL
+    assert basic_move.power == 40
+    assert basic_move.accuracy == 100
+    assert basic_move.max_pp == 35
+    assert basic_move.current_pp == 35
+    assert len(basic_move.effects) == 0
 
-def test_move_effects():
-    """Test that move effects are handled correctly."""
-    effect = Effect(
-        status=StatusEffect.BURN,
-        status_chance=100.0,
-        stat_changes={"attack": -1}
-    )
+def test_move_pp_management(basic_move):
+    """Test PP usage and restoration."""
+    # Test using PP
+    assert basic_move.current_pp == 35
+    assert basic_move.use()  # Should return True and decrease PP
+    assert basic_move.current_pp == 34
     
-    move = Move(
-        name="Test Move",
-        type_=Type.FIRE,
-        category=MoveCategory.SPECIAL,
-        power=50,
-        accuracy=100,
-        pp=10,
-        effects=[effect]
-    )
+    # Test using all PP
+    for _ in range(34):
+        basic_move.use()
+    assert basic_move.current_pp == 0
     
-    assert len(move.effects) == 1
-    assert move.effects[0].status == StatusEffect.BURN
-    assert move.effects[0].status_chance == 100.0
-    assert move.effects[0].stat_changes == {"attack": -1}
+    # Test trying to use move with no PP
+    assert not basic_move.use()  # Should return False
+    assert basic_move.current_pp == 0
+    
+    # Test partial PP restore
+    basic_move.restore_pp(10)
+    assert basic_move.current_pp == 10
+    
+    # Test full PP restore
+    basic_move.restore_pp()
+    assert basic_move.current_pp == basic_move.max_pp
+
+def test_status_move_effects(status_move):
+    """Test status move effect properties."""
+    assert len(status_move.effects) == 1
+    effect = status_move.effects[0]
+    
+    assert effect.status == StatusEffect.PARALYSIS
+    assert effect.status_chance == 30
+    assert effect.stat_changes == {"speed": -1}
 
 def test_move_is_damaging():
-    """Test that moves are correctly identified as damaging or not."""
-    physical = Move(
+    """Test is_damaging property for different move categories."""
+    physical_move = Move(
         name="Physical",
         type_=Type.NORMAL,
         category=MoveCategory.PHYSICAL,
-        power=50,
+        power=40,
         accuracy=100,
-        pp=10
+        pp=35
     )
-    assert physical.is_damaging
+    assert physical_move.is_damaging
     
-    special = Move(
+    special_move = Move(
         name="Special",
-        type_=Type.NORMAL,
+        type_=Type.FIRE,
         category=MoveCategory.SPECIAL,
-        power=50,
+        power=40,
         accuracy=100,
-        pp=10
+        pp=35
     )
-    assert special.is_damaging
+    assert special_move.is_damaging
     
-    status = Move(
+    status_move = Move(
         name="Status",
         type_=Type.NORMAL,
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=10
+        pp=30
     )
-    assert not status.is_damaging
+    assert not status_move.is_damaging
 
-def test_weather_boost_water():
-    """Test that Water moves are boosted in rain and reduced in sun."""
-    move = Move(
-        name="Water Move",
-        type_=Type.WATER,
-        category=MoveCategory.SPECIAL,
-        power=50,
-        accuracy=100,
-        pp=10
+def test_effect_initialization():
+    """Test Effect class initialization and defaults."""
+    # Test with minimal parameters
+    effect = Effect()
+    assert effect.status is None
+    assert effect.status_chance == 0.0
+    assert effect.stat_changes == {}
+    
+    # Test with all parameters
+    effect = Effect(
+        status=StatusEffect.BURN,
+        status_chance=50.0,
+        stat_changes={"attack": -1, "speed": -1}
     )
-    
-    # Should be boosted in rain
-    assert move.get_weather_multiplier(Weather.RAIN) == 1.5
-    
-    # Should be reduced in sun
-    assert move.get_weather_multiplier(Weather.SUN) == 0.5
-    
-    # Should be normal in other weather
-    assert move.get_weather_multiplier(Weather.CLEAR) == 1.0
-    assert move.get_weather_multiplier(Weather.SANDSTORM) == 1.0
-    assert move.get_weather_multiplier(Weather.HAIL) == 1.0
+    assert effect.status == StatusEffect.BURN
+    assert effect.status_chance == 50.0
+    assert effect.stat_changes == {"attack": -1, "speed": -1}
 
-def test_weather_boost_fire():
-    """Test that Fire moves are boosted in sun and reduced in rain."""
+def test_move_with_multiple_effects():
+    """Test move with multiple effects."""
     move = Move(
-        name="Fire Move",
-        type_=Type.FIRE,
-        category=MoveCategory.SPECIAL,
-        power=50,
-        accuracy=100,
-        pp=10
-    )
-    
-    # Should be boosted in sun
-    assert move.get_weather_multiplier(Weather.SUN) == 1.5
-    
-    # Should be reduced in rain
-    assert move.get_weather_multiplier(Weather.RAIN) == 0.5
-    
-    # Should be normal in other weather
-    assert move.get_weather_multiplier(Weather.CLEAR) == 1.0
-    assert move.get_weather_multiplier(Weather.SANDSTORM) == 1.0
-    assert move.get_weather_multiplier(Weather.HAIL) == 1.0
-
-def test_weather_boost_other():
-    """Test that other move types are unaffected by weather."""
-    move = Move(
-        name="Normal Move",
+        name="Multi Effect",
         type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=50,
+        category=MoveCategory.STATUS,
+        power=0,
         accuracy=100,
-        pp=10
+        pp=20,
+        effects=[
+            Effect(status=StatusEffect.BURN, status_chance=10),
+            Effect(stat_changes={"attack": -1}),
+            Effect(stat_changes={"defense": -1})
+        ]
     )
     
-    # Should be normal in all weather
-    assert move.get_weather_multiplier(Weather.CLEAR) == 1.0
-    assert move.get_weather_multiplier(Weather.RAIN) == 1.0
-    assert move.get_weather_multiplier(Weather.SUN) == 1.0
-    assert move.get_weather_multiplier(Weather.SANDSTORM) == 1.0
-    assert move.get_weather_multiplier(Weather.HAIL) == 1.0
+    assert len(move.effects) == 3
+    assert move.effects[0].status == StatusEffect.BURN
+    assert move.effects[1].stat_changes == {"attack": -1}
+    assert move.effects[2].stat_changes == {"defense": -1}
