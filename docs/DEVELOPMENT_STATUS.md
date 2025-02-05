@@ -1,102 +1,122 @@
 # Development Status
 
-## Status Effect System (Completed)
+## Current Focus: Ability System Implementation
 
-The status effect system has been fully implemented with the following features:
+### Status
+Currently working on implementing and testing the Pokemon ability system, particularly focusing on status effect immunities and resistances.
 
-### Core Components
+### Components
 
-1. **Pokemon Class (`src/core/pokemon.py`)**
-   - Status tracking with optional duration
-   - Status clear message generation
-   - Stat stage modifications for status effects
-   - Prevention of multiple status effects
+#### Ability System (src/core/ability.py)
+- Implemented base Ability class with support for:
+  - Status immunities (completely prevents specific status effects)
+  - Status resistances (reduces chance of status effects)
+- Ability types are defined in AbilityType enum:
+  - STATUS_IMMUNITY
+  - STATUS_RESISTANCE
 
-2. **Battle Class (`src/core/battle.py`)**
-   - End-of-turn status effect processing
-   - Status message handling
-   - Damage calculations for poison
-   - Turn skip chance for paralysis
+#### Battle System Integration (src/core/battle.py)
+- Modified battle system to handle abilities during:
+  - Status effect application
+  - Accuracy checks
+  - Move execution
+- Recent changes:
+  - Separated accuracy checks for status moves vs. non-status moves
+  - Fixed status chance calculation to properly handle resistance multipliers
 
-### Implemented Status Effects
+### Testing Status (tests/core/test_ability.py)
 
-1. **Poison**
-   - Deals 1/8 max HP damage at end of turn
-   - Persists until cured or duration expires
-   - Messages: "[Pokemon] was poisoned!", "[Pokemon] is hurt by poison!"
+#### Working Tests
+1. Status Immunity Test (PASSING)
+   - Verifies abilities can completely prevent specific status effects
+   - Tests both immunity to specified status and ability to receive other status effects
 
-2. **Paralysis**
-   - 25% chance to skip turn with message "[Pokemon] is fully paralyzed!"
-   - Reduces speed to 1/4 of normal value
-   - Persists until cured or duration expires
+2. Multiple Status Immunities Test (PASSING)
+   - Verifies abilities can prevent multiple status effects
+   - Tests immunity to multiple specified statuses while allowing other status effects
 
-3. **Sleep**
-   - Prevents moves completely with message "[Pokemon] is fast asleep!"
-   - Lasts 1-3 turns randomly
-   - No stat modifications
-   - Messages: "[Pokemon] fell asleep!", "[Pokemon] is fast asleep!"
+#### Current Issues
+1. Status Resistance Test (FAILING)
+   - Test verifies that abilities can reduce the chance of status effects
+   - Expected: ~50% success rate for status application with resistance ability
+   - Current: Getting much lower success rate (~0.7%)
+   - Potential issues being investigated:
+     - Status chance calculation in battle.py
+     - Accuracy check application for status moves
+     - Type chart handling in test setup
 
-4. **Freeze**
-   - Prevents moves completely with message "[Pokemon] is frozen solid!"
-   - 20% chance to thaw each turn
-   - Fire-type moves automatically thaw the user
-   - No duration limit (persists until thawed)
-   - Messages: "[Pokemon] was frozen!", "[Pokemon] thawed out!"
+### Next Steps
 
-5. **Burn**
-   - Deals 1/8 max HP damage per turn
-   - Reduces Attack to 1/2 of normal value
-   - Persists until cured or duration expires (5 turns)
-   - Messages: "[Pokemon] was burned!", "[Pokemon] is hurt by its burn!"
+1. Fix Status Resistance Implementation
+   - Debug status chance calculation in battle.py
+   - Verify resistance multiplier application
+   - Ensure proper handling of accuracy checks for status moves
 
-### Status Effect Duration
+2. Additional Testing Needed
+   - Add tests for:
+     - Multiple status resistances
+     - Combined immunity and resistance abilities
+     - Edge cases (100% and 0% chances)
+     - Interaction with type immunities
 
-- Status effects can be applied with an optional duration
-- Duration decreases by 1 each turn
-- Status is automatically cleared when duration reaches 0
-- Clear message: "[Pokemon]'s [status] faded!"
+3. Documentation Updates
+   - Add ability documentation to DESIGN.md
+   - Update battle system documentation with ability interactions
+   - Add examples of ability usage to code comments
 
-### Testing
+### Technical Notes
 
-All status effect functionality is verified by tests in `tests/core/test_battle_status.py`:
-- `test_poison_damage`: Verifies poison damage calculation
-- `test_paralysis_speed_reduction`: Checks speed stat modification
-- `test_paralysis_skip_turn`: Validates turn skip probability
-- `test_status_duration`: Tests duration tracking and clearing
-- `test_status_messages`: Verifies message generation
-- `test_multiple_status_effects`: Ensures only one status at a time
-- `test_sleep_prevents_moves`: Verifies sleep prevents all moves
-- `test_sleep_duration`: Validates random sleep duration (1-3 turns)
-- `test_freeze_prevents_moves`: Verifies freeze prevents all moves
-- `test_freeze_thaw_chance`: Validates 20% thaw chance per turn
-- `test_fire_move_thaws_user`: Confirms fire moves thaw the user
-- `test_burn_attack_reduction`: Verifies burn reduces attack to 1/2
-- `test_burn_damage`: Validates burn deals 1/8 max HP damage per turn
-- `test_burn_duration`: Confirms burn lasts 5 turns
+#### Status Effect Application Flow
+1. Move execution (battle.py:execute_turn)
+2. Effect processing (battle.py:execute_turn -> effects loop)
+3. Status chance calculation
+   - Base chance from move effect
+   - Resistance multiplier from ability (if any)
+4. Status application attempt (pokemon.py:set_status)
+   - Immunity check
+   - Current status check
+   - Type immunity check
 
-### Type Immunities
+#### Key Files
+- src/core/ability.py: Core ability implementation
+- src/core/battle.py: Battle system and ability integration
+- src/core/pokemon.py: Pokemon status handling
+- tests/core/test_ability.py: Ability system tests
 
-The following type-based status immunities are implemented:
-- Fire-type Pokemon cannot be burned
-- Ice-type Pokemon cannot be frozen
-- Electric-type Pokemon cannot be paralyzed
-- Poison and Steel-type Pokemon cannot be poisoned
+### Known Issues
+1. Status resistance test failing
+   - Current success rate: 0.7%
+   - Expected success rate: 45-55%
+   - Investigation ongoing
 
-### Future Improvements
+2. Accuracy handling
+   - Need to verify accuracy checks don't interfere with status moves
+   - Currently implementing separate handling for status vs. non-status moves
 
-Potential areas for expansion:
-1. Additional status effects
-2. Status effect resistance abilities
-3. Items to cure specific status effects
-4. Moves that have increased effect chance on status-afflicted Pokemon
+### Dependencies
+- Python 3.12.3
+- pytest 7.4.3
+- Type system from core/types.py
+- Status effects from core/move.py
 
-## Next Steps
+### Code Style Notes
+- Using dataclasses for result objects
+- Enums for type safety
+- Comprehensive docstrings
+- Type hints throughout
+- Test-driven development approach
 
-1. Implement remaining status effects
-2. Add status immunity system
-3. Create status-curing items
-4. Add status-related abilities
+### Future Considerations
+1. Performance optimization
+   - Status check calculations
+   - Battle system efficiency
 
-## Previous Updates
+2. Extensibility
+   - Support for more complex abilities
+   - Weather-based abilities
+   - Stat-modifying abilities
 
-[Previous development status entries would go here]
+3. Error Handling
+   - Add more robust error checking
+   - Improve error messages
+   - Add logging for debugging

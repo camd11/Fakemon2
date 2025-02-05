@@ -1,45 +1,39 @@
 # Changelog
 
-## [2024-02-05] Type Immunities and Burn Status
-- Added type-based status immunities:
-  - Fire-type immunity to burn
-  - Ice-type immunity to freeze
-  - Electric-type immunity to paralysis
-  - Poison/Steel-type immunity to poison
-- Added burn status effect:
-  - 1/8 max HP damage per turn
-  - Attack reduction to 1/2
-  - 5 turn duration
-- Added comprehensive tests for immunities and burn
-- Updated documentation
-
-## [2024-02-04] Status Effect Duration Fixes
-- Fixed sleep duration to properly last 1-3 turns
-- Fixed poison duration to properly last 5 turns
-- Fixed status effect duration handling to decrement first, then check if duration <= 0
-- Increased freeze thaw chance to 20% per turn
-- Added safety limit to prevent infinite loops in tests
-- All status effect tests passing with good coverage
-
 ## [Unreleased]
 
 ### Added
-- Status effect system with support for Poison, Paralysis, and Sleep
-  - Poison deals 1/8 max HP damage per turn
-  - Paralysis has 25% chance to skip turn and reduces speed to 1/4
-  - Sleep prevents moves completely and lasts 1-3 turns randomly
-  - Status duration tracking with automatic clearing
-  - Status messages for application, damage, and clearing
-  - Prevention of multiple status effects
-  - Comprehensive test coverage in test_battle_status.py
+- New ability system with support for:
+  - Status immunities
+  - Status resistances
+- Tests for ability system functionality
+  - Status immunity tests
+  - Multiple status immunities tests
+  - Status resistance tests (in progress)
 
 ### Changed
-- Enhanced Pokemon class with status effect handling
-- Updated Battle class to process status effects at end of turn
-- Improved battle message system to include status effect notifications
+- Modified battle system to integrate abilities
+- Updated status effect application to consider abilities
+- Separated accuracy checks for status moves vs. non-status moves
+- Improved status chance calculation with resistance multipliers
 
 ### Fixed
-- Status effect duration now properly decreases and clears
-- Status messages now show in correct order during battle
+- Accuracy checks no longer apply to status moves
+- Status immunity properly prevents specific status effects
+- Multiple status immunities working correctly
 
-## [Previous versions would go here]
+### Known Issues
+- Status resistance not reducing status chance correctly
+  - Expected ~50% success rate with resistance
+  - Currently getting ~0.7% success rate
+  - Investigation ongoing
+
+## [Previous Versions]
+
+### [0.1.0] - Initial Release
+- Basic battle system
+- Pokemon stats and types
+- Move system with damage calculation
+- Status effects
+- Weather effects
+- Items and inventory
