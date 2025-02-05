@@ -1,5 +1,16 @@
 # Changelog
 
+## [2024-02-05] Contrary Ability Implementation (In Progress)
+- Added Contrary ability system:
+  - Reverses stat stage changes (positive becomes negative, negative becomes positive)
+  - Properly handles max/min stage limits (-6/+6)
+  - Basic contrary functionality tests passing
+- Known issues to be fixed:
+  - Terrain healing calculation returning incorrect value (62 HP vs expected 56)
+  - Aura damage calculations need adjustment for proper boost/reduction values
+  - Color change type message not returning correctly
+  - Multiple auras not stacking properly
+
 ## [2024-02-05] Held Item Bug Fixes
 - Fixed Oran Berry healing functionality:
   - Fixed item consumption timing to only mark items as used after successful effect

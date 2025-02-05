@@ -503,19 +503,42 @@ Color change abilities have been implemented:
    - Move type matching
    - Type restoration testing
 
+### Contrary System (In Progress)
+
+The Contrary ability has been partially implemented with the following features:
+
+1. **Core Components**
+   - Contrary ability type added
+   - Stat stage reversal logic
+   - Integration with Pokemon's modify_stat method
+
+2. **Known Issues**
+   - Terrain healing calculation needs fixing (getting 62 HP instead of expected 56)
+   - Aura damage calculations need adjustment:
+     * Aura boost not properly applying 33% increase
+     * Aura break not properly applying 25% reduction
+     * Multiple auras not stacking correctly
+   - Color change type message not returning correctly
+
+3. **Testing**
+   - Basic contrary functionality tests passing
+   - Need to fix terrain, aura, and color change related tests
+
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Contrary, Defiant)
+1. Additional ability types (Defiant)
 2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add contrary abilities
-2. Add defiant abilities
-3. Add evolution items
+1. Fix terrain healing calculation in Battle.end_turn
+2. Fix aura damage calculations in Battle._calculate_damage
+3. Fix color change message handling in Pokemon.take_damage
+4. Add defiant abilities
+5. Add evolution items
 
 ## Previous Updates
 
