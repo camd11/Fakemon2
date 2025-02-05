@@ -1,545 +1,124 @@
 # Development Status
 
-## Item System Bug Fixes (Completed)
-
-The following improvements have been made to the held item system:
-
-1. **Core Components**
-   - Fixed item consumption timing to only mark items as used after successful effect
-   - Fixed HP threshold checking by properly passing HP percentage to item trigger check
-   - Improved held item trigger validation
-
-2. **Testing**
-   - All held item tests now passing
-   - Verified Oran Berry healing functionality
-   - Validated item consumption timing
-   - Confirmed HP threshold triggers
-
-## Status Effect System (Completed)
-
-The status effect system has been fully implemented with the following features:
-
-### Core Components
-
-1. **Pokemon Class (`src/core/pokemon.py`)**
-   - Status tracking with optional duration
-   - Status clear message generation
-   - Stat stage modifications for status effects
-   - Prevention of multiple status effects
-
-2. **Battle Class (`src/core/battle.py`)**
-   - End-of-turn status effect processing
-   - Status message handling
-   - Damage calculations for poison
-   - Turn skip chance for paralysis
-
-### Implemented Status Effects
-
-1. **Poison**
-   - Deals 1/8 max HP damage at end of turn
-   - Persists until cured or duration expires
-   - Messages: "[Pokemon] was poisoned!", "[Pokemon] is hurt by poison!"
-
-2. **Paralysis**
-   - 25% chance to skip turn with message "[Pokemon] is fully paralyzed!"
-   - Reduces speed to 1/4 of normal value
-   - Persists until cured or duration expires
-
-3. **Sleep**
-   - Prevents moves completely with message "[Pokemon] is fast asleep!"
-   - Lasts 1-3 turns randomly
-   - No stat modifications
-   - Messages: "[Pokemon] fell asleep!", "[Pokemon] is fast asleep!"
-
-4. **Burn**
-   - Deals 1/16 max HP damage at end of turn
-   - Halves physical attack power
-   - Lasts 5 turns
-   - Messages: "[Pokemon] was burned!", "[Pokemon] is hurt by its burn!"
-
-### Status Effect Duration
-
-- Status effects can be applied with an optional duration
-- Duration decreases by 1 each turn
-- Status is automatically cleared when duration reaches 0
-- Clear message: "[Pokemon]'s [status] faded!"
-
-### Testing
-
-All status effect functionality is verified by tests in `tests/core/test_battle_status.py`:
-- `test_poison_damage`: Verifies poison damage calculation
-- `test_paralysis_speed_reduction`: Checks speed stat modification
-- `test_paralysis_skip_turn`: Validates turn skip probability
-- `test_status_duration`: Tests duration tracking and clearing
-- `test_status_messages`: Verifies message generation
-- `test_multiple_status_effects`: Ensures only one status at a time
-- `test_sleep_prevents_moves`: Verifies sleep prevents all moves
-- `test_sleep_duration`: Validates random sleep duration (1-3 turns)
-
-### Ability System
-
-The ability system has been expanded with both status and weather effects:
-
-1. **Core Components**
-   - Ability class with type and effect tracking
-   - Integration with Pokemon class
-   - Status immunity checking in set_status
-   - Weather effect handling in Battle class
-
-2. **Status-Related Abilities**
-   - Immunity: Prevents all status conditions
-   - Limber: Prevents paralysis
-   - Water Veil: Prevents burns
-   - Vital Spirit: Prevents sleep
-   - Magma Armor: Prevents freezing
-
-3. **Weather-Related Abilities**
-   - Drizzle: Summons rain
-   - Drought: Summons sun
-   - Sand Stream: Summons sandstorm
-   - Snow Warning: Summons hail
-
-4. **Stat-Boosting Abilities**
-   - Guts: Boosts Attack when status-afflicted
-   - Swift Swim: Doubles Speed in rain
-   - Chlorophyll: Doubles Speed in sun
-   - Sand Rush: Doubles Speed in sandstorm
-   - Slush Rush: Doubles Speed in hail
-
-5. **Testing**
-   - Comprehensive tests for each ability type
-   - Verification of ability-type immunity interactions
-   - Weather ability interaction testing
-   - Stat boost calculation testing
-   - Edge case testing for ability-less Pokemon
-
-### Item System
-
-The item system has been expanded with both status-curing and held items:
-
-1. **Core Components**
-   - Enhanced ItemEffect with status-specific curing
-   - Integration with Pokemon status system
-   - Validation of item usage based on status
-   - Held item trigger system
-   - Single-use item tracking
-
-2. **Status-Curing Items**
-   - Full Heal: Cures all status conditions
-   - Antidote: Cures poison
-   - Burn Heal: Cures burn
-   - Paralyze Heal: Cures paralysis
-   - Awakening: Cures sleep
-   - Ice Heal: Cures freeze
-
-3. **Held Items**
-   - Leftovers: Restores HP each turn
-   - Oran Berry: Restores HP at low health
-   - Lum Berry: Cures any status condition
-   - Focus Sash: Survives a one-hit KO
-   - Muscle Band: Boosts physical moves
-   - Wise Glasses: Boosts special moves
-
-4. **Testing**
-   - Verification of item-specific status curing
-   - Validation of item usage restrictions
-   - Held item trigger testing
-   - Single-use item verification
-   - Edge case testing for various conditions
-
-### Move System
-
-Weather-boosted moves have been implemented:
-
-1. **Core Components**
-   - Move class with weather multiplier calculation
-   - Integration with Battle class damage system
-   - Weather-specific damage modifiers
-
-2. **Weather Effects**
-   - Water moves: 1.5x in rain, 0.5x in sun
-   - Fire moves: 1.5x in sun, 0.5x in rain
-   - Other moves unaffected by weather
-
-3. **Testing**
-   - Verification of weather boost calculations
-   - Validation of move type interactions
-   - Edge case testing for various weather conditions
-
-### Entry Hazard System
-
-Entry hazards have been implemented:
-
-1. **Core Components**
-   - Hazard tracking for each battle side
-   - Layer system for stackable hazards
-   - Type-based damage calculations
-   - Flying-type immunity handling
-
-2. **Hazard Types**
-   - Spikes: 1/8, 1/6, 1/4 max HP damage (1-3 layers)
-   - Toxic Spikes: Poison vs toxic poison (1-2 layers)
-   - Stealth Rock: Type-based damage (1/8 base)
-
-3. **Testing**
-   - Verification of hazard damage calculations
-   - Layer stacking validation
-   - Type immunity testing
-   - Edge case testing for various conditions
-
-### Type Enhancement System
-
-Type-enhancing items have been implemented:
-
-1. **Core Components**
-   - Type-specific damage boost calculation
-   - Integration with Battle class damage system
-   - Passive trigger handling
-
-2. **Type Items**
-   - Fire: Charcoal
-   - Water: Mystic Water
-   - Grass: Miracle Seed
-   - Electric: Magnet
-   - Ice: Never-Melt Ice
-   - Fighting: Black Belt
-   - Poison: Poison Barb
-   - Ground: Soft Sand
-   - Flying: Sharp Beak
-   - Psychic: Twisted Spoon
-   - Bug: Silver Powder
-   - Rock: Hard Stone
-   - Ghost: Spell Tag
-   - Dragon: Dragon Fang
-   - Steel: Metal Coat
-   - Normal: Silk Scarf
-
-3. **Testing**
-   - Verification of type boost calculations
-   - Multiplier stacking validation
-   - Wrong type testing
-   - Comprehensive testing for all types
-
-### Terrain System
-
-Terrain effects have been implemented:
-
-1. **Core Components**
-   - Terrain tracking and duration
-   - Move power modification
-   - Status prevention
-   - Grounded Pokemon handling
-
-2. **Terrain Types**
-   - Grassy: Heals grounded Pokemon, boosts Grass moves
-   - Misty: Prevents status conditions, weakens Dragon moves
-   - Electric: Prevents sleep, boosts Electric moves
-   - Psychic: Boosts Psychic moves, prevents priority moves
-
-3. **Terrain Abilities**
-   - Grassy Surge: Sets Grassy Terrain
-   - Misty Surge: Sets Misty Terrain
-   - Electric Surge: Sets Electric Terrain
-   - Psychic Surge: Sets Psychic Terrain
-
-4. **Testing**
-   - Terrain setting verification
-   - Move power modification testing
-   - Status prevention validation
-   - Healing effect testing
-   - Duration tracking testing
-
-### Aura System
-
-Aura effects have been implemented:
-
-1. **Core Components**
-   - Aura tracking
-   - Move power modification
-   - Aura Break handling
-   - Multiple aura stacking
-
-2. **Aura Types**
-   - Fairy Aura: 33% boost to Fairy moves
-   - Dark Aura: 33% boost to Dark moves
-   - Aura Break: Reverses boosts to -25%
-
-3. **Testing**
-   - Aura boost verification
-   - Aura Break testing
-   - Multiple aura interaction
-   - Type specificity validation
-
-### Form Change System
-
-Form change abilities have been implemented:
-
-1. **Core Components**
-   - Form tracking
-   - Stat recalculation
-   - Type updating
-   - HP percentage preservation
-
-2. **Form Change Types**
-   - Stance Change: Offensive/defensive forms based on moves
-   - Battle Bond: Powers up after defeating Pokemon
-   - Power Construct: Transforms at low HP
-
-3. **Form-Specific Features**
-   - Stats per form
-   - Types per form
-   - Form change triggers
-   - Form change messages
-
-4. **Testing**
-   - Form change trigger verification
-   - Stat/type update validation
-   - HP preservation testing
-   - Form-specific behavior testing
-
-### Illusion System
-
-Illusion abilities have been implemented:
-
-1. **Core Components**
-   - Illusion tracking
-   - Disguise HP system
-   - Transform copying
-   - Type mimicry
-
-2. **Illusion Types**
-   - Illusion: Appears as another Pokemon
-   - Imposter: Copies opponent's Pokemon
-   - Mimicry: Changes type with terrain
-
-3. **Illusion Features**
-   - Disguise HP protection
-   - Stat/type copying
-   - Move copying
-   - Terrain-based changes
-
-4. **Testing**
-   - Disguise HP verification
-   - Transform copying validation
-   - Type mimicry testing
-   - Illusion trigger testing
-
-### Disguise System
-
-Disguise abilities have been implemented:
-
-1. **Core Components**
-   - Disguise HP tracking
-   - Move category checking
-   - Effectiveness checking
-   - Damage nullification
-
-2. **Disguise Types**
-   - All: Protects from first hit
-   - Physical: Protects from first physical hit
-   - Weakness: Only takes super effective damage
-
-3. **Disguise Features**
-   - One-time protection
-   - Category-specific protection
-   - Effectiveness-based protection
-   - Protection messages
-
-4. **Testing**
-   - Disguise HP verification
-   - Physical move protection
-   - Super effective protection
-   - Protection trigger testing
-
-### Protean System
-
-Protean abilities have been implemented:
-
-1. **Core Components**
-   - Type change tracking
-   - Move type matching
-   - STAB boost handling
-   - Type restoration
-
-2. **Protean Types**
-   - Move: Changes type to match move used
-   - STAB: Boosts same-type attack bonus
-
-3. **Protean Features**
-   - Dynamic type changing
-   - Enhanced STAB multiplier
-   - Original type tracking
-   - Type change messages
-
-4. **Testing**
-   - Type change verification
-   - STAB boost calculation
-   - Move type matching
-   - Type restoration testing
-
-### Unaware System
-
-Unaware abilities have been implemented:
-
-1. **Core Components**
-   - Stat stage ignoring
-   - Opponent checking
-   - Stat multiplier handling
-   - Unaware checking
-
-2. **Unaware Types**
-   - Ignore: Ignores opponent's stat changes
-
-3. **Unaware Features**
-   - Dynamic stat ignoring
-   - Opponent stat preservation
-   - Multiplier handling
-   - Unaware messages
-
-4. **Testing**
-   - Stat ignoring verification
-   - Opponent checking testing
-   - Multiplier testing
-   - Message verification
-
-### Simple System
-
-Simple abilities have been implemented:
-
-1. **Core Components**
-   - Stat stage doubling
-   - Stage limit handling
-   - Stat modification tracking
-   - Simple checking
-
-2. **Simple Types**
-   - Double: Doubles stat stage changes
-
-3. **Simple Features**
-   - Dynamic stat doubling
-   - Stage limit preservation
-   - Positive/negative handling
-   - Simple messages
-
-4. **Testing**
-   - Stage doubling verification
-   - Stage limit testing
-   - Positive/negative testing
-   - Message verification
-
-### Mold Breaker System
-
-Mold breaker abilities have been implemented:
-
-1. **Core Components**
-   - Ability ignoring
-   - Original ability preservation
-   - Status effect handling
-   - Mold breaker checking
-
-2. **Mold Breaker Types**
-   - Ignore: Ignores other Pokemon's abilities
-
-3. **Mold Breaker Features**
-   - Dynamic ability ignoring
-   - Status effect bypass
-   - Ability immunity bypass
-   - Mold breaker messages
-
-4. **Testing**
-   - Ability ignore verification
-   - Status effect testing
-   - Immunity bypass testing
-   - Message verification
-
-### Trace System
-
-Trace abilities have been implemented:
-
-1. **Core Components**
-   - Ability copying
-   - Original ability tracking
-   - Ability restoration
-   - Faint handling
-
-2. **Trace Types**
-   - Copy: Copies opponent's ability
-
-3. **Trace Features**
-   - Dynamic ability copying
-   - Original ability preservation
-   - Automatic restoration on faint
-   - Trace messages
-
-4. **Testing**
-   - Ability copy verification
-   - Ability restoration testing
-   - Faint handling testing
-   - Message verification
-
-### Color Change System
-
-Color change abilities have been implemented:
-
-1. **Core Components**
-   - Type change tracking
-   - Move type matching
-   - Weather type matching
-   - Type restoration
-
-2. **Color Change Types**
-   - Damage: Changes type to match damaging move
-   - Weather: Changes type based on weather
-
-3. **Color Change Features**
-   - Dynamic type changing
-   - Weather-based type changes
-   - Original type tracking
-   - Type change messages
-
-4. **Testing**
-   - Type change verification
-   - Weather type matching
-   - Move type matching
-   - Type restoration testing
-
-### Contrary System (In Progress)
-
-The Contrary ability has been partially implemented with the following features:
-
-1. **Core Components**
-   - Contrary ability type added
-   - Stat stage reversal logic
-   - Integration with Pokemon's modify_stat method
-
-2. **Known Issues**
-   - Terrain healing calculation needs fixing (getting 62 HP instead of expected 56)
-   - Aura damage calculations need adjustment:
-     * Aura boost not properly applying 33% increase
-     * Aura break not properly applying 25% reduction
-     * Multiple auras not stacking correctly
-   - Color change type message not returning correctly
-
-3. **Testing**
-   - Basic contrary functionality tests passing
-   - Need to fix terrain, aura, and color change related tests
-
-### Future Improvements
-
-Potential areas for expansion:
-1. Additional ability types (Defiant)
-2. Additional item types (Evolution items)
-3. Moves that have increased effect chance on status-afflicted Pokemon
-4. Additional weather-based move effects
-
-## Next Steps
-
-1. Fix terrain healing calculation in Battle.end_turn
-2. Fix aura damage calculations in Battle._calculate_damage
-3. Fix color change message handling in Pokemon.take_damage
-4. Add defiant abilities
-5. Add evolution items
-
-## Previous Updates
-
-[Previous development status entries would go here]
+Last Updated: 2/5/2025 5:09 PM EST
+
+## Current Focus: Ability System Implementation
+
+### Status
+Currently working on implementing and testing the Pokemon ability system, particularly focusing on status effect immunities and resistances.
+
+### Components
+
+#### Ability System (src/core/ability.py)
+- Implemented base Ability class with support for:
+  - Status immunities (completely prevents specific status effects)
+  - Status resistances (reduces chance of status effects)
+- Ability types are defined in AbilityType enum:
+  - STATUS_IMMUNITY
+  - STATUS_RESISTANCE
+
+#### Battle System Integration (src/core/battle.py)
+- Modified battle system to handle abilities during:
+  - Status effect application
+  - Accuracy checks
+  - Move execution
+- Recent changes:
+  - Separated accuracy checks for status moves vs. non-status moves
+  - Fixed status chance calculation to properly handle resistance multipliers
+
+### Testing Status (tests/core/test_ability.py)
+
+#### Working Tests
+1. Status Immunity Test (PASSING)
+   - Verifies abilities can completely prevent specific status effects
+   - Tests both immunity to specified status and ability to receive other status effects
+
+2. Multiple Status Immunities Test (PASSING)
+   - Verifies abilities can prevent multiple status effects
+   - Tests immunity to multiple specified statuses while allowing other status effects
+
+#### Current Issues
+1. Status Resistance Test (FAILING)
+   - Test verifies that abilities can reduce the chance of status effects
+   - Expected: ~50% success rate for status application with resistance ability
+   - Current: Getting much lower success rate (~0.7%)
+   - Potential issues being investigated:
+     - Status chance calculation in battle.py
+     - Accuracy check application for status moves
+     - Type chart handling in test setup
+
+### Next Steps
+
+1. Fix Status Resistance Implementation
+   - Debug status chance calculation in battle.py
+   - Verify resistance multiplier application
+   - Ensure proper handling of accuracy checks for status moves
+
+2. Additional Testing Needed
+   - Add tests for:
+     - Multiple status resistances
+     - Combined immunity and resistance abilities
+     - Edge cases (100% and 0% chances)
+     - Interaction with type immunities
+
+3. Documentation Updates
+   - Add ability documentation to DESIGN.md
+   - Update battle system documentation with ability interactions
+   - Add examples of ability usage to code comments
+
+### Technical Notes
+
+#### Status Effect Application Flow
+1. Move execution (battle.py:execute_turn)
+2. Effect processing (battle.py:execute_turn -> effects loop)
+3. Status chance calculation
+   - Base chance from move effect
+   - Resistance multiplier from ability (if any)
+4. Status application attempt (pokemon.py:set_status)
+   - Immunity check
+   - Current status check
+   - Type immunity check
+
+#### Key Files
+- src/core/ability.py: Core ability implementation
+- src/core/battle.py: Battle system and ability integration
+- src/core/pokemon.py: Pokemon status handling
+- tests/core/test_ability.py: Ability system tests
+
+### Known Issues
+1. Status resistance test failing
+   - Current success rate: 0.7%
+   - Expected success rate: 45-55%
+   - Investigation ongoing
+
+2. Accuracy handling
+   - Need to verify accuracy checks don't interfere with status moves
+   - Currently implementing separate handling for status vs. non-status moves
+
+### Dependencies
+- Python 3.12.3
+- pytest 7.4.3
+- Type system from core/types.py
+- Status effects from core/move.py
+
+### Code Style Notes
+- Using dataclasses for result objects
+- Enums for type safety
+- Comprehensive docstrings
+- Type hints throughout
+- Test-driven development approach
+
+### Future Considerations
+1. Performance optimization
+   - Status check calculations
+   - Battle system efficiency
+
+2. Extensibility
+   - Support for more complex abilities
+   - Weather-based abilities
+   - Stat-modifying abilities
+
+3. Error Handling
+   - Add more robust error checking
+   - Improve error messages
+   - Add logging for debugging
