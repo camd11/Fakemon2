@@ -163,22 +163,23 @@ def set_status(self, status: Optional[StatusEffect], duration: Optional[int] = N
        return self.resistance_multiplier
    ```
 
-### Current Limitations
+### Current Implementation Status
 
-1. Status Resistance Implementation
-   - Current issue with resistance calculations
-   - Need to verify probability calculations
-   - Potential accuracy check interference
+1. Status Effect Handling
+    - Complete immunity to specific status effects
+    - 50% resistance to specific status effects
+    - Proper probability calculations verified
+    - Separate handling for status vs. non-status moves
 
-2. Ability Combinations
-   - No support for multiple abilities
-   - Limited interaction between different ability types
-   - No priority system for conflicting effects
+2. Ability Types
+    - STATUS_IMMUNITY: Completely blocks specified status effects
+    - STATUS_RESISTANCE: Reduces chance of specified status effects by 50%
+    - Each type thoroughly tested with multiple scenarios
 
 3. Battle Integration
-   - Limited to status effect manipulation
-   - No support for complex timing effects
-   - No turn order modification
+    - Full integration with battle system
+    - Proper handling of PP and status management
+    - Clear separation between immunity and resistance effects
 
 ### Best Practices
 

@@ -77,21 +77,20 @@ Currently working on implementing and testing the Pokemon ability system, partic
    - Tests immunity to multiple specified statuses while allowing other status effects
 
 #### Current Issues
-1. Status Resistance Test (FAILING)
-   - Test verifies that abilities can reduce the chance of status effects
-   - Expected: ~50% success rate for status application with resistance ability
-   - Current: Getting much lower success rate (~0.7%)
-   - Potential issues being investigated:
-     - Status chance calculation in battle.py
-     - Accuracy check application for status moves
-     - Type chart handling in test setup
+No critical issues remaining in the ability system implementation.
 
 ### Next Steps
 
-1. Fix Status Resistance Implementation
-   - Debug status chance calculation in battle.py
-   - Verify resistance multiplier application
-   - Ensure proper handling of accuracy checks for status moves
+1. Improve Battle System Coverage
+    - Add tests for weather effects
+    - Add tests for stat changes
+    - Add tests for move accuracy
+    - Add tests for critical hits
+
+2. Implement New Features
+    - Weather-based abilities
+    - Stat-modifying abilities
+    - Move-enhancing abilities
 
 2. Additional Testing Needed
    - Add tests for:
@@ -125,14 +124,9 @@ Currently working on implementing and testing the Pokemon ability system, partic
 - tests/core/test_ability.py: Ability system tests
 
 ### Known Issues
-1. Status resistance test failing
-   - Current success rate: 0.7%
-   - Expected success rate: 45-55%
-   - Investigation ongoing
-
-2. Accuracy handling
-   - Need to verify accuracy checks don't interfere with status moves
-   - Currently implementing separate handling for status vs. non-status moves
+1. Accuracy handling
+    - Need to verify accuracy checks don't interfere with status moves
+    - Currently implementing separate handling for status vs. non-status moves
 
 ### Dependencies
 - Python 3.12.3

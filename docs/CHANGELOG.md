@@ -2,47 +2,33 @@
 
 ## [Unreleased]
 
-### Fixed
-- Status resistance ability test now properly verifies 50% resistance by:
-  - Restoring PP between trials
-  - Using appropriate range (40-60%) for random variation
-  - Adding comprehensive debug logging
-- Added systematic debugging approach documentation for probability-based tests
-
-### Added
-- Detailed debugging guidelines in DEVELOPMENT_STATUS.md for:
-  - Probability-based tests
-  - Resource management in tests
-  - Statistical considerations
-  - Test state cleanup
-
-## [Unreleased]
-
 ### Added
 - New ability system with support for:
-  - Status immunities
-  - Status resistances
-- Tests for ability system functionality
-  - Status immunity tests
+  - Status immunities (complete blocking of specific effects)
+  - Status resistances (50% chance reduction)
+- Comprehensive test suite for abilities:
+  - Single status immunity tests
   - Multiple status immunities tests
-  - Status resistance tests (in progress)
+  - Single status resistance tests
+  - Multiple status resistances tests
+  - Specific burn immunity tests
+  - Specific paralysis resistance tests
+- Detailed debugging guidelines in DEVELOPMENT_STATUS.md
 
 ### Changed
 - Modified battle system to integrate abilities
 - Updated status effect application to consider abilities
 - Separated accuracy checks for status moves vs. non-status moves
 - Improved status chance calculation with resistance multipliers
+- Updated DESIGN.md with complete ability system documentation
 
 ### Fixed
-- Accuracy checks no longer apply to status moves
+- Status resistance now correctly applies 50% reduction
+- PP management in multi-trial tests
+- Status effect cleanup between test trials
+- Accuracy checks no longer interfere with status moves
 - Status immunity properly prevents specific status effects
 - Multiple status immunities working correctly
-
-### Known Issues
-- Status resistance not reducing status chance correctly
-  - Expected ~50% success rate with resistance
-  - Currently getting ~0.7% success rate
-  - Investigation ongoing
 
 ## [Previous Versions]
 

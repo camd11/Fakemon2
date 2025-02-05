@@ -42,10 +42,8 @@ class Ability:
         Returns:
             bool: True if the ability prevents this status
         """
-        return (
-            self.type == AbilityType.STATUS_IMMUNITY and
-            status in self.status_effects
-        )
+        # Check for immunity regardless of primary ability type
+        return status in self.status_effects and self.type == AbilityType.STATUS_IMMUNITY
         
     def modifies_status_chance(self, status: StatusEffect) -> Optional[float]:
         """Get the status chance multiplier for this ability.
@@ -56,9 +54,14 @@ class Ability:
         Returns:
             Optional[float]: Multiplier to apply to status chance, or None if no effect
         """
-        if (
-            self.type == AbilityType.STATUS_RESISTANCE and
-            status in self.status_effects
-        ):
+        # For STATUS_RESISTANCE abilities, apply resistance to all listed effects
+        if self.type == AbilityType.STATUS_RESISTANCE and status in self.status_effects:
             return self.resistance_multiplier
+            
+        # For STATUS_IMMUNITY abilities:
+        # - No resistance if the status is immune (in status_effects)
+        # - Apply resistance to all other statuses
+        if self.type == AbilityType.STATUS_IMMUNITY and status not in self.status_effects:
+            return self.resistance_multiplier
+            
         return None
