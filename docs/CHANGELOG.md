@@ -3,39 +3,32 @@
 ## [Unreleased]
 
 ### Added
-- New ability system with support for:
-  - Status immunities (complete blocking of specific effects)
-  - Status resistances (50% chance reduction)
-- Comprehensive test suite for abilities:
-  - Single status immunity tests
-  - Multiple status immunities tests
-  - Single status resistance tests
-  - Multiple status resistances tests
-  - Specific burn immunity tests
-  - Specific paralysis resistance tests
-- Detailed debugging guidelines in DEVELOPMENT_STATUS.md
+- Weather system implementation
+  - Added Weather enum with CLEAR, RAIN, SUN, SANDSTORM, and HAIL types
+  - Implemented weather effects on move damage (1.5x boost/0.5x reduction)
+  - Added weather-based damage for Sandstorm and Hail
+  - Implemented weather duration system
+- Comprehensive weather system tests
+  - Added tests for weather effects on moves
+  - Added tests for weather damage and immunities
+  - Added tests for weather duration
+  - Improved test reliability with critical hit handling
 
 ### Changed
-- Modified battle system to integrate abilities
-- Updated status effect application to consider abilities
-- Separated accuracy checks for status moves vs. non-status moves
-- Improved status chance calculation with resistance multipliers
-- Updated DESIGN.md with complete ability system documentation
+- Modified battle system to integrate weather effects
+- Improved damage calculation to handle weather multipliers
+- Enhanced battle message system for weather effects
 
 ### Fixed
-- Status resistance now correctly applies 50% reduction
-- PP management in multi-trial tests
-- Status effect cleanup between test trials
-- Accuracy checks no longer interfere with status moves
-- Status immunity properly prevents specific status effects
-- Multiple status immunities working correctly
+- Fixed weather duration handling to properly maintain state
+- Fixed damage calculation order for weather effects
+- Improved test reliability for random elements (critical hits)
 
-## [Previous Versions]
+## [0.1.0] - 2025-02-05
 
-### [0.1.0] - Initial Release
-- Basic battle system
-- Pokemon stats and types
-- Move system with damage calculation
-- Status effects
-- Weather effects
-- Items and inventory
+### Added
+- Initial battle system implementation
+- Basic Pokemon stats and moves
+- Type effectiveness system
+- Status effects (Sleep, Freeze, Burn, Poison, Paralysis)
+- Ability system with status immunities and resistances

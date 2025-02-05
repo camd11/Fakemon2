@@ -271,7 +271,7 @@ class Battle:
         # Apply random factor (85-100%)
         damage *= random.randint(85, 100) / 100
         
-        # Weather effects
+        # Weather effects - apply before rounding
         if self.weather == Weather.RAIN:
             if move.type == Type.WATER:
                 damage *= 1.5
@@ -282,6 +282,9 @@ class Battle:
                 damage *= 1.5
             elif move.type == Type.WATER:
                 damage *= 0.5
+                
+        # Round after all multipliers
+        damage = max(1, int(damage))  # Minimum 1 damage
                 
         return int(damage)
         
@@ -356,21 +359,11 @@ class Battle:
         if self.weather == Weather.CLEAR:
             return result
             
-        # Add weather message
-        if self.weather == Weather.RAIN:
-            result.messages.append("Rain continues to fall.")
-        elif self.weather == Weather.SUN:
-            result.messages.append("The sunlight is strong.")
-        elif self.weather == Weather.SANDSTORM:
-            result.messages.append("The sandstorm rages!")
-        elif self.weather == Weather.HAIL:
-            result.messages.append("Hail continues to fall!")
-            
-        # Apply damage for sandstorm/hail
+        # Apply damage for sandstorm/hail first
         if self.weather in (Weather.SANDSTORM, Weather.HAIL):
             for pokemon in (self.player_pokemon, self.enemy_pokemon):
                 # Skip Rock/Ground/Steel types in sandstorm
-                if (self.weather == Weather.SANDSTORM and 
+                if (self.weather == Weather.SANDSTORM and
                     any(t in (Type.ROCK, Type.GROUND, Type.STEEL) for t in pokemon.types)):
                     continue
                     
@@ -380,11 +373,22 @@ class Battle:
                     
                 # Deal 1/16 max HP damage
                 damage = pokemon.stats.hp // 16
-                pokemon.current_hp = max(0, pokemon.current_hp - damage)
+                damage_dealt = pokemon.take_damage(damage)
                 
-                # Add damage message
+                # Add damage message first
                 weather_name = "sandstorm" if self.weather == Weather.SANDSTORM else "hail"
-                result.messages.append(f"{pokemon.name} is buffeted by the {weather_name}!")
+                if damage_dealt > 0:
+                    result.messages.append(f"{pokemon.name} is buffeted by the {weather_name}!")
+        
+        # Then add weather status message
+        if self.weather == Weather.RAIN:
+            result.messages.append("Rain continues to fall.")
+        elif self.weather == Weather.SUN:
+            result.messages.append("The sunlight is strong.")
+        elif self.weather == Weather.SANDSTORM:
+            result.messages.append("The sandstorm rages!")
+        elif self.weather == Weather.HAIL:
+            result.messages.append("Hail continues to fall!")
                 
         return result
         
@@ -426,15 +430,19 @@ class Battle:
         weather_result = self.apply_weather_effects()
         result.messages.extend(weather_result.messages)
         
-        # Decrease weather duration
-        if self.weather_duration > 0:
-            self.weather_duration -= 1
-            if self.weather_duration == 0:
-                weather_name = self.weather.name.lower()
-                if weather_name == "sun":
-                    weather_name = "harsh sunlight"
-                result.messages.append(f"The {weather_name} subsided.")
-                self.weather = Weather.CLEAR
+        # Check weather duration at end of turn
+        if self.weather != Weather.CLEAR:
+            if self.weather_duration > 0:
+                self.weather_duration -= 1  # Decrement after this turn's effects
+                
+                # Only clear weather after duration hits 0 and turn is complete
+                if self.weather_duration == 0:
+                    weather_name = self.weather.name.lower()
+                    if weather_name == "sun":
+                        weather_name = "harsh sunlight"
+                    result.messages.append(f"The {weather_name} subsided.")
+                    # Weather persists until turn is fully complete
+                    self.weather = Weather.CLEAR
                 
         return result
         

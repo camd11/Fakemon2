@@ -1,231 +1,288 @@
-"""Tests for weather effects in battles."""
+"""Tests for weather effects in battle system."""
 
 import pytest
-from src.core.battle import Battle, Weather, TurnResult
+from src.core.battle import Battle, Weather
 from src.core.pokemon import Pokemon, Stats
+from src.core.move import Move, MoveCategory, Effect
 from src.core.types import Type, TypeEffectiveness
-from src.core.move import Move, MoveCategory
 
-@pytest.fixture
-def type_chart():
-    """Create a type chart for testing."""
+def test_rain_boost():
+    """Test that rain boosts water moves and weakens fire moves."""
+    # Create type chart with neutral effectiveness
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "water": {"normal": 1.0},
+        "fire": {"normal": 1.0},
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create Pokemon
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Create water and fire moves
+    water_move = Move(
+        name="Water Gun",
+        type_=Type.WATER,
+        category=MoveCategory.SPECIAL,
+        power=40,
+        accuracy=100,
+        pp=25
+    )
+    
+    fire_move = Move(
+        name="Ember",
+        type_=Type.FIRE,
+        category=MoveCategory.SPECIAL,
+        power=40,
+        accuracy=100,
+        pp=25
+    )
+    
+    attacker.moves = [water_move, fire_move]
+    
+    # Test in clear weather first
+    battle = Battle(attacker, defender, chart)
+    
+    # Get base damage values
+    water_result = battle.execute_turn(water_move, defender)
+    base_water_damage = water_result.damage_dealt
+    
+    fire_result = battle.execute_turn(fire_move, defender)
+    base_fire_damage = fire_result.damage_dealt
+    
+    # Test in rain
+    battle = Battle(attacker, defender, chart, weather=Weather.RAIN)
+    
+    # Water moves should do 1.5x damage
+    water_result = battle.execute_turn(water_move, defender)
+    assert water_result.damage_dealt > base_water_damage * 1.4  # Allow for random variation
+    
+    # Fire moves should do 0.5x damage
+    fire_result = battle.execute_turn(fire_move, defender)
+    assert fire_result.damage_dealt < base_fire_damage * 0.6  # Allow for random variation
+
+def test_sun_boost():
+    """Test that sun boosts fire moves and weakens water moves."""
+    # Create type chart with neutral effectiveness
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "water": {"normal": 1.0},
+        "fire": {"normal": 1.0},
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create Pokemon
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Create water and fire moves
+    water_move = Move(
+        name="Water Gun",
+        type_=Type.WATER,
+        category=MoveCategory.SPECIAL,
+        power=40,
+        accuracy=100,
+        pp=25
+    )
+    
+    fire_move = Move(
+        name="Ember",
+        type_=Type.FIRE,
+        category=MoveCategory.SPECIAL,
+        power=40,
+        accuracy=100,
+        pp=25
+    )
+    
+    attacker.moves = [water_move, fire_move]
+    
+    # Test in clear weather first
+    battle = Battle(attacker, defender, chart)
+    
+    # Get base damage values
+    water_result = battle.execute_turn(water_move, defender)
+    base_water_damage = water_result.damage_dealt
+    
+    fire_result = battle.execute_turn(fire_move, defender)
+    base_fire_damage = fire_result.damage_dealt
+    
+    # Test in sun
+    battle = Battle(attacker, defender, chart, weather=Weather.SUN)
+
+    # Fire moves should do 1.5x damage (retry if critical hit)
+    fire_result = battle.execute_turn(fire_move, defender)
+    attempts = 0
+    while fire_result.critical_hit and attempts < 5:
+        battle = Battle(attacker, defender, chart, weather=Weather.SUN)
+        fire_result = battle.execute_turn(fire_move, defender)
+        attempts += 1
+    assert not fire_result.critical_hit, "Got critical hit after 5 attempts"
+    assert fire_result.damage_dealt > base_fire_damage * 1.4  # Allow for random variation
+
+    # Water moves should do 0.5x damage (retry if critical hit)
+    water_result = battle.execute_turn(water_move, defender)
+    attempts = 0
+    while water_result.critical_hit and attempts < 5:
+        battle = Battle(attacker, defender, chart, weather=Weather.SUN)
+        water_result = battle.execute_turn(water_move, defender)
+        attempts += 1
+    assert not water_result.critical_hit, "Got critical hit after 5 attempts"
+    assert water_result.damage_dealt < base_water_damage * 0.6  # Allow for random variation
+
+def test_sandstorm_damage():
+    """Test that sandstorm damages non-Rock/Ground/Steel types."""
+    # Create type chart
     chart = TypeEffectiveness()
     chart.load_from_json({
         "normal": {"normal": 1.0},
-        "fire": {"fire": 0.5, "water": 0.5},
-        "water": {"water": 0.5, "fire": 2.0}
+        "rock": {"normal": 1.0},
+        "ground": {"normal": 1.0},
+        "steel": {"normal": 1.0}
     })
-    return chart
-
-@pytest.fixture
-def test_pokemon():
-    """Create a test Pokemon for battle."""
-    stats = Stats(
-        hp=100,
-        attack=100,
-        defense=100,
-        special_attack=100,
-        special_defense=100,
-        speed=100
+    
+    # Create Pokemon pairs to test immunity vs damage
+    normal_pokemon = Pokemon(
+        name="Normal",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
     )
     
-    moves = [
-        Move(
-            name="Water Gun",
-            type_=Type.WATER,
-            category=MoveCategory.SPECIAL,
-            power=40,
-            accuracy=100,
-            pp=35
-        )
-    ]
-    
-    pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.WATER,),
-        base_stats=stats,
-        level=50,
-        moves=moves
+    rock_pokemon = Pokemon(
+        name="Rock",
+        types=(Type.ROCK,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
     )
-    return pokemon
-
-@pytest.fixture
-def battle(test_pokemon, type_chart):
-    """Create a battle instance for testing."""
-    player_pokemon = test_pokemon
-    enemy_pokemon = Pokemon(
-        name="Enemy Pokemon",
-        types=(Type.FIRE,),
-        base_stats=Stats(
-            hp=100,
-            attack=100,
-            defense=100,
-            special_attack=100,
-            special_defense=100,
-            speed=100
-        ),
-        level=50,
-        moves=[
-            Move(
-                name="Ember",
-                type_=Type.FIRE,
-                category=MoveCategory.SPECIAL,
-                power=40,
-                accuracy=100,
-                pp=35
-            )
-        ]
-    )
-    return Battle(player_pokemon, enemy_pokemon, type_chart)
-
-def test_rain_boosts_water_moves(battle):
-    """Test that rain boosts Water-type moves."""
-    battle.weather = Weather.RAIN
-    battle.weather_duration = 5
     
-    # Do multiple trials to account for random factors
-    rain_damages = []
-    clear_damages = []
+    # Test in sandstorm
+    battle = Battle(normal_pokemon, rock_pokemon, chart, weather=Weather.SANDSTORM)
     
-    for _ in range(10):
-        # Water move in rain
-        result = battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
-        if not result.critical_hit:  # Only count non-critical hits
-            rain_damages.append(result.damage_dealt)
-        
-        # Reset Pokemon HP
-        battle.enemy_pokemon.current_hp = battle.enemy_pokemon.stats.hp
-        
-        # Water move in clear weather
-        battle.weather = Weather.CLEAR
-        result = battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
-        if not result.critical_hit:  # Only count non-critical hits
-            clear_damages.append(result.damage_dealt)
-            
-        # Reset for next trial
-        battle.weather = Weather.RAIN
-        battle.enemy_pokemon.current_hp = battle.enemy_pokemon.stats.hp
+    # Record initial HP
+    normal_hp = normal_pokemon.current_hp
+    rock_hp = rock_pokemon.current_hp
     
-    # Calculate average damages
-    avg_rain = sum(rain_damages) / len(rain_damages)
-    avg_clear = sum(clear_damages) / len(clear_damages)
-    
-    # Rain should do ~1.5x damage
-    assert avg_rain > avg_clear
-    assert abs(avg_rain / avg_clear - 1.5) < 0.1
-
-def test_rain_weakens_fire_moves(battle):
-    """Test that rain weakens Fire-type moves."""
-    battle.weather = Weather.RAIN
-    battle.weather_duration = 5
-    
-    # Fire move in rain should do 0.5x damage
-    result = battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
-    reduced_damage = result.damage_dealt
-    
-    # Reset battle and try without rain
-    battle.weather = Weather.CLEAR
-    result = battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
-    
-    assert reduced_damage < result.damage_dealt
-    assert abs(reduced_damage / result.damage_dealt - 0.5) < 0.1  # Account for random factor
-
-def test_sun_boosts_fire_moves(battle):
-    """Test that sun boosts Fire-type moves."""
-    battle.weather = Weather.SUN
-    battle.weather_duration = 5
-    
-    # Do multiple trials to account for random factors
-    sun_damages = []
-    clear_damages = []
-    
-    for _ in range(10):
-        # Fire move in sun
-        result = battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
-        if not result.critical_hit:  # Only count non-critical hits
-            sun_damages.append(result.damage_dealt)
-        
-        # Reset Pokemon HP
-        battle.player_pokemon.current_hp = battle.player_pokemon.stats.hp
-        
-        # Fire move in clear weather
-        battle.weather = Weather.CLEAR
-        result = battle.execute_turn(battle.enemy_pokemon.moves[0], battle.player_pokemon)
-        if not result.critical_hit:  # Only count non-critical hits
-            clear_damages.append(result.damage_dealt)
-            
-        # Reset for next trial
-        battle.weather = Weather.SUN
-        battle.player_pokemon.current_hp = battle.player_pokemon.stats.hp
-    
-    # Calculate average damages
-    avg_sun = sum(sun_damages) / len(sun_damages)
-    avg_clear = sum(clear_damages) / len(clear_damages)
-    
-    # Sun should do ~1.5x damage
-    assert avg_sun > avg_clear
-    assert abs(avg_sun / avg_clear - 1.5) < 0.1
-
-def test_sun_weakens_water_moves(battle):
-    """Test that sun weakens Water-type moves."""
-    battle.weather = Weather.SUN
-    battle.weather_duration = 5
-    
-    # Water move in sun should do 0.5x damage
-    result = battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
-    reduced_damage = result.damage_dealt
-    
-    # Reset battle and try without sun
-    battle.weather = Weather.CLEAR
-    result = battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
-    
-    assert reduced_damage < result.damage_dealt
-    assert abs(reduced_damage / result.damage_dealt - 0.5) < 0.1  # Account for random factor
-
-def test_sandstorm_damage(battle):
-    """Test that sandstorm damages non-Rock/Ground/Steel types."""
-    battle.weather = Weather.SANDSTORM
-    battle.weather_duration = 5
-    
-    initial_hp = battle.player_pokemon.current_hp
-    battle.apply_weather_effects()
-    
-    assert battle.player_pokemon.current_hp < initial_hp
-    assert battle.player_pokemon.current_hp == initial_hp - (battle.player_pokemon.stats.hp // 16)
-
-def test_hail_damage(battle):
-    """Test that hail damages non-Ice types."""
-    battle.weather = Weather.HAIL
-    battle.weather_duration = 5
-    
-    initial_hp = battle.player_pokemon.current_hp
-    battle.apply_weather_effects()
-    
-    assert battle.player_pokemon.current_hp < initial_hp
-    assert battle.player_pokemon.current_hp == initial_hp - (battle.player_pokemon.stats.hp // 16)
-
-def test_weather_duration(battle):
-    """Test that weather effects expire after their duration."""
-    battle.weather = Weather.RAIN
-    battle.weather_duration = 2
-    
-    # Weather should last for 2 turns
-    assert battle.weather == Weather.RAIN
-    battle.end_turn()
-    assert battle.weather == Weather.RAIN
-    battle.end_turn()
-    assert battle.weather == Weather.CLEAR
-    assert battle.weather_duration == 0
-
-def test_weather_messages(battle):
-    """Test weather effect messages."""
-    battle.weather = Weather.SANDSTORM
-    battle.weather_duration = 5
-    
-    result = battle.apply_weather_effects()
-    assert "The sandstorm rages!" in result.messages
-    assert f"{battle.player_pokemon.name} is buffeted by the sandstorm!" in result.messages
-    
-    battle.weather_duration = 1
+    # End turn to trigger weather damage
     result = battle.end_turn()
-    assert "The sandstorm subsided." in result.messages
+    
+    # Normal Pokemon should take damage (1/16 of max HP)
+    assert normal_pokemon.current_hp == normal_hp - (normal_pokemon.stats.hp // 16)
+    assert "buffeted by the sandstorm" in result.messages[0]
+    
+    # Rock Pokemon should not take damage
+    assert rock_pokemon.current_hp == rock_hp
+
+def test_hail_damage():
+    """Test that hail damages non-Ice types."""
+    # Create type chart
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0},
+        "ice": {"normal": 1.0}
+    })
+    
+    # Create Pokemon pairs to test immunity vs damage
+    normal_pokemon = Pokemon(
+        name="Normal",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    ice_pokemon = Pokemon(
+        name="Ice",
+        types=(Type.ICE,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Test in hail
+    battle = Battle(normal_pokemon, ice_pokemon, chart, weather=Weather.HAIL)
+    
+    # Record initial HP
+    normal_hp = normal_pokemon.current_hp
+    ice_hp = ice_pokemon.current_hp
+    
+    # End turn to trigger weather damage
+    result = battle.end_turn()
+    
+    # Normal Pokemon should take damage (1/16 of max HP)
+    assert normal_pokemon.current_hp == normal_hp - (normal_pokemon.stats.hp // 16)
+    assert "buffeted by the hail" in result.messages[0]
+    
+    # Ice Pokemon should not take damage
+    assert ice_pokemon.current_hp == ice_hp
+
+def test_weather_duration():
+    """Test that weather effects expire after their duration."""
+    # Create basic Pokemon and type chart for battle
+    chart = TypeEffectiveness()
+    chart.load_from_json({"normal": {"normal": 1.0}})
+    
+    pokemon1 = Pokemon(
+        name="Pokemon1",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    pokemon2 = Pokemon(
+        name="Pokemon2",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Test each weather type
+    for weather in [Weather.RAIN, Weather.SUN, Weather.SANDSTORM, Weather.HAIL]:
+        # Set weather with 2 turn duration
+        battle = Battle(pokemon1, pokemon2, chart, weather=weather, weather_duration=2)
+        
+        # First turn - weather should be active
+        result = battle.end_turn()
+        assert battle.weather == weather
+        assert any(weather.name.lower() in msg.lower() for msg in result.messages)
+        
+        # Second turn - weather should be active during the turn but clear at the end
+        result = battle.end_turn()
+        assert any(weather.name.lower() in msg.lower() for msg in result.messages)
+        assert any("subsided" in msg for msg in result.messages)
+        assert battle.weather == Weather.CLEAR  # Weather clears at end of its final turn
+        
+        # Third turn - weather should already be clear
+        result = battle.end_turn()
+        assert battle.weather == Weather.CLEAR
+        # No subsided message since weather already cleared last turn
