@@ -1,11 +1,17 @@
 # Changelog
 
-## [2024-02-05] Burn Status Implementation
-- Added burn status effect with 1/8 max HP damage per turn
-- Added attack reduction to 1/2 for burned Pokemon
-- Added burn duration of 5 turns
-- Added comprehensive burn tests
-- Updated documentation to include burn status
+## [2024-02-05] Type Immunities and Burn Status
+- Added type-based status immunities:
+  - Fire-type immunity to burn
+  - Ice-type immunity to freeze
+  - Electric-type immunity to paralysis
+  - Poison/Steel-type immunity to poison
+- Added burn status effect:
+  - 1/8 max HP damage per turn
+  - Attack reduction to 1/2
+  - 5 turn duration
+- Added comprehensive tests for immunities and burn
+- Updated documentation
 
 ## [2024-02-04] Status Effect Duration Fixes
 - Fixed sleep duration to properly last 1-3 turns

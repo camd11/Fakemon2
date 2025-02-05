@@ -74,14 +74,21 @@ All status effect functionality is verified by tests in `tests/core/test_battle_
 - `test_burn_damage`: Validates burn deals 1/8 max HP damage per turn
 - `test_burn_duration`: Confirms burn lasts 5 turns
 
+### Type Immunities
+
+The following type-based status immunities are implemented:
+- Fire-type Pokemon cannot be burned
+- Ice-type Pokemon cannot be frozen
+- Electric-type Pokemon cannot be paralyzed
+- Poison and Steel-type Pokemon cannot be poisoned
+
 ### Future Improvements
 
 Potential areas for expansion:
 1. Additional status effects
-2. Status immunity based on Pokemon type
-3. Status effect resistance abilities
-4. Items to cure specific status effects
-5. Moves that have increased effect chance on status-afflicted Pokemon
+2. Status effect resistance abilities
+3. Items to cure specific status effects
+4. Moves that have increased effect chance on status-afflicted Pokemon
 
 ## Next Steps
 

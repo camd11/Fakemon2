@@ -177,6 +177,17 @@ class Pokemon:
         if old_status is not None and status is not None:
             return False
             
+        # Check type immunities
+        if status is not None:
+            if status == StatusEffect.BURN and Type.FIRE in self.types:
+                return False  # Fire-types can't be burned
+            elif status == StatusEffect.FREEZE and Type.ICE in self.types:
+                return False  # Ice-types can't be frozen
+            elif status == StatusEffect.PARALYSIS and Type.ELECTRIC in self.types:
+                return False  # Electric-types can't be paralyzed
+            elif status == StatusEffect.POISON and (Type.POISON in self.types or Type.STEEL in self.types):
+                return False  # Poison/Steel-types can't be poisoned
+            
         # Clear old status
         self.status = None
         self.status_duration = None
