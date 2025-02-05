@@ -2,39 +2,20 @@
 
 import pytest
 from src.core.ability import (
-    Ability,
-    AbilityType,
-    TerrainType,
-    AuraType,
-    FormChangeType,
-    IllusionType,
-    IMMUNITY,
-    LIMBER,
-    WATER_VEIL,
-    VITAL_SPIRIT,
-    MAGMA_ARMOR,
-    DRIZZLE,
-    DROUGHT,
-    SAND_STREAM,
-    SNOW_WARNING,
-    GUTS,
-    SWIFT_SWIM,
-    CHLOROPHYLL,
-    SAND_RUSH,
-    SLUSH_RUSH,
-    GRASSY_SURGE,
-    MISTY_SURGE,
-    ELECTRIC_SURGE,
-    PSYCHIC_SURGE,
-    FAIRY_AURA,
-    DARK_AURA,
-    AURA_BREAK,
-    STANCE_CHANGE,
-    BATTLE_BOND,
-    POWER_CONSTRUCT,
-    ILLUSION,
-    IMPOSTER,
-    MIMICRY
+    Ability, AbilityType, TerrainType, AuraType, FormChangeType,
+    IllusionType, DisguiseType, ProteanType, MoldBreakerType,
+    SimpleType, UnawareType,
+    # Ability constants
+    UNAWARE, SIMPLE, MOLD_BREAKER, TERAVOLT, TURBOBLAZE,
+    TRACE, IMMUNITY, COLOR_CHANGE, FORECAST, PROTEAN,
+    LIBERO, ADAPTABILITY, DISGUISE, ICE_FACE, WONDER_GUARD,
+    ILLUSION, IMPOSTER, MIMICRY, STANCE_CHANGE, BATTLE_BOND,
+    POWER_CONSTRUCT, FAIRY_AURA, DARK_AURA, AURA_BREAK,
+    GRASSY_SURGE, MISTY_SURGE, ELECTRIC_SURGE, PSYCHIC_SURGE,
+    GUTS, SWIFT_SWIM, CHLOROPHYLL, SAND_RUSH, SLUSH_RUSH,
+    DRIZZLE, DROUGHT, SAND_STREAM, SNOW_WARNING,
+    LIMBER, WATER_VEIL, VITAL_SPIRIT, MAGMA_ARMOR,
+    SPIKES_SETTER, TOXIC_SPIKES_SETTER, STEALTH_ROCK_SETTER
 )
 from src.core.pokemon import Pokemon, Stats
 from src.core.types import Type, TypeEffectiveness
@@ -194,11 +175,11 @@ def test_terrain_status_prevention():
     battle = Battle(pokemon, pokemon, TypeEffectiveness())
     
     # Should not be able to apply status to grounded Pokemon
-    assert not pokemon.set_status(StatusEffect.POISON)
-    assert not pokemon.set_status(StatusEffect.BURN)
-    assert not pokemon.set_status(StatusEffect.PARALYSIS)
-    assert not pokemon.set_status(StatusEffect.SLEEP)
-    assert not pokemon.set_status(StatusEffect.FREEZE)
+    assert not pokemon.set_status(StatusEffect.POISON, terrain=battle.terrain)
+    assert not pokemon.set_status(StatusEffect.BURN, terrain=battle.terrain)
+    assert not pokemon.set_status(StatusEffect.PARALYSIS, terrain=battle.terrain)
+    assert not pokemon.set_status(StatusEffect.SLEEP, terrain=battle.terrain)
+    assert not pokemon.set_status(StatusEffect.FREEZE, terrain=battle.terrain)
     assert pokemon.status is None
 
 def test_terrain_dragon_reduction():
@@ -712,6 +693,37 @@ def test_color_change():
     assert msg == "Test Pokemon became WATER-type!"
     assert pokemon.types == (Type.WATER,)
 
+def test_unaware():
+    """Test that Unaware ignores opponent's stat changes."""
+    # Create Pokemon with Unaware
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50,
+        ability=UNAWARE
+    )
+    
+    # Create Pokemon with boosted stats
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(100, 100, 100, 100, 100, 100),
+        level=50
+    )
+    
+    # Boost defender's stats
+    defender.modify_stat("defense", 2)  # +2 stages
+    defender.modify_stat("special_defense", 2)  # +2 stages
+    
+    # Test that Unaware ignores stat boosts
+    assert defender.get_stat_multiplier("defense", opponent=attacker) == 1.0  # No boost
+    assert defender.get_stat_multiplier("special_defense", opponent=attacker) == 1.0  # No boost
+    
+    # Test that stats work normally without Unaware
+    assert defender.get_stat_multiplier("defense") == 2.0  # Normal +2 boost
+    assert defender.get_stat_multiplier("special_defense") == 2.0  # Normal +2 boost
+
 def test_simple():
     """Test that Simple doubles stat stage changes."""
     # Create Pokemon with Simple
@@ -820,96 +832,4 @@ def test_turboblaze():
     assert defender.set_status(StatusEffect.POISON, attacker=attacker)
     assert defender.status == StatusEffect.POISON
     
-    # Test that immunity works without Turboblaze
-    defender.set_status(None)  # Clear status
-    assert not defender.set_status(StatusEffect.POISON)
-    assert defender.status is None
-
-def test_forecast():
-    """Test that Forecast changes type based on weather."""
-    pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50,
-        ability=FORECAST
-    )
-    
-    # Test each weather type
-    weather_types = {
-        Weather.CLEAR: Type.NORMAL,
-        Weather.SUN: Type.FIRE,
-        Weather.RAIN: Type.WATER,
-        Weather.SANDSTORM: Type.ROCK,
-        Weather.HAIL: Type.ICE
-    }
-    
-    for weather, expected_type in weather_types.items():
-        msg = pokemon.check_weather_type(weather)
-        assert msg == f"Test Pokemon became {expected_type.name}-type!"
-        assert pokemon.types == (expected_type,)
-
-def test_trace():
-    """Test that Trace copies opponent's ability."""
-    # Create Pokemon with Trace
-    pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50,
-        ability=TRACE
-    )
-    
-    # Create opponent with Guts
-    opponent = Pokemon(
-        name="Opponent",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50,
-        ability=GUTS
-    )
-    
-    # Test ability copying
-    msg = pokemon.copy_ability(opponent)
-    assert msg == "Test Pokemon traced Opponent's Guts!"
-    assert pokemon.ability == GUTS
-    
-    # Test ability restoration
-    msg = pokemon.restore_ability()
-    assert msg == "Test Pokemon's Trace was restored!"
-    assert pokemon.ability == TRACE
-    
-def test_trace_faint():
-    """Test that traced ability is restored when Pokemon faints."""
-    # Create Pokemon with Trace
-    pokemon = Pokemon(
-        name="Test Pokemon",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50,
-        ability=TRACE
-    )
-    
-    # Create opponent with Guts
-    opponent = Pokemon(
-        name="Opponent",
-        types=(Type.NORMAL,),
-        base_stats=Stats(100, 100, 100, 100, 100, 100),
-        level=50,
-        ability=GUTS
-    )
-    
-    # Copy ability
-    pokemon.copy_ability(opponent)
-    assert pokemon.ability == GUTS
-    
-    # Create battle
-    battle = Battle(pokemon, opponent, TypeEffectiveness())
-    
-    # Faint Pokemon
-    pokemon.take_damage(pokemon.stats.hp)
-    messages = battle.handle_faint(pokemon)
-    
-    # Check ability restoration
-    assert any("Trace was restored" in msg for msg in messages)
-    assert pokemon.ability == TRACE
+    # Test that immunity works

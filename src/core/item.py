@@ -4,6 +4,7 @@ from enum import Enum, auto
 from typing import Optional, Dict, Any, Set
 from dataclasses import dataclass
 from .move import StatusEffect
+from .types import Type
 
 class ItemType(Enum):
     """Types of items in the game."""
@@ -23,6 +24,8 @@ class HeldItemTrigger(Enum):
     LOW_HP = auto()       # When HP is low
     STATUS = auto()       # When status is applied
     SUPER_EFFECTIVE = auto()  # When hit by super effective move
+    END_TURN = auto()     # At the end of each turn
+    LETHAL_DAMAGE = auto()  # When about to take lethal damage
 
 @dataclass
 class ItemEffect:
@@ -32,6 +35,9 @@ class ItemEffect:
     duration: Optional[int] = None  # For temporary effects, None means instant
     conditions: Optional[Dict[str, Any]] = None  # Special conditions for effect
     cures_status: Optional[Set[StatusEffect]] = None  # Status effects this item cures
+    heal_amount: Optional[int] = None  # Amount of HP to heal
+    prevents_ko: bool = False  # Whether item prevents KO
+    boost_type: Optional[Type] = None  # Type that this item boosts (for TYPE_BOOST items)
 
 class Item:
     """Represents an item in the game."""
@@ -75,7 +81,7 @@ class Item:
             bool: True if the item can be used, False otherwise
         """
         # First check type-specific conditions
-        if self.effect.type == ItemType.HEALING:
+        if self.effect.type in (ItemType.HEALING, ItemType.BERRY):
             if hasattr(target, "current_hp") and hasattr(target, "stats"):
                 if target.current_hp >= target.stats.hp:
                     return False
@@ -145,6 +151,16 @@ class Item:
         elif self.effect.type == ItemType.BOOST:
             # Temporary stat boosts handled by battle system
             pass
+            
+        elif self.effect.type == ItemType.BERRY:
+            if hasattr(target, "current_hp") and hasattr(target, "stats"):
+                if self.effect.heal_amount:
+                    old_hp = target.current_hp
+                    target.current_hp = min(
+                        target.current_hp + self.effect.heal_amount,
+                        target.stats.hp
+                    )
+                    return target.current_hp - old_hp
             
         return True
         
@@ -250,11 +266,12 @@ LEFTOVERS = Item(
     description="Restores a little HP each turn.",
     effect=ItemEffect(
         type=ItemType.HELD,
-        value=int(1/16 * 100)  # 1/16 max HP
+        value=0,  # Not used, healing is calculated as 1/16 of max HP
+        heal_amount=0  # Will be calculated based on max HP
     ),
     price=200,
     single_use=False,
-    trigger=HeldItemTrigger.PASSIVE
+    trigger=HeldItemTrigger.END_TURN
 )
 
 ORAN_BERRY = Item(
@@ -262,7 +279,8 @@ ORAN_BERRY = Item(
     description="Restores 10 HP when HP is low.",
     effect=ItemEffect(
         type=ItemType.BERRY,
-        value=10
+        value=10,
+        heal_amount=10
     ),
     price=100,
     single_use=True,
@@ -318,11 +336,12 @@ FOCUS_SASH = Item(
     description="Survives a one-hit KO with 1 HP.",
     effect=ItemEffect(
         type=ItemType.HELD,
-        value=1  # 1 HP
+        value=1,  # 1 HP
+        prevents_ko=True
     ),
     price=2000,
     single_use=True,
-    trigger=HeldItemTrigger.LOW_HP,
+    trigger=HeldItemTrigger.LETHAL_DAMAGE,
     trigger_threshold=0  # 0% HP (would be KO)
 )
 
@@ -332,7 +351,8 @@ CHARCOAL = Item(
     description="Powers up Fire-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.FIRE
     ),
     price=1000,
     single_use=False,
@@ -344,7 +364,8 @@ MYSTIC_WATER = Item(
     description="Powers up Water-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.WATER
     ),
     price=1000,
     single_use=False,
@@ -356,7 +377,8 @@ MIRACLE_SEED = Item(
     description="Powers up Grass-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.GRASS
     ),
     price=1000,
     single_use=False,
@@ -368,7 +390,8 @@ MAGNET = Item(
     description="Powers up Electric-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.ELECTRIC
     ),
     price=1000,
     single_use=False,
@@ -380,7 +403,8 @@ NEVER_MELT_ICE = Item(
     description="Powers up Ice-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.ICE
     ),
     price=1000,
     single_use=False,
@@ -392,7 +416,8 @@ BLACK_BELT = Item(
     description="Powers up Fighting-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.FIGHTING
     ),
     price=1000,
     single_use=False,
@@ -404,7 +429,8 @@ POISON_BARB = Item(
     description="Powers up Poison-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.POISON
     ),
     price=1000,
     single_use=False,
@@ -416,7 +442,8 @@ SOFT_SAND = Item(
     description="Powers up Ground-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.GROUND
     ),
     price=1000,
     single_use=False,
@@ -428,7 +455,8 @@ SHARP_BEAK = Item(
     description="Powers up Flying-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.FLYING
     ),
     price=1000,
     single_use=False,
@@ -440,7 +468,8 @@ TWISTED_SPOON = Item(
     description="Powers up Psychic-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.PSYCHIC
     ),
     price=1000,
     single_use=False,
@@ -452,7 +481,8 @@ SILVER_POWDER = Item(
     description="Powers up Bug-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.BUG
     ),
     price=1000,
     single_use=False,
@@ -464,7 +494,8 @@ HARD_STONE = Item(
     description="Powers up Rock-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.ROCK
     ),
     price=1000,
     single_use=False,
@@ -476,7 +507,8 @@ SPELL_TAG = Item(
     description="Powers up Ghost-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.GHOST
     ),
     price=1000,
     single_use=False,
@@ -488,7 +520,8 @@ DRAGON_FANG = Item(
     description="Powers up Dragon-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.DRAGON
     ),
     price=1000,
     single_use=False,
@@ -500,7 +533,8 @@ METAL_COAT = Item(
     description="Powers up Steel-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.STEEL
     ),
     price=1000,
     single_use=False,
@@ -512,7 +546,8 @@ SILK_SCARF = Item(
     description="Powers up Normal-type moves.",
     effect=ItemEffect(
         type=ItemType.TYPE_BOOST,
-        value=20  # 20% boost
+        value=20,  # 20% boost
+        boost_type=Type.NORMAL
     ),
     price=1000,
     single_use=False,

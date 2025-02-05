@@ -46,6 +46,18 @@ class TypeEffectiveness:
                 defender = Type[defender_str.upper()]
                 self._effectiveness_chart[attacker][defender] = float(multiplier)
 
+    def get_effectiveness(self, attack_type: Type, defender_types: Tuple[Type, ...]) -> float:
+        """Calculate type effectiveness for an attack against a Pokemon.
+        
+        Args:
+            attack_type: The type of the attacking move
+            defender_types: Tuple of the defending Pokemon's types
+            
+        Returns:
+            float: The type effectiveness multiplier (0.0, 0.25, 0.5, 1.0, 2.0, or 4.0)
+        """
+        return self.get_multiplier(attack_type, defender_types)
+        
     def get_multiplier(self, attack_type: Type, defender_types: Tuple[Type, ...]) -> float:
         """Calculate type effectiveness multiplier for an attack against a Pokemon.
         

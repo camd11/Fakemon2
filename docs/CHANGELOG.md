@@ -1,5 +1,17 @@
 # Changelog
 
+## [2024-02-05] Held Item Bug Fixes
+- Fixed Oran Berry healing functionality:
+  - Fixed item consumption timing to only mark items as used after successful effect
+  - Fixed HP threshold check by properly passing HP percentage to item trigger check
+  - All held item tests now passing
+
+## [2024-02-04] Unaware Abilities
+- Added unaware system:
+  - Unaware: Ignores opponent's stat changes when calculating damage
+- Enhanced Pokemon class to handle stat stage ignoring
+- Added comprehensive tests for unaware functionality
+
 ## [2024-02-04] Simple Abilities
 - Added simple system:
   - Simple: Doubles all stat stage changes

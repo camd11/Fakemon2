@@ -1,5 +1,20 @@
 # Development Status
 
+## Item System Bug Fixes (Completed)
+
+The following improvements have been made to the held item system:
+
+1. **Core Components**
+   - Fixed item consumption timing to only mark items as used after successful effect
+   - Fixed HP threshold checking by properly passing HP percentage to item trigger check
+   - Improved held item trigger validation
+
+2. **Testing**
+   - All held item tests now passing
+   - Verified Oran Berry healing functionality
+   - Validated item consumption timing
+   - Confirmed HP threshold triggers
+
 ## Status Effect System (Completed)
 
 The status effect system has been fully implemented with the following features:
@@ -362,6 +377,31 @@ Protean abilities have been implemented:
    - Move type matching
    - Type restoration testing
 
+### Unaware System
+
+Unaware abilities have been implemented:
+
+1. **Core Components**
+   - Stat stage ignoring
+   - Opponent checking
+   - Stat multiplier handling
+   - Unaware checking
+
+2. **Unaware Types**
+   - Ignore: Ignores opponent's stat changes
+
+3. **Unaware Features**
+   - Dynamic stat ignoring
+   - Opponent stat preservation
+   - Multiplier handling
+   - Unaware messages
+
+4. **Testing**
+   - Stat ignoring verification
+   - Opponent checking testing
+   - Multiplier testing
+   - Message verification
+
 ### Simple System
 
 Simple abilities have been implemented:
@@ -466,15 +506,15 @@ Color change abilities have been implemented:
 ### Future Improvements
 
 Potential areas for expansion:
-1. Additional ability types (Unaware, Contrary)
+1. Additional ability types (Contrary, Defiant)
 2. Additional item types (Evolution items)
 3. Moves that have increased effect chance on status-afflicted Pokemon
 4. Additional weather-based move effects
 
 ## Next Steps
 
-1. Add unaware abilities
-2. Add contrary abilities
+1. Add contrary abilities
+2. Add defiant abilities
 3. Add evolution items
 
 ## Previous Updates

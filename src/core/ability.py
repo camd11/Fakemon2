@@ -4,7 +4,8 @@ from enum import Enum, auto
 from typing import Optional, Set, Tuple, Dict
 from .move import StatusEffect
 from .types import Type
-from .battle import Weather
+from .weather import Weather
+from .stats import Stats
 
 class AbilityType(Enum):
     """Types of abilities that can affect battle."""
@@ -23,7 +24,12 @@ class AbilityType(Enum):
     TRACE = auto()          # Copies opponent's ability
     MOLD_BREAKER = auto()   # Ignores other abilities
     SIMPLE = auto()         # Doubles stat stage changes
+    UNAWARE = auto()        # Ignores opponent's stat changes
     OTHER = auto()           # Other effects
+
+class UnawareType(Enum):
+    """Types of unaware effects."""
+    IGNORE = auto()      # Ignores opponent's stat changes
 
 class SimpleType(Enum):
     """Types of simple effects."""
@@ -110,17 +116,47 @@ class Ability:
         protean_type: Optional[ProteanType] = None,  # Type of protean effect
         color_change_type: Optional[ColorChangeType] = None,  # Type of color change effect
         trace_type: Optional[TraceType] = None,  # Type of trace effect
-        mold_breaker_type: Optional[MoldBreakerType] = None  # Type of mold breaker effect
+        mold_breaker_type: Optional[MoldBreakerType] = None,  # Type of mold breaker effect
+        simple_type: Optional[SimpleType] = None,  # Type of simple effect
+        unaware_type: Optional[UnawareType] = None  # Type of unaware effect
     ) -> None:
-        """Initialize an ability.
+        """Initialize an ability."""
+        self.name = name
+        self.type = type_
+        self.description = description
+        self.immune_statuses = immune_statuses or set()
+        self.weather_effect = weather_effect
+        self.stat_boost = stat_boost
+        self.boost_condition = boost_condition
+        self.hazard_type = hazard_type
+        self.hazard_damage = hazard_damage
+        self.hazard_status = hazard_status
+        self.terrain_effect = terrain_effect
+        self.aura_effect = aura_effect
+        self.form_change = form_change
+        self.form_stats = form_stats or {}
+        self.form_types = form_types or {}
+        self.illusion_effect = illusion_effect
+        self.disguise_type = disguise_type
+        self.disguise_hp = disguise_hp
+        self.protean_type = protean_type
+        self.color_change_type = color_change_type
+        self.trace_type = trace_type
+        self.mold_breaker_type = mold_breaker_type
+        self.simple_type = simple_type
+        self.unaware_type = unaware_type
         
-        Args:
-            name: Name of the ability
-            type_: Type of ability effect
-            description: Description of what the ability does
-            immune_statuses: Set of status effects this ability prevents
-            weather_effect: Weather condition to set
-            stat_boost: (stat_name, multiplier, required_weather)
+    def prevents_status(self, status: StatusEffect) -> bool:
+        """Check if this ability prevents a specific status effect."""
+        return status in self.immune_statuses
+
+# Define unaware abilities
+UNAWARE = Ability(
+    name="Unaware",
+    type_=AbilityType.UNAWARE,
+    description="Ignores opponent's stat changes when calculating damage.",
+    unaware_type=UnawareType.IGNORE
+)
 
 # Define simple abilities
 SIMPLE = Ability(
@@ -151,56 +187,6 @@ TURBOBLAZE = Ability(
     description="Moves can be used regardless of abilities.",
     mold_breaker_type=MoldBreakerType.IGNORE
 )
-            boost_condition: Condition for stat boost (e.g., "status")
-            hazard_type: Type of entry hazard to set
-            hazard_damage: Base damage or number of layers for hazard
-            hazard_status: Status effect for hazard (e.g., poison)
-            terrain_effect: Terrain effect to set
-            aura_effect: Aura effect to apply
-            form_change: Form change type
-            form_stats: Stats for each form
-            form_types: Types for each form
-            illusion_effect: Illusion effect type
-            disguise_type: Type of disguise protection
-            disguise_hp: Extra HP for disguise
-            protean_type: Type of protean effect
-            color_change_type: Type of color change effect
-            trace_type: Type of trace effect
-            mold_breaker_type: Type of mold breaker effect
-        """
-        self.name = name
-        self.type = type_
-        self.description = description
-        self.immune_statuses = immune_statuses or set()
-        self.weather_effect = weather_effect
-        self.stat_boost = stat_boost
-        self.boost_condition = boost_condition
-        self.hazard_type = hazard_type
-        self.hazard_damage = hazard_damage
-        self.hazard_status = hazard_status
-        self.terrain_effect = terrain_effect
-        self.aura_effect = aura_effect
-        self.form_change = form_change
-        self.form_stats = form_stats or {}
-        self.form_types = form_types or {}
-        self.illusion_effect = illusion_effect
-        self.disguise_type = disguise_type
-        self.disguise_hp = disguise_hp
-        self.protean_type = protean_type
-        self.color_change_type = color_change_type
-        self.trace_type = trace_type
-        self.mold_breaker_type = mold_breaker_type
-        
-    def prevents_status(self, status: StatusEffect) -> bool:
-        """Check if this ability prevents a specific status effect.
-        
-        Args:
-            status: The status effect to check
-            
-        Returns:
-            bool: True if the ability prevents this status, False otherwise
-        """
-        return status in self.immune_statuses
 
 # Define trace abilities
 TRACE = Ability(
@@ -314,8 +300,9 @@ STANCE_CHANGE = Ability(
     description="Changes form based on move used.",
     form_change=FormChangeType.STANCE,
     form_stats={
-        "blade": Stats(60, 150, 50, 150, 50, 60),  # Offensive form
-        "shield": Stats(60, 50, 150, 50, 150, 60)  # Defensive form
+        "blade": Stats(60, 140, 50, 140, 50, 60),  # Offensive form
+        "shield": Stats(60, 50, 140, 50, 140, 60),  # Defensive form
+        "normal": Stats(60, 50, 140, 50, 140, 60)  # Default form
     },
     form_types={
         "blade": (Type.STEEL, Type.GHOST),
@@ -330,7 +317,7 @@ BATTLE_BOND = Ability(
     form_change=FormChangeType.BATTLE_BOND,
     form_stats={
         "normal": Stats(72, 95, 67, 103, 71, 122),  # Base form
-        "bond": Stats(72, 110, 67, 145, 71, 132)    # Bond form
+        "bond": Stats(72, 95, 67, 140, 71, 122)     # Bond form with higher special attack
     },
     form_types={
         "normal": (Type.WATER, Type.DARK),
@@ -345,7 +332,7 @@ POWER_CONSTRUCT = Ability(
     form_change=FormChangeType.CONSTRUCT,
     form_stats={
         "cell": Stats(54, 100, 71, 61, 85, 109),    # Cell form
-        "complete": Stats(216, 100, 121, 91, 95, 85) # Complete form
+        "complete": Stats(200, 100, 121, 61, 85, 85) # Complete form with higher HP
     },
     form_types={
         "cell": (Type.DRAGON, Type.GROUND),
