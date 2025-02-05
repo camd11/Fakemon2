@@ -129,8 +129,11 @@ class Battle:
             return result
         
         # Check if move can be used
-        if not move.use():
+        print(f"Checking if move {move.name} can be used (PP: {move.current_pp}/{move.max_pp})")
+        can_use = move.use()
+        if not can_use:
             result.messages.append(f"{move.name} has no PP left!")
+            print(f"Move {move.name} cannot be used - no PP left")
             return result
             
         # Accuracy check for non-status moves
@@ -171,17 +174,25 @@ class Battle:
         for effect in move.effects:
             # Status effects
             if effect.status:
-                # Keep status chance as percentage until final check
-                status_chance = effect.status_chance
+                # Convert status chance to decimal first
+                status_chance = effect.status_chance / 100
+                print(f"Initial status chance (decimal): {status_chance}")
                 
-                # Apply resistance if any
+                # Apply resistance if any (already in decimal form)
                 if target.ability:
                     resistance = target.ability.modifies_status_chance(effect.status)
+                    print(f"Resistance from ability: {resistance}")
                     if resistance is not None:
                         status_chance *= resistance
+                        print(f"Final status chance after resistance: {status_chance}")
                 
-                # Random check (convert to decimal at the end)
-                if random.random() <= status_chance / 100:
+                # Random check (already in decimal)
+                rand = random.random()
+                print(f"Random value: {rand}, Status chance: {status_chance}")
+                success = rand <= status_chance
+                print(f"Probability check passed: {success}")
+                if success:
+                    print(f"Attempting to set {effect.status} on {target.name}")
                     # Set duration based on status type
                     duration = None
                     if effect.status == StatusEffect.SLEEP:
@@ -191,7 +202,9 @@ class Battle:
                     else:
                         duration = 5  # Initial duration 5 turns
                     
-                    if target.set_status(effect.status, duration=duration):
+                    status_set = target.set_status(effect.status, duration=duration)
+                    print(f"Status set result: {status_set}, Current status: {target.status}")
+                    if status_set:
                         result.status_applied = effect.status
                         # Custom message for sleep
                         if effect.status == StatusEffect.SLEEP:

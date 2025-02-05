@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 from .types import Type
 from .move import Move, StatusEffect
-from .ability import Ability
+from .ability import Ability, AbilityType
 
 @dataclass
 class Stats:
@@ -192,8 +192,8 @@ class Pokemon:
             elif status == StatusEffect.POISON and (Type.POISON in self.types or Type.STEEL in self.types):
                 return False  # Poison/Steel-types can't be poisoned
                 
-            # Ability immunities
-            if self.ability and self.ability.prevents_status(status):
+            # Ability immunities (only check AbilityType.STATUS_IMMUNITY)
+            if self.ability and self.ability.type == AbilityType.STATUS_IMMUNITY and self.ability.prevents_status(status):
                 return False  # Ability prevents this status
             
         # Clear old status

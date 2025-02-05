@@ -1,5 +1,44 @@
 # Development Status
 
+## Debugging Approach
+
+When debugging probability-based tests:
+
+1. Add detailed logging at each step of the calculation to understand the flow:
+   - Initial values
+   - Any modifications (e.g., resistance multipliers)
+   - Final values
+   - Results of random checks
+   - Status of affected entities
+
+2. Consider resource management:
+   - Check if resources (like PP) are being properly managed
+   - Restore resources between test iterations if needed
+   - Verify resource state affects test outcomes
+
+3. Statistical considerations:
+   - Use appropriate sample sizes (e.g., 100+ trials for probability tests)
+   - Allow reasonable ranges for random variation (e.g., ±10% from expected)
+   - Document expected vs actual results
+
+4. Test cleanup:
+   - Reset state between trials
+   - Verify reset was successful
+   - Ensure independent trials
+
+Example: Status Resistance Test Fix
+- Problem: Status resistance test failing (~0.8% success vs expected 50%)
+- Debug steps:
+  1. Added logging for status chance calculation
+  2. Tracked PP usage and status application
+  3. Found PP depletion affecting results
+  4. Adjusted success rate range for random variation
+- Solution:
+  1. Restore PP between trials
+  2. Widened acceptable range (40-60%) for random variation
+  3. Maintained 100 trials for statistical significance
+
+
 Last Updated: 2/5/2025 5:09 PM EST
 
 ## Current Focus: Ability System Implementation

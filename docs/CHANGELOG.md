@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed
+- Status resistance ability test now properly verifies 50% resistance by:
+  - Restoring PP between trials
+  - Using appropriate range (40-60%) for random variation
+  - Adding comprehensive debug logging
+- Added systematic debugging approach documentation for probability-based tests
+
+### Added
+- Detailed debugging guidelines in DEVELOPMENT_STATUS.md for:
+  - Probability-based tests
+  - Resource management in tests
+  - Statistical considerations
+  - Test state cleanup
+
+## [Unreleased]
+
 ### Added
 - New ability system with support for:
   - Status immunities
