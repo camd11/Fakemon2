@@ -1,13 +1,16 @@
 """Ability implementation for Pokemon."""
 
 from enum import Enum, auto
-from typing import Optional
+from typing import Optional, Union
 from .move import StatusEffect
+from .types import Weather
 
 class AbilityType(Enum):
     """Types of abilities that can affect battle."""
     STATUS_IMMUNITY = auto()  # Complete immunity to specific status effects
     STATUS_RESISTANCE = auto()  # Reduced chance of status effects
+    WEATHER_IMMUNITY = auto()  # Complete immunity to weather damage
+    WEATHER_RESISTANCE = auto()  # Reduced weather damage
 
 class Ability:
     """An ability that provides special effects in battle."""
@@ -17,7 +20,8 @@ class Ability:
         name: str,
         type_: AbilityType,
         status_effects: Optional[tuple[StatusEffect, ...]] = None,
-        resistance_multiplier: float = 0.5  # 50% chance reduction for resistances
+        weather_types: Optional[tuple[Weather, ...]] = None,
+        resistance_multiplier: float = 0.5  # 50% reduction for resistances
     ) -> None:
         """Initialize an ability.
         
@@ -30,7 +34,8 @@ class Ability:
         self.name = name
         self.type = type_
         self.status_effects = status_effects or tuple()
-        # Store resistance multiplier directly (e.g., 0.5 means 50% chance)
+        self.weather_types = weather_types or tuple()
+        # Store resistance multiplier directly (e.g., 0.5 means 50% reduction)
         self.resistance_multiplier = resistance_multiplier
         
     def prevents_status(self, status: StatusEffect) -> bool:
@@ -64,4 +69,28 @@ class Ability:
         if self.type == AbilityType.STATUS_IMMUNITY and status not in self.status_effects:
             return self.resistance_multiplier
             
+        return None
+        
+    def prevents_weather_damage(self, weather: Weather) -> bool:
+        """Check if this ability prevents damage from a weather condition.
+        
+        Args:
+            weather: The weather condition to check
+            
+        Returns:
+            bool: True if the ability prevents weather damage
+        """
+        return weather in self.weather_types and self.type == AbilityType.WEATHER_IMMUNITY
+        
+    def modifies_weather_damage(self, weather: Weather) -> Optional[float]:
+        """Get the weather damage multiplier for this ability.
+        
+        Args:
+            weather: The weather condition to check
+            
+        Returns:
+            Optional[float]: Multiplier to apply to weather damage, or None if no effect
+        """
+        if self.type == AbilityType.WEATHER_RESISTANCE and weather in self.weather_types:
+            return self.resistance_multiplier
         return None

@@ -6,16 +6,8 @@ from typing import List, Optional, Tuple
 import random
 from .pokemon import Pokemon
 from .move import Move, MoveCategory, StatusEffect
-from .types import Type, TypeEffectiveness
+from .types import Type, TypeEffectiveness, Weather
 from .item import Item, ItemType
-
-class Weather(Enum):
-    """Weather conditions that can affect battle."""
-    CLEAR = auto()
-    RAIN = auto()
-    SUN = auto()
-    SANDSTORM = auto()
-    HAIL = auto()
 
 class BattleAction(Enum):
     """Possible actions a player can take in battle."""
@@ -472,17 +464,26 @@ class Battle:
         # Apply damage for sandstorm/hail first
         if self.weather in (Weather.SANDSTORM, Weather.HAIL):
             for pokemon in (self.player_pokemon, self.enemy_pokemon):
-                # Skip Rock/Ground/Steel types in sandstorm
+                # Check for weather immunity first
+                if pokemon.ability and pokemon.ability.prevents_weather_damage(self.weather):
+                    continue
+                
+                # Skip type immunities
                 if (self.weather == Weather.SANDSTORM and
                     any(t in (Type.ROCK, Type.GROUND, Type.STEEL) for t in pokemon.types)):
                     continue
                     
-                # Skip Ice types in hail
                 if self.weather == Weather.HAIL and Type.ICE in pokemon.types:
                     continue
                     
-                # Deal 1/16 max HP damage
+                # Calculate base damage (1/16 max HP)
                 damage = pokemon.stats.hp // 16
+                
+                # Apply resistance if any
+                if pokemon.ability:
+                    resistance = pokemon.ability.modifies_weather_damage(self.weather)
+                    if resistance is not None:
+                        damage = int(damage * resistance)
                 damage_dealt = pokemon.take_damage(damage)
                 
                 # Add damage message first

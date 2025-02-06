@@ -4,6 +4,11 @@
 
 ### Added
 - Test debugging guide with comprehensive strategies and examples
+- Ability system enhancements:
+  - Added weather immunity abilities
+  - Added weather resistance abilities
+  - Added proper interaction with battle mechanics
+  - Added comprehensive ability tests
   - Added docs/TEST_DEBUGGING.md with sections on:
     - Managing test output and verbosity
     - Handling randomness in tests
@@ -22,7 +27,7 @@
   - Improved test reliability with critical hit handling
 
 ### Changed
-- Modified battle system to integrate weather effects
+- Modified battle system to integrate weather effects and abilities
 - Improved test reliability and maintainability
   - Enhanced critical hit tests with better probability handling
   - Added proper resource management (PP, HP) in tests
@@ -39,6 +44,8 @@
 
 ### Fixed
 - Fixed weather duration handling to properly maintain state
+- Fixed circular imports between battle and ability systems
+- Fixed ability-weather interaction in damage calculations
 - Fixed damage calculation order for weather effects
 - Improved test reliability for random elements (critical hits)
 - Fixed critical hit damage calculation and stat handling

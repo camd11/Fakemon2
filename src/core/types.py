@@ -3,6 +3,14 @@
 from enum import Enum, auto
 from typing import Dict, Tuple
 
+class Weather(Enum):
+    """Weather conditions that can affect battle."""
+    CLEAR = auto()
+    RAIN = auto()
+    SUN = auto()
+    SANDSTORM = auto()
+    HAIL = auto()
+
 class Type(Enum):
     """Pokemon and move types."""
     NORMAL = auto()

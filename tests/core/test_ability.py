@@ -2,7 +2,7 @@
 
 import pytest
 from src.core.ability import Ability, AbilityType
-from src.core.battle import Battle
+from src.core.battle import Battle, Weather
 from src.core.pokemon import Pokemon, Stats
 from src.core.types import Type, TypeEffectiveness
 from src.core.move import Move, MoveCategory, Effect, StatusEffect
@@ -390,3 +390,135 @@ def test_multiple_status_immunities():
     # Should still be able to apply other status effects
     assert pokemon.set_status(StatusEffect.PARALYSIS)
     assert pokemon.status == StatusEffect.PARALYSIS
+
+def test_weather_immunity_ability():
+    """Test that weather immunity abilities prevent weather damage."""
+    # Create type chart
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create an ability that prevents sandstorm damage
+    sand_immunity = Ability(
+        name="Sand Veil",
+        type_=AbilityType.WEATHER_IMMUNITY,
+        weather_types=(Weather.SANDSTORM,)
+    )
+    
+    # Create Pokemon with and without immunity
+    normal_pokemon = Pokemon(
+        name="Normal Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    immune_pokemon = Pokemon(
+        name="Immune Pokemon",
+        types=(Type.NORMAL,),  # Not Rock/Ground/Steel to avoid type immunity
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50,
+        ability=sand_immunity
+    )
+    
+    # Test in sandstorm
+    battle = Battle(normal_pokemon, immune_pokemon, chart, weather=Weather.SANDSTORM)
+    
+    # Record initial HP
+    normal_hp = normal_pokemon.current_hp
+    immune_hp = immune_pokemon.current_hp
+    
+    # End turn to trigger weather damage
+    result = battle.end_turn()
+    
+    # Normal Pokemon should take damage
+    assert normal_pokemon.current_hp == normal_hp - (normal_pokemon.stats.hp // 16)
+    assert "buffeted by the sandstorm" in result.messages[0]
+    
+    # Immune Pokemon should not take damage despite not being Rock/Ground/Steel type
+    assert immune_pokemon.current_hp == immune_hp
+
+def test_weather_resistance_ability():
+    """Test that weather resistance abilities reduce weather damage."""
+    # Create type chart
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create an ability that halves sandstorm damage
+    sand_resistance = Ability(
+        name="Sand Resistance",
+        type_=AbilityType.WEATHER_RESISTANCE,
+        weather_types=(Weather.SANDSTORM,),
+        resistance_multiplier=0.5  # Half damage
+    )
+    
+    # Create Pokemon with resistance
+    pokemon = Pokemon(
+        name="Resistant Pokemon",
+        types=(Type.NORMAL,),  # Not Rock/Ground/Steel to avoid immunity
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50,
+        ability=sand_resistance
+    )
+    
+    # Create a normal Pokemon for comparison
+    normal_pokemon = Pokemon(
+        name="Normal Pokemon",
+        types=(Type.NORMAL,),  # Not Rock/Ground/Steel to avoid immunity
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+
+    # Test in sandstorm
+    battle = Battle(normal_pokemon, pokemon, chart, weather=Weather.SANDSTORM)
+    initial_hp = pokemon.current_hp
+
+    # End turn to trigger weather damage
+    battle.end_turn()
+
+    # Should take half damage (1/32 instead of 1/16 max HP)
+    expected_damage = pokemon.stats.hp // 32
+    assert pokemon.current_hp == initial_hp - expected_damage, f"Expected {initial_hp - expected_damage} HP (initial {initial_hp} - {expected_damage}), got {pokemon.current_hp}"
+
+def test_multiple_weather_immunities():
+    """Test that abilities can prevent damage from multiple weather types."""
+    # Create type chart
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create an ability that prevents both sandstorm and hail damage
+    weather_immunity = Ability(
+        name="Weather Protection",
+        type_=AbilityType.WEATHER_IMMUNITY,
+        weather_types=(Weather.SANDSTORM, Weather.HAIL)
+    )
+    
+    # Create Pokemon with immunity
+    pokemon = Pokemon(
+        name="Weather Immune Pokemon",
+        types=(Type.NORMAL,),  # Not Rock/Ground/Steel/Ice to avoid type immunity
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50,
+        ability=weather_immunity
+    )
+    
+    # Test in both weather conditions
+    for weather in (Weather.SANDSTORM, Weather.HAIL):
+        battle = Battle(pokemon, pokemon, chart, weather=weather)
+        initial_hp = pokemon.current_hp
+        
+        # End turn to trigger weather damage
+        battle.end_turn()
+        
+        # Should not take damage from either weather type
+        assert pokemon.current_hp == initial_hp
