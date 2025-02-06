@@ -96,8 +96,8 @@ class Battle:
             Tuple[bool, Optional[str]]: Whether the Pokemon can move and any message
         """
         if pokemon.status == StatusEffect.PARALYSIS:
-            # 25% chance to be fully paralyzed (using randint for better distribution)
-            if random.randint(1, 4) == 1:
+            # 25% chance to be fully paralyzed
+            if random.random() < 0.25:  # Exact 25% chance
                 return False, f"{pokemon.name} is fully paralyzed!"
         elif pokemon.status == StatusEffect.SLEEP:
             # Cannot move while sleeping
@@ -146,9 +146,16 @@ class Battle:
             
         # Accuracy check for non-status moves
         if move.category != MoveCategory.STATUS:
-            accuracy = move.accuracy * attacker.get_stat_multiplier("accuracy")
-            evasion = target.get_stat_multiplier("evasion")
-            if random.random() > (accuracy / evasion) / 100:  # Convert to decimal for comparison
+            # Convert move accuracy to decimal first
+            accuracy = move.accuracy / 100
+            
+            # Apply stat modifiers
+            # Accuracy boost increases hit chance, evasion boost decreases hit chance
+            accuracy_multiplier = attacker.get_stat_multiplier("accuracy")
+            evasion_multiplier = target.get_stat_multiplier("evasion")
+            final_accuracy = accuracy * (accuracy_multiplier / evasion_multiplier)
+            
+            if random.random() > final_accuracy:
                 result.move_missed = True
                 result.messages.append(f"{move.name} missed!")
                 return result
@@ -160,9 +167,9 @@ class Battle:
                 attacker.set_status(None)
                 result.messages.append(f"{attacker.name} thawed out!")
                 
-            # Critical hit check (1/24 chance)
+            # Critical hit check (1/24 chance = ~4.17%)
             crit_roll = random.random()
-            result.critical_hit = crit_roll <= 1/24  # Use <= to include threshold value
+            result.critical_hit = crit_roll < (1.0/24.0)  # Convert to float for exact probability
             if self.debug:
                 print(f"\nCRITICAL HIT CHECK:")
                 print(f"Critical hit roll: {crit_roll:.3f} (threshold: {1/24:.3f})")
@@ -294,19 +301,16 @@ class Battle:
                 print(f"Special move - base sp.atk={attacker.stats.special_attack}, multiplier={attacker.get_stat_multiplier('special_attack')}")
                 print(f"Special move - base sp.def={defender.stats.special_defense}, multiplier={defender.get_stat_multiplier('special_defense')}")
             
-        # Critical hits ignore stat reductions
-        if self.debug:
-            print(f"\nCRITICAL HIT DAMAGE CALCULATION:")
-            print(f"Critical hit active: {critical}")
-            if critical:
-                print(f"\nStats before critical hit adjustments:")
-                print(f"  Attack: {attack:.1f}")
-                print(f"  Defense: {defense:.1f}")
-                print(f"  Base attack: {attacker.stats.attack}")
-                print(f"  Base defense: {defender.stats.defense}")
-                
-        # Critical hits ignore negative stat changes for attacker and positive for defender
+        # Get base damage with current or adjusted stats
+        level_factor = (2 * attacker.level / 5 + 2)
+        
         if critical:
+            if self.debug:
+                print(f"\nCRITICAL HIT ADJUSTMENTS:")
+                print(f"  Pre-crit stats:")
+                print(f"    Attack: {attack:.1f}")
+                print(f"    Defense: {defense:.1f}")
+                
             # For attacker, use the better of current or base stats
             attack = max(attack, attacker.stats.attack if move.category == MoveCategory.PHYSICAL else attacker.stats.special_attack)
             
@@ -314,13 +318,11 @@ class Battle:
             defense = min(defense, defender.stats.defense if move.category == MoveCategory.PHYSICAL else defender.stats.special_defense)
             
             if self.debug:
-                print(f"\nStats after critical hit adjustments:")
-                print(f"  Attack: {attack:.1f}")
-                print(f"  Defense: {defense:.1f}")
-            
+                print(f"  Post-crit stats:")
+                print(f"    Attack: {attack:.1f}")
+                print(f"    Defense: {defense:.1f}")
+        
         # Calculate base damage
-        # ((2 * Level / 5 + 2) * Power * Attack / Defense / 50 + 2)
-        level_factor = (2 * attacker.level / 5 + 2)
         damage = (level_factor * move.power * attack / defense / 50 + 2)
         if self.debug:
             print(f"Base damage calculation:")
@@ -330,14 +332,14 @@ class Battle:
             print(f"  Defense: {defense}")
             print(f"  Initial damage: {damage:.1f}")
         
-        # Apply STAB (Same Type Attack Bonus)
+        # Apply STAB
         if move.type in attacker.types:
             if self.debug:
                 print(f"Applying STAB bonus (1.5x)")
             damage *= 1.5
             if self.debug:
                 print(f"After STAB: {damage:.1f}")
-            
+        
         # Apply type effectiveness
         type_multiplier = self.type_chart.get_multiplier(move.type, defender.types)
         if self.debug:
@@ -346,7 +348,7 @@ class Battle:
         if self.debug:
             print(f"After type effectiveness: {damage:.1f}")
         
-        # Weather effects - apply before critical hit
+        # Apply weather effects
         if self.weather == Weather.RAIN:
             if move.type == Type.WATER:
                 damage *= 1.5
@@ -366,16 +368,16 @@ class Battle:
                 if self.debug:
                     print(f"Sun weakened Water move: {damage:.1f}")
         
-        # Apply critical hit multiplier (2x)
+        # Apply critical hit multiplier last
         if critical:
             if self.debug:
                 print(f"\nAPPLYING CRITICAL HIT MULTIPLIER:")
                 print(f"  Pre-crit damage: {damage:.1f}")
                 print(f"  Applying 2x multiplier")
-            damage *= 2.0  # Critical hits do 2x damage
+            damage *= 2.0
             if self.debug:
                 print(f"  Post-crit damage: {damage:.1f}")
-            
+        
         # Apply random factor (85-100%)
         random_factor = random.randint(85, 100) / 100
         if self.debug:
@@ -508,7 +510,11 @@ class Battle:
         """
         result = TurnResult()
         
-        # Apply status effects
+        # Apply weather effects first
+        weather_result = self.apply_weather_effects()
+        result.messages.extend(weather_result.messages)
+        
+        # Then apply status effects
         for pokemon in (self.player_pokemon, self.enemy_pokemon):
             # Store current status
             current_status = pokemon.status
@@ -533,10 +539,6 @@ class Battle:
                 damage = pokemon.stats.hp // 8
                 pokemon.take_damage(damage)
                 result.messages.append(f"{pokemon.name} is hurt by its burn!")
-                
-        # Apply weather effects
-        weather_result = self.apply_weather_effects()
-        result.messages.extend(weather_result.messages)
         
         # Check weather duration at end of turn
         if self.weather != Weather.CLEAR:

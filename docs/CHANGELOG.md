@@ -42,7 +42,14 @@
 - Fixed damage calculation order for weather effects
 - Improved test reliability for random elements (critical hits)
 - Fixed critical hit damage calculation and stat handling
-- Fixed accuracy test assertions for proper comparison
+  - Corrected assumption about weather/critical hit interaction
+  - Updated test to expect 2x damage regardless of weather
+  - Added detailed documentation about damage calculation order
+  - Fixed critical hit probability calculation using float division
+- Fixed accuracy calculation and stat modifiers
+  - Properly convert move accuracy to decimal before applying modifiers
+  - Correctly handle accuracy and evasion stat modifiers
+  - Fixed accuracy test assertions for proper comparison
 - Fixed debug logging conditionals to reduce test output
 
 ## [0.1.0] - 2025-02-05

@@ -7,7 +7,7 @@ from src.core.move import Move, MoveCategory, Effect
 from src.core.types import Type, TypeEffectiveness
 
 def test_critical_hit_damage():
-    """Test that critical hits deal 1.5x damage and ignore stat reductions."""
+    """Test that critical hits deal 2.0x damage and ignore stat reductions."""
     chart = TypeEffectiveness()
     chart.load_from_json({
         "normal": {"normal": 1.0}

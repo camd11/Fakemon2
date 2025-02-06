@@ -107,23 +107,11 @@ def test_status_resistance_ability():
     trials = 20  # Reduced trials, increased range to compensate
     
     for trial in range(trials):
-        print(f"\nTrial {trial}:")
-        # First restore PP to ensure move is usable
-        print(f"Before PP restore - PP: {burn_move.current_pp}/{burn_move.max_pp}")
         burn_move.restore_pp()
-        print(f"After PP restore - PP: {burn_move.current_pp}/{burn_move.max_pp}")
-        
-        print(f"Before turn - Defender status: {defender.status}")
         battle.execute_turn(burn_move, defender)
-        print(f"After turn - Defender status: {defender.status}")
-        
         if defender.status == StatusEffect.BURN:
             burn_count += 1
-            print(f"Burn detected! Count now: {burn_count}")
-            
-        print(f"Resetting status from: {defender.status}")
         defender.set_status(None)  # Reset status for next trial
-        print(f"After reset - Defender status: {defender.status}")
     
     # With 50% resistance, expect around 50% success rate
     # Allow for some random variation (40-60%)
@@ -209,25 +197,12 @@ def test_multiple_status_resistances():
         trials = 20  # Reduced trials, increased range to compensate
         expected_status = move.effects[0].status
         
-        print(f"\nTesting {move.name} ({expected_status.name}):")
-        for trial in range(trials):
-            # First restore PP
-            print(f"\nTrial {trial}:")
-            print(f"Before PP restore - PP: {move.current_pp}/{move.max_pp}")
+        for _ in range(trials):
             move.restore_pp()
-            print(f"After PP restore - PP: {move.current_pp}/{move.max_pp}")
-            
-            print(f"Before turn - Defender status: {defender.status}")
             battle.execute_turn(move, defender)
-            print(f"After turn - Defender status: {defender.status}")
-            
             if defender.status == expected_status:
                 status_count += 1
-                print(f"{expected_status.name} detected! Count now: {status_count}")
-                
-            print(f"Resetting status from: {defender.status}")
             defender.set_status(None)  # Reset status for next trial
-            print(f"After reset - Defender status: {defender.status}")
         
         # With 50% resistance, expect around 50% success rate
         # Allow for some random variation (40-60%)
@@ -297,7 +272,6 @@ def test_status_immunity_with_burn():
     battle = Battle(attacker, defender, chart)
     
     # Test burn immunity
-    print("\nTesting burn immunity:")
     for _ in range(10):  # 10 trials should be enough for immunity
         burn_move.restore_pp()
         battle.execute_turn(burn_move, defender)
@@ -368,28 +342,15 @@ def test_status_resistance_with_paralysis():
     battle = Battle(attacker, defender, chart)
     
     # Test paralysis resistance
-    print("\nTesting paralysis resistance:")
     paralysis_count = 0
     trials = 20  # Reduced trials, increased range to compensate
     
-    for trial in range(trials):
-        # First restore PP
-        print(f"\nTrial {trial}:")
-        print(f"Before PP restore - PP: {paralyze_move.current_pp}/{paralyze_move.max_pp}")
+    for _ in range(trials):
         paralyze_move.restore_pp()
-        print(f"After PP restore - PP: {paralyze_move.current_pp}/{paralyze_move.max_pp}")
-        
-        print(f"Before turn - Defender status: {defender.status}")
         battle.execute_turn(paralyze_move, defender)
-        print(f"After turn - Defender status: {defender.status}")
-        
         if defender.status == StatusEffect.PARALYSIS:
             paralysis_count += 1
-            print(f"Paralysis detected! Count now: {paralysis_count}")
-            
-        print(f"Resetting status from: {defender.status}")
         defender.set_status(None)  # Reset status for next trial
-        print(f"After reset - Defender status: {defender.status}")
     
     # With 50% resistance, expect around 50% success rate
     # Allow for some random variation (40-60%)

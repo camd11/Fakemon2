@@ -165,7 +165,91 @@ Before debugging, verify test fundamentals:
    - Ensure sufficient resources (PP, HP)
    - Update assertions to allow valid variations
 
-## 5. Documentation
+## 5. Cross-Referencing Tests
+
+When debugging test failures, it's crucial to cross-reference related tests to validate assumptions. Here's a real example from our battle system:
+
+### Case Study: Weather and Critical Hit Interaction
+
+In `test_battle_weather.py`, we initially had an incorrect assumption:
+```python
+# Original incorrect test
+def test_weather_damage_order():
+    """Test that weather effects are applied before critical hits."""
+    # ... test setup ...
+    expected_ratio = 1.0  # Incorrectly assumed crit and weather should cancel out
+    actual_ratio = crit_damage / non_crit_damage
+    assert 0.9 <= actual_ratio <= 1.1
+```
+
+The test assumed that a critical hit in sun should do the same damage as a non-critical hit in clear weather. To debug this:
+
+1. **Check Related Tests**:
+   - Examined `test_battle_critical.py`
+   - Found that critical hits should always do ~2x damage
+   - Discovered standard ratio range (1.70-2.35) accounting for random factor
+
+2. **Analyze Assumptions**:
+   ```python
+   # Walk through the damage calculation
+   Non-critical in sun:
+   - Base damage * 0.5 (sun weakens water) = X
+   
+   Critical in sun:
+   - Base damage * 0.5 (sun weakens water) * 2.0 (crit) = 2X
+   
+   Expected ratio = 2X/X = 2.0 (before random factor)
+   ```
+
+3. **Validate Implementation**:
+   - Confirmed battle.py correctly applies multipliers
+   - Weather and critical hits are independent multipliers
+   - Critical hits should always double damage
+
+4. **Fix the Test**:
+```python
+def test_weather_damage_order():
+    """Test that critical hits do 2x damage regardless of weather.
+    
+    Damage calculation order:
+    1. Base damage
+    2. Weather effects (e.g., 0.5x in sun for water moves)
+    3. Critical hit multiplier (2.0x)
+    4. Random factor (0.85-1.00)
+    
+    Expected ratio range: 1.70-2.35
+    - Min: 2.0 * (0.85/1.00) ≈ 1.70
+    - Max: 2.0 * (1.00/0.85) ≈ 2.35
+    """
+    # ... test setup ...
+    assert 1.70 <= actual_ratio <= 2.35
+```
+
+This process revealed that the test's assumption was incorrect, not the implementation. By cross-referencing `test_battle_critical.py`, we understood that critical hits should maintain their 2x multiplier regardless of other damage modifiers.
+
+### Key Takeaways
+
+1. **Cross-Reference Related Tests**:
+   - Look for similar tests that might provide insight
+   - Check how related mechanics are tested
+   - Verify assumptions against established patterns
+
+2. **Walk Through the Logic**:
+   - Break down calculations step by step
+   - Consider how different mechanics should interact
+   - Document your reasoning
+
+3. **Question Assumptions**:
+   - Don't assume the implementation is wrong
+   - Validate test assumptions against design
+   - Check if similar tests handle the case differently
+
+4. **Document Insights**:
+   - Add detailed docstrings explaining the logic
+   - Include examples of calculations
+   - Note why certain ranges or values are used
+
+## 6. Documentation
 
 Always document key insights:
 

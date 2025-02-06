@@ -247,7 +247,7 @@ def test_freeze_prevents_moves(battle):
     assert "Enemy Pokemon is frozen solid!" in result.messages
 
 def test_freeze_thaw_chance(battle):
-    """Test that freeze has 1% chance to thaw each turn."""
+    """Test that freeze has 20% chance to thaw each turn."""
     # Create a freeze move
     freeze_move = Move(
         name="Ice Beam",
