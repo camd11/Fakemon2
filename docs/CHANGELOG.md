@@ -28,13 +28,22 @@
   - Added proper resource management (PP, HP) in tests
   - Improved test assertions to handle random factors
   - Standardized debug logging format
+  - Added optional debug mode to reduce test output
+  - Reduced test trials with wider acceptable ranges
 - Improved damage calculation to handle weather multipliers
 - Enhanced battle message system for weather effects
+- Updated critical hit mechanics
+  - Changed critical hit multiplier from 1.5x to 2.0x
+  - Fixed stat restoration logic for critical hits
+  - Reordered damage calculation (weather before critical)
 
 ### Fixed
 - Fixed weather duration handling to properly maintain state
 - Fixed damage calculation order for weather effects
 - Improved test reliability for random elements (critical hits)
+- Fixed critical hit damage calculation and stat handling
+- Fixed accuracy test assertions for proper comparison
+- Fixed debug logging conditionals to reduce test output
 
 ## [0.1.0] - 2025-02-05
 

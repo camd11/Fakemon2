@@ -21,24 +21,23 @@ This guide outlines strategies for effectively debugging tests in the Fakemon pr
 
 ### Debug Logging Strategy
 
-1. **Layered Logging**: Structure logs in layers of detail
+1. **Conditional Logging**: Use debug mode to control output
    ```python
-   # Basic outcome
-   print("CRITICAL HIT CHECK:")
-   print(f"Critical hit roll: {roll} (threshold: {threshold})")
-   print(f"Critical hit: {is_critical}")
-
-   # Detailed calculations (when needed)
-   print("\nCRITICAL HIT DAMAGE CALCULATION:")
-   print(f"Base damage calculation:")
-   print(f"  Level factor: {level_factor}")
-   print(f"  Move power: {power}")
+   class Battle:
+       def __init__(self, debug: bool = False):
+           self.debug = debug
+           
+       def execute_turn(self):
+           if self.debug:
+               print("Detailed debug info")
+           # ... battle logic
    ```
 
 2. **Focused Debugging**: Only log relevant information
    ```python
    # Good - specific to what we're testing
-   print(f"Attack: {attack} multiplier={multiplier}")
+   if self.debug:
+       print(f"Attack: {attack} multiplier={multiplier}")
    
    # Bad - too much noise
    print(f"All stats: {pokemon.stats}")
@@ -46,10 +45,11 @@ This guide outlines strategies for effectively debugging tests in the Fakemon pr
 
 3. **Clear Section Headers**: Make log sections easily scannable
    ```python
-   print("\nSTATS BEFORE CRITICAL HIT:")
-   # ... stats logging
-   print("\nSTATS AFTER CRITICAL HIT:")
-   # ... stats logging
+   if self.debug:
+       print("\nSTATS BEFORE CRITICAL HIT:")
+       # ... stats logging
+       print("\nSTATS AFTER CRITICAL HIT:")
+       # ... stats logging
    ```
 
 ## 2. Test Design Principles
@@ -58,15 +58,17 @@ This guide outlines strategies for effectively debugging tests in the Fakemon pr
 
 As seen in `test_battle_critical.py`, tests involving random elements need special consideration:
 
-1. **Adequate Sample Size**:
+1. **Balance Trial Count vs Output**:
    ```python
-   # Too few attempts - unreliable
-   for _ in range(50):
+   # Too verbose - many trials with debug on
+   battle = Battle(debug=True)
+   for _ in range(200):  # Lots of debug output
        if get_critical_hit():
            break
 
-   # Better - accounts for 1/24 chance
-   for _ in range(200):
+   # Better - fewer trials with debug, more without
+   battle = Battle(debug=False)
+   for _ in range(100):  # No debug spam
        if get_critical_hit():
            break
    ```
@@ -82,10 +84,10 @@ As seen in `test_battle_critical.py`, tests involving random elements need speci
 3. **Valid Ranges vs Exact Values**:
    ```python
    # Bad - too precise for random factors
-   assert critical_damage == base_damage * 1.5
+   assert critical_damage == base_damage * 2.0
 
    # Good - accounts for random range (0.85-1.00)
-   assert 1.28 <= critical_damage / base_damage <= 1.76
+   assert 1.70 <= critical_damage / base_damage <= 2.35
    ```
 
 ### Test Validity Checklist
@@ -143,12 +145,13 @@ Before debugging, verify test fundamentals:
 
 1. **Isolate the Issue**:
    ```bash
-   # Run specific test with maximum verbosity
-   pytest tests/core/test_battle_critical.py::test_critical_hit_damage -vv
+   # Run specific test with debug mode
+   battle = Battle(debug=True)
+   pytest tests/core/test_battle_critical.py::test_critical_hit_damage -v
    ```
 
 2. **Add Strategic Logging**:
-   - Start with high-level outcomes
+   - Enable debug mode only when needed
    - Add detailed calculations only where needed
    - Use clear section headers
 
@@ -168,14 +171,14 @@ Always document key insights:
 
 ```python
 def test_critical_hit_damage():
-    """Test that critical hits deal 1.5x damage and ignore stat reductions.
+    """Test that critical hits deal 2.0x damage and ignore stat reductions.
     
     Critical hit damage calculation:
-    1. Base damage * 1.5 for critical hit
+    1. Base damage * 2.0 for critical hit
     2. Random factor (0.85-1.00) applied to both normal and crit hits
-    3. Expected ratio range: 1.28-1.76
-       - Min: 1.5 * (0.85/1.00) ≈ 1.28
-       - Max: 1.5 * (1.00/0.85) ≈ 1.76
+    3. Expected ratio range: 1.70-2.35
+       - Min: 2.0 * (0.85/1.00) ≈ 1.70
+       - Max: 2.0 * (1.00/0.85) ≈ 2.35
     """
 ```
 

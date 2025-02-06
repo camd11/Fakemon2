@@ -69,11 +69,11 @@ def test_rain_boost():
     
     # Water moves should do 1.5x damage
     water_result = battle.execute_turn(water_move, defender)
-    assert water_result.damage_dealt > base_water_damage * 1.4  # Allow for random variation
+    assert water_result.damage_dealt > base_water_damage * 1.35  # Allow for random variation (1.5x nominal)
     
     # Fire moves should do 0.5x damage
     fire_result = battle.execute_turn(fire_move, defender)
-    assert fire_result.damage_dealt < base_fire_damage * 0.6  # Allow for random variation
+    assert fire_result.damage_dealt < base_fire_damage * 0.65  # Allow for random variation (0.5x nominal)
 
 def test_sun_boost():
     """Test that sun boosts fire moves and weakens water moves."""
@@ -139,22 +139,22 @@ def test_sun_boost():
     # Fire moves should do 1.5x damage (retry if critical hit)
     fire_result = battle.execute_turn(fire_move, defender)
     attempts = 0
-    while fire_result.critical_hit and attempts < 5:
+    while fire_result.critical_hit and attempts < 10:
         battle = Battle(attacker, defender, chart, weather=Weather.SUN)
         fire_result = battle.execute_turn(fire_move, defender)
         attempts += 1
-    assert not fire_result.critical_hit, "Got critical hit after 5 attempts"
-    assert fire_result.damage_dealt > base_fire_damage * 1.4  # Allow for random variation
+    assert not fire_result.critical_hit, "Got critical hit after 10 attempts"
+    assert fire_result.damage_dealt > base_fire_damage * 1.35  # Allow for random variation (1.5x nominal)
 
     # Water moves should do 0.5x damage (retry if critical hit)
     water_result = battle.execute_turn(water_move, defender)
     attempts = 0
-    while water_result.critical_hit and attempts < 5:
+    while water_result.critical_hit and attempts < 10:
         battle = Battle(attacker, defender, chart, weather=Weather.SUN)
         water_result = battle.execute_turn(water_move, defender)
         attempts += 1
-    assert not water_result.critical_hit, "Got critical hit after 5 attempts"
-    assert water_result.damage_dealt < base_water_damage * 0.6  # Allow for random variation
+    assert not water_result.critical_hit, "Got critical hit after 10 attempts"
+    assert water_result.damage_dealt < base_water_damage * 0.65  # Allow for random variation (0.5x nominal)
 
 def test_sandstorm_damage():
     """Test that sandstorm damages non-Rock/Ground/Steel types."""

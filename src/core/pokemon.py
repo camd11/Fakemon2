@@ -158,8 +158,14 @@ class Pokemon:
             int: The amount of damage actually dealt
         """
         old_hp = self.current_hp
+        print(f"\nTaking damage - {self.name}:")
+        print(f"  Current HP: {self.current_hp}")
+        print(f"  Damage amount: {amount}")
         self.current_hp = max(0, self.current_hp - amount)
-        return old_hp - self.current_hp
+        print(f"  New HP: {self.current_hp}")
+        damage_dealt = old_hp - self.current_hp
+        print(f"  Actual damage dealt: {damage_dealt}")
+        return damage_dealt
         
     def set_status(self, status: Optional[StatusEffect], duration: Optional[int] = None) -> bool:
         """Set a status effect on the Pokemon.
@@ -244,6 +250,18 @@ class Pokemon:
             self.status_duration = None
             return f"{self.name}'s {old_status.name.lower()} faded!"
         return None
+        
+    def reset_stats(self) -> None:
+        """Reset all stat stages to 0."""
+        self.stat_stages = {
+            "attack": 0,
+            "defense": 0,
+            "special_attack": 0,
+            "special_defense": 0,
+            "speed": 0,
+            "accuracy": 0,
+            "evasion": 0
+        }
         
     @property
     def is_fainted(self) -> bool:
