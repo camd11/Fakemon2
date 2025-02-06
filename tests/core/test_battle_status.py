@@ -36,7 +36,7 @@ def test_pokemon():
             category=MoveCategory.STATUS,
             power=0,
             accuracy=100,
-            pp=35,
+            pp=250,  # Enough PP for all attempts
             effects=[Effect(status=StatusEffect.POISON, status_chance=100)]
         )
     ]
@@ -73,7 +73,7 @@ def battle(test_pokemon, type_chart):
                 category=MoveCategory.STATUS,
                 power=0,
                 accuracy=100,
-                pp=35,
+                pp=250,  # Enough PP for all attempts
                 effects=[Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
             )
         ]
@@ -173,7 +173,7 @@ def test_sleep_prevents_moves(battle):
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=35,
+            pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.SLEEP, status_chance=100)]
     )
     battle.player_pokemon.moves.append(sleep_move)
@@ -195,14 +195,14 @@ def test_sleep_duration(battle):
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=35,
+        pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.SLEEP, status_chance=100)]
     )
     battle.player_pokemon.moves.append(sleep_move)
     
     # Test multiple times to verify random duration
     durations = set()
-    for _ in range(50):  # More trials with debug off
+    for _ in range(100):  # More trials for better statistical significance
         # Apply sleep
         battle.execute_turn(sleep_move, battle.enemy_pokemon)
         
@@ -234,7 +234,7 @@ def test_freeze_prevents_moves(battle):
         category=MoveCategory.SPECIAL,
         power=90,
         accuracy=100,
-        pp=10,
+            pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
     )
     battle.player_pokemon.moves.append(freeze_move)
@@ -256,7 +256,7 @@ def test_freeze_thaw_chance(battle):
         category=MoveCategory.SPECIAL,
         power=90,
         accuracy=100,
-        pp=10,
+        pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
     )
     battle.player_pokemon.moves.append(freeze_move)
@@ -265,7 +265,7 @@ def test_freeze_thaw_chance(battle):
     stayed_frozen = 0
     thaw_turns = []
     
-    for _ in range(50):  # More trials with debug off
+    for _ in range(100):  # More trials for better statistical significance
         # Apply freeze
         battle.execute_turn(freeze_move, battle.enemy_pokemon)
         
@@ -284,15 +284,17 @@ def test_freeze_thaw_chance(battle):
         battle.enemy_pokemon.set_status(None)
     
     # With 20% chance per turn, over 10 turns:
-    # - Most should thaw
-    # - Few might stay frozen
-    # Allow for wider random variation due to fewer trials
-    assert stayed_frozen <= 4  # At most 20% should stay frozen
-    assert len(thaw_turns) >= 14  # At least 70% should thaw
+    # - Most Pokemon should thaw (89% chance to thaw within 10 turns)
+    # - Few might stay frozen (11% chance to stay frozen all 10 turns)
+    # With 100 trials, allow for ±5% variation
+    thaw_rate = len(thaw_turns) / 100
+    assert 0.84 <= thaw_rate <= 0.94, f"Expected ~89% thaw rate (±5%), got {thaw_rate*100:.1f}%"
+    
     if len(thaw_turns) > 0:
         # Most thaws should happen in first few turns
+        # Expected average thaw turn with 20% chance: 1/0.2 = 5 turns
         avg_thaw_turn = sum(thaw_turns) / len(thaw_turns)
-        assert avg_thaw_turn <= 5  # Average thaw turn should be early
+        assert 3 <= avg_thaw_turn <= 7, f"Expected ~5 turns average thaw time (±2), got {avg_thaw_turn:.1f}"
 
 def test_fire_move_thaws_user(battle):
     """Test that using a fire move thaws the user."""
@@ -303,7 +305,7 @@ def test_fire_move_thaws_user(battle):
         category=MoveCategory.SPECIAL,
         power=90,
         accuracy=100,
-        pp=10,
+        pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
     )
     fire_move = Move(
@@ -312,7 +314,7 @@ def test_fire_move_thaws_user(battle):
         category=MoveCategory.SPECIAL,
         power=90,
         accuracy=100,
-        pp=15
+            pp=250  # Enough PP for all attempts
     )
     battle.player_pokemon.moves.extend([freeze_move, fire_move])
     
@@ -334,7 +336,7 @@ def test_burn_attack_reduction(battle):
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=15,
+            pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
     )
     battle.player_pokemon.moves.append(burn_move)
@@ -356,7 +358,7 @@ def test_burn_damage(battle):
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=15,
+        pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
     )
     battle.player_pokemon.moves.append(burn_move)
@@ -380,7 +382,7 @@ def test_burn_duration(battle):
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=15,
+        pp=250,  # Enough PP for all attempts
         effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
     )
     battle.player_pokemon.moves.append(burn_move)
@@ -398,98 +400,76 @@ def test_burn_duration(battle):
     battle.end_turn()
     assert battle.enemy_pokemon.status is None
 
-def test_type_immunities(battle):
-    """Test that Pokemon are immune to status effects based on their type."""
-    # Create status moves
-    burn_move = Move(
-        name="Will-O-Wisp",
-        type_=Type.FIRE,
-        category=MoveCategory.STATUS,
-        power=0,
-        accuracy=100,
-        pp=15,
-        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
-    )
-    freeze_move = Move(
-        name="Ice Beam",
-        type_=Type.ICE,
-        category=MoveCategory.SPECIAL,
-        power=90,
-        accuracy=100,
-        pp=10,
-        effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
-    )
-    paralyze_move = Move(
-        name="Thunder Wave",
-        type_=Type.ELECTRIC,
-        category=MoveCategory.STATUS,
-        power=0,
-        accuracy=100,
-        pp=20,
-        effects=[Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
-    )
-    poison_move = Move(
-        name="Toxic",
-        type_=Type.POISON,
-        category=MoveCategory.STATUS,
-        power=0,
-        accuracy=100,
-        pp=10,
-        effects=[Effect(status=StatusEffect.POISON, status_chance=100)]
-    )
-    battle.player_pokemon.moves.extend([burn_move, freeze_move, paralyze_move, poison_move])
+@pytest.mark.parametrize("immune_type,status,move_data", [
+    (Type.FIRE, StatusEffect.BURN, {
+        "name": "Will-O-Wisp",
+        "type_": Type.FIRE,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.BURN, status_chance=100)]
+    }),
+    (Type.ICE, StatusEffect.FREEZE, {
+        "name": "Ice Beam",
+        "type_": Type.ICE,
+        "category": MoveCategory.SPECIAL,
+        "power": 90,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.FREEZE, status_chance=100)]
+    }),
+    (Type.ELECTRIC, StatusEffect.PARALYSIS, {
+        "name": "Thunder Wave",
+        "type_": Type.ELECTRIC,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
+    }),
+    (Type.POISON, StatusEffect.POISON, {
+        "name": "Toxic",
+        "type_": Type.POISON,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.POISON, status_chance=100)]
+    }),
+    (Type.STEEL, StatusEffect.POISON, {
+        "name": "Toxic",
+        "type_": Type.POISON,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.POISON, status_chance=100)]
+    })
+])
+def test_type_immunities(battle, immune_type, status, move_data):
+    """Test that Pokemon are immune to status effects based on their type.
     
-    # Test Fire-type immunity to burn
-    fire_pokemon = Pokemon(
-        name="Fire Pokemon",
-        types=(Type.FIRE,),
-        base_stats=Stats(hp=100, attack=100, defense=100, special_attack=100, special_defense=100, speed=100),
+    Args:
+        battle: Battle fixture
+        immune_type: Type that should be immune to the status
+        status: Status effect to test immunity against
+        move_data: Data to create the status-inflicting move
+    """
+    # Create status move
+    status_move = Move(**move_data)
+    battle.player_pokemon.moves = [status_move]
+    
+    # Create immune Pokemon
+    immune_pokemon = Pokemon(
+        name=f"{immune_type.name} Pokemon",
+        types=(immune_type,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
         level=50
     )
-    battle.enemy_pokemon = fire_pokemon
-    battle.execute_turn(burn_move, battle.enemy_pokemon)
-    assert battle.enemy_pokemon.status is None
+    battle.enemy_pokemon = immune_pokemon
     
-    # Test Ice-type immunity to freeze
-    ice_pokemon = Pokemon(
-        name="Ice Pokemon",
-        types=(Type.ICE,),
-        base_stats=Stats(hp=100, attack=100, defense=100, special_attack=100, special_defense=100, speed=100),
-        level=50
-    )
-    battle.enemy_pokemon = ice_pokemon
-    battle.execute_turn(freeze_move, battle.enemy_pokemon)
-    assert battle.enemy_pokemon.status is None
-    
-    # Test Electric-type immunity to paralysis
-    electric_pokemon = Pokemon(
-        name="Electric Pokemon",
-        types=(Type.ELECTRIC,),
-        base_stats=Stats(hp=100, attack=100, defense=100, special_attack=100, special_defense=100, speed=100),
-        level=50
-    )
-    battle.enemy_pokemon = electric_pokemon
-    battle.execute_turn(paralyze_move, battle.enemy_pokemon)
-    assert battle.enemy_pokemon.status is None
-    
-    # Test Poison-type immunity to poison
-    poison_pokemon = Pokemon(
-        name="Poison Pokemon",
-        types=(Type.POISON,),
-        base_stats=Stats(hp=100, attack=100, defense=100, special_attack=100, special_defense=100, speed=100),
-        level=50
-    )
-    battle.enemy_pokemon = poison_pokemon
-    battle.execute_turn(poison_move, battle.enemy_pokemon)
-    assert battle.enemy_pokemon.status is None
-    
-    # Test Steel-type immunity to poison
-    steel_pokemon = Pokemon(
-        name="Steel Pokemon",
-        types=(Type.STEEL,),
-        base_stats=Stats(hp=100, attack=100, defense=100, special_attack=100, special_defense=100, speed=100),
-        level=50
-    )
-    battle.enemy_pokemon = steel_pokemon
-    battle.execute_turn(poison_move, battle.enemy_pokemon)
-    assert battle.enemy_pokemon.status is None
+    # Try to apply status
+    battle.execute_turn(status_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status is None, f"{immune_type.name} type should be immune to {status.name}"
