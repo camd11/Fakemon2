@@ -126,11 +126,11 @@ class Pokemon:
                 else:
                     multiplier *= 3 / (3 + abs(stage))
             else:  # evasion
-                # For evasion, invert the formula so higher stages = lower hit chance
+                # For evasion, higher stages = lower hit chance
                 if stage >= 0:
-                    multiplier *= 3 / (3 + stage)  # +1 stage = 3/4 = 0.75 hit chance
+                    multiplier *= 3 / (3 + stage * 2)  # +1 stage = 0.6 hit chance
                 else:
-                    multiplier *= (3 + abs(stage)) / 3  # -1 stage = 4/3 ≈ 1.33 hit chance
+                    multiplier *= (3 - stage * 2) / 3  # -1 stage = 1.67 hit chance
         else:
             multiplier *= max(2, 2 + stage) / max(2, 2 - stage)
             

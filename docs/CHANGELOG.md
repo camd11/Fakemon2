@@ -46,8 +46,12 @@
 - Fixed accuracy calculation system
   - Properly handle accuracy and evasion stat stages separately
   - Fixed accuracy formula to use correct multipliers (e.g. +1 stage = 4/3)
-  - Fixed evasion formula to properly reduce hit chance (e.g. +1 stage = 3/4)
+  - Fixed evasion formula to properly reduce hit chance (e.g. +1 stage = 0.6)
   - Added comprehensive test coverage for all accuracy scenarios
+  - Corrected evasion stage multipliers:
+    - +1 stage = 0.6 hit chance (harder to hit)
+    - -1 stage = 1.67 hit chance (easier to hit)
+  - Fixed stat stage calculation to use proper denominators
 - Fixed weather duration handling to properly maintain state
 - Fixed circular imports between battle and ability systems
 - Fixed ability-weather interaction in damage calculations
