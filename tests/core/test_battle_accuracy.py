@@ -34,7 +34,14 @@ def test_basic_accuracy():
     trials = 20  # Reduced trials, increased range to compensate
     
     for _ in range(trials):
-        # Create fresh move for each trial
+        # Reset defender's HP and create fresh move for each trial
+        defender = Pokemon(
+            name="Defender",
+            types=(Type.NORMAL,),
+            base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+            level=50
+        )
         inaccurate_move = Move(
             name="Inaccurate Move",
             type_=Type.NORMAL,
@@ -81,7 +88,14 @@ def test_baseline_accuracy():
     trials = 20  # Reduced trials, increased range to compensate
     
     for _ in range(trials):
-        # Create fresh move and battle for each trial
+        # Reset defender's HP and create fresh move for each trial
+        defender = Pokemon(
+            name="Defender",
+            types=(Type.NORMAL,),
+            base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+            level=50
+        )
         normal_move = Move(
             name="Normal Move",
             type_=Type.NORMAL,
@@ -102,7 +116,14 @@ def test_baseline_accuracy():
     # Test with increased accuracy
     hits = 0
     for _ in range(trials):
-        # Create fresh moves and battle for each trial
+        # Reset defender's HP and create fresh moves for each trial
+        defender = Pokemon(
+            name="Defender",
+            types=(Type.NORMAL,),
+            base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+            level=50
+        )
         normal_move = Move(
             name="Normal Move",
             type_=Type.NORMAL,
@@ -134,7 +155,14 @@ def test_baseline_accuracy():
     # Test with increased evasion
     hits = 0
     for _ in range(trials):
-        # Create fresh moves and battle for each trial
+        # Reset both Pokemon's stats for each trial
+        attacker = Pokemon(
+            name="Attacker",
+            types=(Type.NORMAL,),
+            base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+            level=50
+        )
         normal_move = Move(
             name="Normal Move",
             type_=Type.NORMAL,
@@ -154,17 +182,36 @@ def test_baseline_accuracy():
         )
         attacker.moves = [normal_move]
         defender.moves = [evasion_boost]
-        battle = Battle(attacker, defender, chart, debug=False)  # Disable debug for multiple trials
+        # Reset defender's HP and create fresh battle
+        defender = Pokemon(
+            name="Defender",
+            types=(Type.NORMAL,),
+            base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+            level=50
+        )
+        # First trial with debug to see multipliers
+        debug = _ == 0  # Only debug first trial
+        battle = Battle(attacker, defender, chart, debug=debug)
         
         battle.execute_turn(evasion_boost, defender)  # Boost evasion
+        if debug:
+            print(f"\nEvasion multiplier: {defender.get_stat_multiplier('evasion')}")
+            print(f"Accuracy multiplier: {attacker.get_stat_multiplier('accuracy')}")
         result = battle.execute_turn(normal_move, defender)
         if not result.move_missed:
             hits += 1
     
     reduced_accuracy = hits / trials
-    # With fewer trials, allow for wider random variation but still ensure general trend
-    # Baseline accuracy should be higher than reduced accuracy (when evasion is boosted)
-    assert baseline_accuracy > reduced_accuracy * 0.8, f"Expected baseline accuracy ({baseline_accuracy}) to be notably higher than reduced accuracy ({reduced_accuracy})"
+    # Calculate expected accuracy ranges
+    # Base accuracy: 75%
+    # After accuracy boost (+1 stage): 75% * (2/1) = 150% (capped at 100%)
+    # After evasion boost (+1 stage): 75% * (1/2) = 37.5%
+    
+    # Allow for random variation with 20 trials
+    assert 0.60 <= baseline_accuracy <= 0.90, f"Expected baseline accuracy around 75% (±15%), got {baseline_accuracy*100:.1f}%"
+    assert 0.80 <= boosted_accuracy <= 1.00, f"Expected boosted accuracy around 100% (capped), got {boosted_accuracy*100:.1f}%"
+    assert 0.25 <= reduced_accuracy <= 0.50, f"Expected reduced accuracy around 37.5% (±12.5%), got {reduced_accuracy*100:.1f}%"
 
 def test_status_move_accuracy():
     """Test that status moves ignore accuracy checks."""

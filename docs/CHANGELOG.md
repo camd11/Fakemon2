@@ -43,6 +43,11 @@
   - Reordered damage calculation (weather before critical)
 
 ### Fixed
+- Fixed accuracy calculation system
+  - Properly handle accuracy and evasion stat stages separately
+  - Fixed accuracy formula to use correct multipliers (e.g. +1 stage = 4/3)
+  - Fixed evasion formula to properly reduce hit chance (e.g. +1 stage = 3/4)
+  - Added comprehensive test coverage for all accuracy scenarios
 - Fixed weather duration handling to properly maintain state
 - Fixed circular imports between battle and ability systems
 - Fixed ability-weather interaction in damage calculations

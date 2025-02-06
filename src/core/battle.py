@@ -145,7 +145,8 @@ class Battle:
             # Accuracy boost increases hit chance, evasion boost decreases hit chance
             accuracy_multiplier = attacker.get_stat_multiplier("accuracy")
             evasion_multiplier = target.get_stat_multiplier("evasion")
-            final_accuracy = accuracy * (accuracy_multiplier / evasion_multiplier)
+            # Evasion multiplier is already inverted (higher stages = lower hit chance)
+            final_accuracy = accuracy * accuracy_multiplier * evasion_multiplier
             
             if random.random() > final_accuracy:
                 result.move_missed = True

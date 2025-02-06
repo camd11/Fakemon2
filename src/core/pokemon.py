@@ -79,15 +79,16 @@ class Pokemon:
         Returns:
             Stats: The calculated stats at the current level
         """
-        # HP = ((2 * Base + IV + (EV/4)) * Level/100) + Level + 10
-        # Other = ((2 * Base + IV + (EV/4)) * Level/100) + 5
-        # Simplified version without IVs/EVs for now
-        hp = int((2 * self.base_stats.hp * self.level / 100) + self.level + 10)
-        attack = int((2 * self.base_stats.attack * self.level / 100) + 5)
-        defense = int((2 * self.base_stats.defense * self.level / 100) + 5)
-        special_attack = int((2 * self.base_stats.special_attack * self.level / 100) + 5)
-        special_defense = int((2 * self.base_stats.special_defense * self.level / 100) + 5)
-        speed = int((2 * self.base_stats.speed * self.level / 100) + 5)
+        # Stat calculation formula:
+        # HP = ((2 * Base * Level)/100) + Level + 10
+        # Other = ((2 * Base * Level)/100) + 5
+        # Simplified version without IVs/EVs
+        hp = int((2 * self.base_stats.hp * self.level) / 100 + self.level + 10)
+        attack = int((2 * self.base_stats.attack * self.level) / 100 + 5)
+        defense = int((2 * self.base_stats.defense * self.level) / 100 + 5)
+        special_attack = int((2 * self.base_stats.special_attack * self.level) / 100 + 5)
+        special_defense = int((2 * self.base_stats.special_defense * self.level) / 100 + 5)
+        speed = int((2 * self.base_stats.speed * self.level) / 100 + 5)
         
         return Stats(hp, attack, defense, special_attack, special_defense, speed)
         
@@ -105,7 +106,31 @@ class Pokemon:
         # Stage multiplier
         stage = self.stat_stages[stat]
         if stat in ("accuracy", "evasion"):
-            multiplier *= (3 + max(-3, min(3, stage))) / 3
+            # Accuracy/Evasion use different formula:
+            # For accuracy:
+            # +1: 3/3 = 1.0
+            # +2: 4/3 ≈ 1.33
+            # +3: 5/3 ≈ 1.67
+            # +4: 6/3 = 2.0
+            # +5: 7/3 ≈ 2.33
+            # +6: 8/3 ≈ 2.67
+            # -1: 3/4 = 0.75
+            # -2: 3/5 = 0.60
+            # -3: 3/6 = 0.50
+            # -4: 3/7 ≈ 0.43
+            # -5: 3/8 = 0.375
+            # -6: 3/9 = 0.333
+            if stat == "accuracy":
+                if stage >= 0:
+                    multiplier *= (3 + stage) / 3
+                else:
+                    multiplier *= 3 / (3 + abs(stage))
+            else:  # evasion
+                # For evasion, invert the formula so higher stages = lower hit chance
+                if stage >= 0:
+                    multiplier *= 3 / (3 + stage)  # +1 stage = 3/4 = 0.75 hit chance
+                else:
+                    multiplier *= (3 + abs(stage)) / 3  # -1 stage = 4/3 ≈ 1.33 hit chance
         else:
             multiplier *= max(2, 2 + stage) / max(2, 2 - stage)
             
