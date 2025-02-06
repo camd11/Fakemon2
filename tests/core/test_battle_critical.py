@@ -29,32 +29,7 @@ def test_critical_hit_damage():
         level=50
     )
     
-    # Create physical and special moves
-    physical_move = Move(
-        name="Physical Move",
-        type_=Type.NORMAL,
-        category=MoveCategory.PHYSICAL,
-        power=40,
-        accuracy=100,
-        pp=100
-    )
-    
-    special_move = Move(
-        name="Special Move",
-        type_=Type.NORMAL,
-        category=MoveCategory.SPECIAL,
-        power=40,
-        accuracy=100,
-        pp=100
-    )
-    
-    attacker.moves = [physical_move, special_move]
-    
-    # Test physical critical hits
-    battle = Battle(attacker, defender, chart, debug=False)  # Disable debug for multiple trials
-    
-    # Get base damage
-    base_damage = None
+    # Create moves with enough PP for all attempts
     physical_move = Move(
         name="Physical Move",
         type_=Type.NORMAL,
@@ -63,11 +38,25 @@ def test_critical_hit_damage():
         accuracy=100,
         pp=250  # Enough PP for all attempts
     )
-    attacker.moves = [physical_move]
-    battle = Battle(attacker, defender, chart, debug=False)  # Disable debug for multiple trials
     
-    # Try to get a non-critical hit
-    for _ in range(10):
+    special_move = Move(
+        name="Special Move",
+        type_=Type.NORMAL,
+        category=MoveCategory.SPECIAL,
+        power=40,
+        accuracy=100,
+        pp=250  # Enough PP for all attempts
+    )
+    
+    # Test physical critical hits
+    attacker.moves = [physical_move]
+    battle = Battle(attacker, defender, chart, debug=False)
+    
+    # Get base damage
+    base_damage = None
+    
+    # Try to get a non-critical hit (1/24 chance to crit, so try up to 50 times)
+    for _ in range(50):
         defender.current_hp = defender.stats.hp  # Reset HP
         result = battle.execute_turn(physical_move, defender)
         if not result.critical_hit and result.damage_dealt > 0:
@@ -79,8 +68,8 @@ def test_critical_hit_damage():
     # Test critical hit mechanics
     critical_damage = None
     
-    # Try to get a critical hit (1/24 chance, try more times to be reliable)
-    for _ in range(20):  # Reduced trials, increased range to compensate
+    # Try to get a critical hit (1/24 chance, try up to 100 times)
+    for _ in range(100):
         defender.current_hp = defender.stats.hp  # Reset HP
         result = battle.execute_turn(physical_move, defender)
         if result.critical_hit and result.damage_dealt > 0:
@@ -94,22 +83,29 @@ def test_critical_hit_damage():
     # Min ratio: 2.0 * (0.85/1.00) ≈ 1.70
     assert 1.70 <= critical_damage / base_damage <= 2.35, f"Expected ~2x damage (with random factor), got {critical_damage/base_damage}x"
     
-    # Test special critical hits
-    # Get base damage
-    base_damage = None
-    special_move = Move(
-        name="Special Move",
-        type_=Type.NORMAL,
-        category=MoveCategory.SPECIAL,
-        power=40,
-        accuracy=100,
-        pp=250  # Enough PP for all attempts
+    # Test special critical hits with fresh Pokemon
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
     )
-    attacker.moves = [special_move]
-    battle = Battle(attacker, defender, chart, debug=False)  # Disable debug for multiple trials
     
-    # Try to get a non-critical hit
-    for _ in range(10):
+    defender = Pokemon(
+        name="Defender",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    attacker.moves = [special_move]
+    battle = Battle(attacker, defender, chart, debug=False)
+    
+    # Try to get a non-critical hit (1/24 chance to crit, so try up to 50 times)
+    base_damage = None
+    for _ in range(50):
         defender.current_hp = defender.stats.hp  # Reset HP
         result = battle.execute_turn(special_move, defender)
         if not result.critical_hit and result.damage_dealt > 0:
@@ -121,8 +117,8 @@ def test_critical_hit_damage():
     # Test critical hit mechanics
     critical_damage = None
     
-    # Try to get a critical hit (1/24 chance, try more times to be reliable)
-    for _ in range(100):  # More trials with debug off for better statistical significance
+    # Try to get a critical hit (1/24 chance, try up to 100 times)
+    for _ in range(100):
         defender.current_hp = defender.stats.hp  # Reset HP
         result = battle.execute_turn(special_move, defender)
         if result.critical_hit and result.damage_dealt > 0:
@@ -165,7 +161,7 @@ def test_critical_hit_stat_ignore():
         category=MoveCategory.PHYSICAL,
         power=40,
         accuracy=100,
-        pp=100
+        pp=250  # Enough PP for all attempts
     )
     
     attack_lower = Move(
@@ -174,7 +170,7 @@ def test_critical_hit_stat_ignore():
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=30,
+        pp=250,  # Enough PP for all attempts
         effects=[Effect(stat_changes={"attack": -2})]  # Harshly lower attack
     )
     
@@ -184,7 +180,7 @@ def test_critical_hit_stat_ignore():
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
-        pp=30,
+        pp=250,  # Enough PP for all attempts
         effects=[Effect(stat_changes={"defense": 2})]  # Sharply raise defense
     )
     
@@ -199,8 +195,8 @@ def test_critical_hit_stat_ignore():
     battle.execute_turn(attack_lower, attacker)
     battle.execute_turn(defense_boost, defender)
     
-    # Try to get a non-critical hit
-    for _ in range(10):
+    # Try to get a non-critical hit (1/24 chance to crit, so try up to 50 times)
+    for _ in range(50):
         defender.current_hp = defender.stats.hp  # Reset HP
         result = battle.execute_turn(attack_move, defender)
         if not result.critical_hit and result.damage_dealt > 0:
@@ -248,29 +244,30 @@ def test_critical_hit_rate():
         level=50
     )
     
-    move = Move(
+    # Create move with enough PP for all trials
+    test_move = Move(
         name="Test Move",
         type_=Type.NORMAL,
         category=MoveCategory.PHYSICAL,
         power=40,
         accuracy=100,
-        pp=1000  # Lots of PP for multiple trials
+        pp=250  # Enough PP for all attempts
     )
     
-    attacker.moves = [move]
+    attacker.moves = [test_move]
     battle = Battle(attacker, defender, chart)
     
-    # Test critical hit rate with fewer trials but wider acceptable range
+    # Test critical hit rate with reasonable number of trials
     crits = 0
-    trials = 20  # Reduced trials, increased range to compensate
+    trials = 100  # More trials for better statistical significance
     
     for _ in range(trials):
         defender.current_hp = defender.stats.hp  # Reset HP each time
-        result = battle.execute_turn(move, defender)
+        result = battle.execute_turn(test_move, defender)
         if result.critical_hit:
             crits += 1
     
     # Should be roughly 1/24 rate (4.17%)
-    # Allow for wider random variation (0-12%) due to fewer trials
+    # With 100 trials, expect 2-8 crits (2-8%)
     crit_rate = (crits / trials) * 100
-    assert 0 <= crit_rate <= 20, f"Critical hit rate was {crit_rate}% (expected ~4.17% with high variance due to small sample)"
+    assert 2 <= crit_rate <= 8, f"Critical hit rate was {crit_rate}% (expected ~4.17% ±2%)"
