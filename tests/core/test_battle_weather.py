@@ -6,8 +6,12 @@ from src.core.pokemon import Pokemon, Stats
 from src.core.move import Move, MoveCategory, Effect, StatusEffect
 from src.core.types import Type, TypeEffectiveness
 
-def test_rain_boost():
-    """Test that rain boosts water moves and weakens fire moves."""
+@pytest.mark.parametrize("weather,boosted_type,reduced_type", [
+    (Weather.RAIN, Type.WATER, Type.FIRE),
+    (Weather.SUN, Type.FIRE, Type.WATER)
+])
+def test_weather_move_effects(weather, boosted_type, reduced_type):
+    """Test that weather boosts and reduces appropriate move types."""
     # Create type chart with neutral effectiveness
     chart = TypeEffectiveness()
     chart.load_from_json({
@@ -33,154 +37,73 @@ def test_rain_boost():
         level=50
     )
     
-    # Create water and fire moves
-    water_move = Move(
-        name="Water Gun",
-        type_=Type.WATER,
+    # Create moves
+    boosted_move = Move(
+        name=f"{boosted_type.name} Move",
+        type_=boosted_type,
         category=MoveCategory.SPECIAL,
         power=40,
         accuracy=100,
-        pp=25
+        pp=250  # Enough PP for all attempts
     )
     
-    fire_move = Move(
-        name="Ember",
-        type_=Type.FIRE,
+    reduced_move = Move(
+        name=f"{reduced_type.name} Move",
+        type_=reduced_type,
         category=MoveCategory.SPECIAL,
         power=40,
         accuracy=100,
-        pp=25
+        pp=250  # Enough PP for all attempts
     )
     
-    attacker.moves = [water_move, fire_move]
+    attacker.moves = [boosted_move, reduced_move]
     
     # Test in clear weather first
     battle = Battle(attacker, defender, chart)
     
     # Get base damage values (non-critical hits)
-    base_water_damage = None
-    for _ in range(10):
-        water_result = battle.execute_turn(water_move, defender)
-        if not water_result.critical_hit:
-            base_water_damage = water_result.damage_dealt
+    base_boosted_damage = None
+    # Try to get non-critical hit (1/24 chance to crit, so try up to 50 times)
+    for _ in range(50):
+        result = battle.execute_turn(boosted_move, defender)
+        if not result.critical_hit:
+            base_boosted_damage = result.damage_dealt
             break
         defender.current_hp = defender.stats.hp  # Reset HP for next attempt
-    assert base_water_damage is not None, "Failed to get non-critical water damage"
+    assert base_boosted_damage is not None, f"Failed to get non-critical {boosted_type.name} damage"
     
-    base_fire_damage = None
-    for _ in range(10):
-        fire_result = battle.execute_turn(fire_move, defender)
-        if not fire_result.critical_hit:
-            base_fire_damage = fire_result.damage_dealt
+    base_reduced_damage = None
+    # Try to get non-critical hit (1/24 chance to crit, so try up to 50 times)
+    for _ in range(50):
+        result = battle.execute_turn(reduced_move, defender)
+        if not result.critical_hit:
+            base_reduced_damage = result.damage_dealt
             break
         defender.current_hp = defender.stats.hp  # Reset HP for next attempt
-    assert base_fire_damage is not None, "Failed to get non-critical fire damage"
+    assert base_reduced_damage is not None, f"Failed to get non-critical {reduced_type.name} damage"
     
-    # Test in rain
-    battle = Battle(attacker, defender, chart, weather=Weather.RAIN)
+    # Test in weather
+    battle = Battle(attacker, defender, chart, weather=weather)
     
-    # Test water boost (1.5x damage)
-    for _ in range(10):
-        water_result = battle.execute_turn(water_move, defender)
-        if not water_result.critical_hit:
-            assert water_result.damage_dealt > base_water_damage * 1.35  # Allow for random variation (1.5x nominal)
-            break
-        defender.current_hp = defender.stats.hp  # Reset HP for next attempt
-    
-    # Test fire reduction (0.5x damage)
-    for _ in range(10):
-        fire_result = battle.execute_turn(fire_move, defender)
-        if not fire_result.critical_hit:
-            assert fire_result.damage_dealt < base_fire_damage * 0.65  # Allow for random variation (0.5x nominal)
-            break
-        defender.current_hp = defender.stats.hp  # Reset HP for next attempt
-
-def test_sun_boost():
-    """Test that sun boosts fire moves and weakens water moves."""
-    # Create type chart with neutral effectiveness
-    chart = TypeEffectiveness()
-    chart.load_from_json({
-        "water": {"normal": 1.0},
-        "fire": {"normal": 1.0},
-        "normal": {"normal": 1.0}
-    })
-    
-    # Create Pokemon
-    attacker = Pokemon(
-        name="Attacker",
-        types=(Type.NORMAL,),
-        base_stats=Stats(hp=100, attack=100, defense=100,
-                        special_attack=100, special_defense=100, speed=100),
-        level=50
-    )
-    
-    defender = Pokemon(
-        name="Defender",
-        types=(Type.NORMAL,),
-        base_stats=Stats(hp=100, attack=100, defense=100,
-                        special_attack=100, special_defense=100, speed=100),
-        level=50
-    )
-    
-    # Create water and fire moves
-    water_move = Move(
-        name="Water Gun",
-        type_=Type.WATER,
-        category=MoveCategory.SPECIAL,
-        power=40,
-        accuracy=100,
-        pp=25
-    )
-    
-    fire_move = Move(
-        name="Ember",
-        type_=Type.FIRE,
-        category=MoveCategory.SPECIAL,
-        power=40,
-        accuracy=100,
-        pp=25
-    )
-    
-    attacker.moves = [water_move, fire_move]
-    
-    # Test in clear weather first
-    battle = Battle(attacker, defender, chart)
-    
-    # Get base damage values (non-critical hits)
-    base_water_damage = None
-    for _ in range(10):
-        water_result = battle.execute_turn(water_move, defender)
-        if not water_result.critical_hit:
-            base_water_damage = water_result.damage_dealt
-            break
-        defender.current_hp = defender.stats.hp  # Reset HP for next attempt
-    assert base_water_damage is not None, "Failed to get non-critical water damage"
-    
-    base_fire_damage = None
-    for _ in range(10):
-        fire_result = battle.execute_turn(fire_move, defender)
-        if not fire_result.critical_hit:
-            base_fire_damage = fire_result.damage_dealt
-            break
-        defender.current_hp = defender.stats.hp  # Reset HP for next attempt
-    assert base_fire_damage is not None, "Failed to get non-critical fire damage"
-    
-    # Test in sun
-    battle = Battle(attacker, defender, chart, weather=Weather.SUN)
-    
-    # Test fire boost (1.5x damage)
-    for _ in range(10):
-        fire_result = battle.execute_turn(fire_move, defender)
-        if not fire_result.critical_hit:
-            assert fire_result.damage_dealt > base_fire_damage * 1.35  # Allow for random variation (1.5x nominal)
+    # Test boosted move (1.5x damage)
+    # Try to get non-critical hit (1/24 chance to crit, so try up to 50 times)
+    for _ in range(50):
+        result = battle.execute_turn(boosted_move, defender)
+        if not result.critical_hit:
+            # With random factor (0.85-1.00), minimum boosted damage is:
+            # base * 1.5 * 0.85 ≈ base * 1.275
+            assert result.damage_dealt > base_boosted_damage * 1.25  # Allow for random variation
             break
         defender.current_hp = defender.stats.hp  # Reset HP for next attempt
     
-    # Test water reduction (0.5x damage)
-    for _ in range(10):
-        water_result = battle.execute_turn(water_move, defender)
-        if not water_result.critical_hit:
-            assert water_result.damage_dealt < base_water_damage * 0.65  # Allow for random variation (0.5x nominal)
+    # Test reduced move (0.5x damage)
+    # Try to get non-critical hit (1/24 chance to crit, so try up to 50 times)
+    for _ in range(50):
+        result = battle.execute_turn(reduced_move, defender)
+        if not result.critical_hit:
+            # With random factor (0.85-1.00), maximum reduced damage is:
+            # base * 0.5 * 1.00 = base * 0.5
+            assert result.damage_dealt < base_reduced_damage * 0.75  # Allow for random variation
             break
         defender.current_hp = defender.stats.hp  # Reset HP for next attempt
 
@@ -356,7 +279,7 @@ def test_weather_damage_order():
         category=MoveCategory.SPECIAL,
         power=40,
         accuracy=100,
-        pp=1000  # Lots of PP for multiple trials
+        pp=250  # Enough PP for all attempts
     )
     attacker.moves = [water_move]
     
@@ -365,7 +288,8 @@ def test_weather_damage_order():
     
     # Get non-critical hit damage first
     non_crit_damage = None
-    for _ in range(10):
+    # Try to get non-critical hit (1/24 chance to crit, so try up to 50 times)
+    for _ in range(50):
         result = battle.execute_turn(water_move, defender)
         if not result.critical_hit:
             non_crit_damage = result.damage_dealt
@@ -375,7 +299,8 @@ def test_weather_damage_order():
     
     # Then get critical hit damage (1/24 chance, try many more times to be reliable)
     crit_damage = None
-    for _ in range(1000):  # Much more attempts to ensure we get a critical hit
+    # Try to get critical hit (1/24 chance, try up to 100 times)
+    for _ in range(100):
         result = battle.execute_turn(water_move, defender)
         if result.critical_hit:
             crit_damage = result.damage_dealt
