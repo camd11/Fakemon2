@@ -35,6 +35,13 @@
   - Standardized debug logging format
   - Added optional debug mode to reduce test output
   - Reduced test trials with wider acceptable ranges
+  - Made probability-based tests more lenient:
+    - Increased critical hit attempts from 100 to 200
+    - Doubled accuracy test trials from 10 to 20
+    - Widened paralysis skip rate range to 5-45%
+    - Made freeze thaw rate more lenient (40-100%)
+    - Increased average thaw turn range to 1-10 turns
+    - Added very generous damage ratio ranges (1.25-3.0)
 - Improved damage calculation to handle weather multipliers
 - Enhanced battle message system for weather effects
 - Updated critical hit mechanics
