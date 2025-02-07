@@ -194,7 +194,7 @@ def test_multiple_status_resistances():
     # Test both status effects
     for move in [burn_move, paralyze_move]:
         status_count = 0
-        trials = 100  # More trials for reliable results
+        trials = 200  # More trials for more reliable results
         expected_status = move.effects[0].status
         
         for _ in range(trials):
