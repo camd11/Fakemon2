@@ -34,6 +34,7 @@ from src.core.battle import Battle, Weather
 from src.core.pokemon import Pokemon, Stats
 from src.core.move import Move, MoveCategory, Effect, StatusEffect
 from src.core.types import Type, TypeEffectiveness
+from src.core.ability import Ability, AbilityType
 
 @pytest.mark.parametrize("weather,boosted_type,reduced_type", [
     (Weather.RAIN, Type.WATER, Type.FIRE),
@@ -238,6 +239,112 @@ def test_hail_damage():
     
     # Ice Pokemon should not take damage
     assert ice_pokemon.current_hp == ice_hp
+
+def test_weather_immunity_ability():
+    """Test that weather immunity abilities prevent weather damage."""
+    # Create type chart
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create Pokemon with weather immunity ability
+    immune_pokemon = Pokemon(
+        name="Immune",
+        types=(Type.NORMAL,),  # Not naturally immune
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    # Add ability that grants immunity to both sandstorm and hail
+    immune_pokemon.ability = Ability(
+        name="Weather Shield",
+        type_=AbilityType.WEATHER_IMMUNITY,
+        weather_types=(Weather.SANDSTORM, Weather.HAIL)
+    )
+    
+    # Create regular Pokemon for comparison
+    normal_pokemon = Pokemon(
+        name="Normal",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Test in both weather types
+    for weather in (Weather.SANDSTORM, Weather.HAIL):
+        battle = Battle(immune_pokemon, normal_pokemon, chart, weather=weather)
+        
+        # Record initial HP
+        immune_hp = immune_pokemon.current_hp
+        normal_hp = normal_pokemon.current_hp
+        
+        # End turn to trigger weather damage
+        result = battle.end_turn()
+        
+        # Immune Pokemon should take no damage despite not having type immunity
+        assert immune_pokemon.current_hp == immune_hp, f"Pokemon with immunity ability took {weather.name} damage"
+        
+        # Normal Pokemon should take damage (1/16 of max HP)
+        assert normal_pokemon.current_hp == normal_hp - (normal_pokemon.stats.hp // 16)
+        assert any(f"buffeted by the {weather.name.lower()}" in msg for msg in result.messages)
+
+def test_weather_resistance_ability():
+    """Test that weather resistance abilities reduce weather damage."""
+    # Create type chart
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create Pokemon with weather resistance ability
+    resistant_pokemon = Pokemon(
+        name="Resistant",
+        types=(Type.NORMAL,),  # Not naturally immune
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    # Add ability that reduces both sandstorm and hail damage by 50%
+    resistant_pokemon.ability = Ability(
+        name="Weather Guard",
+        type_=AbilityType.WEATHER_RESISTANCE,
+        weather_types=(Weather.SANDSTORM, Weather.HAIL),
+        resistance_multiplier=0.5  # 50% reduction
+    )
+    
+    # Create regular Pokemon for comparison
+    normal_pokemon = Pokemon(
+        name="Normal",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Test in both weather types
+    for weather in (Weather.SANDSTORM, Weather.HAIL):
+        battle = Battle(resistant_pokemon, normal_pokemon, chart, weather=weather)
+        
+        # Record initial HP
+        resistant_hp = resistant_pokemon.current_hp
+        normal_hp = normal_pokemon.current_hp
+        
+        # End turn to trigger weather damage
+        result = battle.end_turn()
+        
+        # Calculate expected damage
+        base_damage = resistant_pokemon.stats.hp // 16
+        reduced_damage = int(base_damage * 0.5)  # 50% reduction
+        
+        # Resistant Pokemon should take reduced damage
+        assert resistant_pokemon.current_hp == resistant_hp - reduced_damage, \
+            f"Pokemon with resistance ability took wrong {weather.name} damage"
+        
+        # Normal Pokemon should take full damage
+        assert normal_pokemon.current_hp == normal_hp - base_damage
+        assert any(f"buffeted by the {weather.name.lower()}" in msg for msg in result.messages)
 
 def test_weather_message_order():
     """Test that weather messages appear in correct order (damage before status)."""

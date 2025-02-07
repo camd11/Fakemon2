@@ -4,6 +4,11 @@
 
 ### Added
 - Test debugging guide with comprehensive strategies and examples
+- Comprehensive test coverage for weather abilities:
+  - Added tests for weather immunity abilities
+  - Added tests for weather resistance abilities
+  - Added tests for multi-weather ability support
+  - Added tests for ability-type immunity interaction
 - Ability system enhancements:
   - Added weather immunity abilities
   - Added weather resistance abilities
