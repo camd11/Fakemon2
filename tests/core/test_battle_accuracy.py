@@ -11,10 +11,10 @@ catching significant implementation errors. For example:
   * Allows for normal random variation
   * More trials = more reliable results
 
-- Baseline accuracy test (35-100% range):
+- Baseline accuracy test (60-90% range):
   * Testing 75% accuracy move
-  * 50 trials with wide range
-  * Would catch if accuracy was too low
+  * 50 trials with reasonable range
+  * Would catch if accuracy was too low/high
   * Allows for normal random variation
   * More trials = more consistent results
 
@@ -888,7 +888,7 @@ def test_baseline_accuracy():
     # After accuracy boost (+1 stage): 75% * (2/1) = 150% (capped at 100%)
     # After evasion boost (+1 stage): 75% * (1/2) = 37.5%
     
-    # Allow for much wider random variation with 50 trials
-    assert 0.35 <= baseline_accuracy <= 1.00, f"Expected baseline accuracy around 75% (±40%), got {baseline_accuracy*100:.1f}%"
-    assert 0.60 <= boosted_accuracy <= 1.00, f"Expected boosted accuracy around 100% (capped), got {boosted_accuracy*100:.1f}%"
-    assert 0.05 <= reduced_accuracy <= 0.70, f"Expected reduced accuracy around 37.5% (±32.5%), got {reduced_accuracy*100:.1f}%"
+    # Allow for reasonable random variation with 50 trials
+    assert 0.60 <= baseline_accuracy <= 0.90, f"Expected baseline accuracy around 75% (±15%), got {baseline_accuracy*100:.1f}%"
+    assert 0.90 <= boosted_accuracy <= 1.00, f"Expected boosted accuracy around 100% (75% * 4/3), got {boosted_accuracy*100:.1f}%"
+    assert 0.40 <= reduced_accuracy <= 0.70, f"Expected reduced accuracy around 56% (75% * 3/4), got {reduced_accuracy*100:.1f}%"
