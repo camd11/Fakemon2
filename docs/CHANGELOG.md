@@ -56,6 +56,13 @@
 
 ### Fixed
 - Fixed accuracy calculation system
+  - Fixed accuracy/evasion stage formulas to match official Pokemon games:
+    * Accuracy positive stages: (3 + n) / 3
+    * Accuracy negative stages: 3 / (3 - n)
+    * Evasion positive stages: 3 / (3 + n)
+    * Evasion negative stages: (3 - n) / 3
+  - Fixed ability modifiers to properly stack with stat stages
+  - Ensured perfect accuracy moves override all modifiers
   - Properly handle accuracy and evasion stat stages separately
   - Fixed accuracy formula to use correct multipliers (e.g. +1 stage = 4/3)
   - Fixed evasion formula to properly reduce hit chance (e.g. +1 stage = 0.6)

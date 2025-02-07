@@ -121,17 +121,35 @@ class Battle:
             
         # Accuracy check for non-status moves
         if move.category != MoveCategory.STATUS:
-            # Convert accuracy to decimal and apply stat modifiers
-            base_accuracy = move.accuracy / 100  # Convert from percentage
+            # Get base accuracy and stat modifiers
+            base_accuracy = 1.0 if move.accuracy is None else move.accuracy / 100
             accuracy_multiplier = attacker.get_stat_multiplier("accuracy")
             evasion_multiplier = target.get_stat_multiplier("evasion")
+            
+            # Get ability modifiers
+            ability_accuracy = 1.0
+            ability_evasion = 1.0
+            
+            if attacker.ability:
+                accuracy_boost = attacker.ability.modifies_accuracy()
+                if accuracy_boost is not None:
+                    ability_accuracy = accuracy_boost
+                    
+            if target.ability:
+                evasion_boost = target.ability.modifies_evasion()
+                if evasion_boost is not None:
+                    ability_evasion = evasion_boost
             
             # Calculate final accuracy:
             # - Base accuracy is a percentage (0-1)
             # - Accuracy multiplier increases hit chance
             # - Evasion multiplier is already inverted (higher = harder to hit)
-            # - So multiply by evasion to reduce accuracy as evasion increases
-            final_accuracy = base_accuracy * accuracy_multiplier * evasion_multiplier
+            # - Apply ability modifiers (evasion boost means lower accuracy)
+            final_accuracy = base_accuracy * accuracy_multiplier * evasion_multiplier * ability_accuracy * (1.0 / ability_evasion)
+            
+            # Perfect accuracy moves never miss (override after all modifiers)
+            if move.accuracy is None:
+                final_accuracy = 1.0
             
             # Random roll (0-1) must be <= accuracy to hit
             if random.random() >= final_accuracy:

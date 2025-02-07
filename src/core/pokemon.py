@@ -122,15 +122,15 @@ class Pokemon:
             # -6: 3/9 = 0.333
             if stat == "accuracy":
                 if stage >= 0:
-                    multiplier *= (3 + stage) / 3
+                    multiplier *= (3 + stage) / 3  # +1 = 4/3, +2 = 5/3, +3 = 6/3, etc.
                 else:
-                    multiplier *= 3 / (3 + abs(stage))
+                    multiplier *= 3 / (3 - stage)  # -1 = 3/2, -2 = 3/1, -3 = 3/0, etc.
             else:  # evasion
-                # For evasion, higher stages = lower hit chance
+                # For evasion, use same formula as accuracy but inverted
                 if stage >= 0:
-                    multiplier *= 3 / (3 + stage * 2)  # +1 stage = 0.6 hit chance
+                    multiplier *= 3 / (3 + stage)  # +1 = 3/4, +2 = 3/5, +3 = 3/6, etc.
                 else:
-                    multiplier *= (3 - stage * 2) / 3  # -1 stage = 1.67 hit chance
+                    multiplier *= (3 - stage) / 3  # -1 = 4/3, -2 = 5/3, -3 = 6/3, etc.
         else:
             multiplier *= max(2, 2 + stage) / max(2, 2 - stage)
             

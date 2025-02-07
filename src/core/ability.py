@@ -11,6 +11,8 @@ class AbilityType(Enum):
     STATUS_RESISTANCE = auto()  # Reduced chance of status effects
     WEATHER_IMMUNITY = auto()  # Complete immunity to weather damage
     WEATHER_RESISTANCE = auto()  # Reduced weather damage
+    ACCURACY_BOOST = auto()  # Increases accuracy of moves
+    EVASION_BOOST = auto()  # Increases evasion
 
 class Ability:
     """An ability that provides special effects in battle."""
@@ -21,7 +23,9 @@ class Ability:
         type_: AbilityType,
         status_effects: Optional[tuple[StatusEffect, ...]] = None,
         weather_types: Optional[tuple[Weather, ...]] = None,
-        resistance_multiplier: float = 0.5  # 50% reduction for resistances
+        resistance_multiplier: float = 0.5,  # 50% reduction for resistances
+        accuracy_multiplier: float = 1.2,  # 20% boost to accuracy
+        evasion_multiplier: float = 1.2  # 20% boost to evasion
     ) -> None:
         """Initialize an ability.
         
@@ -37,6 +41,8 @@ class Ability:
         self.weather_types = weather_types or tuple()
         # Store resistance multiplier directly (e.g., 0.5 means 50% reduction)
         self.resistance_multiplier = resistance_multiplier
+        self.accuracy_multiplier = accuracy_multiplier
+        self.evasion_multiplier = evasion_multiplier
         
     def prevents_status(self, status: StatusEffect) -> bool:
         """Check if this ability prevents a status effect.
@@ -69,6 +75,26 @@ class Ability:
         if self.type == AbilityType.STATUS_IMMUNITY and status not in self.status_effects:
             return self.resistance_multiplier
             
+        return None
+        
+    def modifies_accuracy(self) -> Optional[float]:
+        """Get the accuracy multiplier for this ability.
+        
+        Returns:
+            Optional[float]: Multiplier to apply to accuracy, or None if no effect
+        """
+        if self.type == AbilityType.ACCURACY_BOOST:
+            return self.accuracy_multiplier
+        return None
+        
+    def modifies_evasion(self) -> Optional[float]:
+        """Get the evasion multiplier for this ability.
+        
+        Returns:
+            Optional[float]: Multiplier to apply to evasion, or None if no effect
+        """
+        if self.type == AbilityType.EVASION_BOOST:
+            return self.evasion_multiplier
         return None
         
     def prevents_weather_damage(self, weather: Weather) -> bool:
