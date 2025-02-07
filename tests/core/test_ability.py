@@ -104,7 +104,7 @@ def test_status_resistance_ability():
     
     # Test multiple times to verify reduced chance
     burn_count = 0
-    trials = 100  # More trials for reliable results
+    trials = 200  # More trials for reliable results
     
     for trial in range(trials):
         burn_move.restore_pp()
@@ -343,7 +343,7 @@ def test_status_resistance_with_paralysis():
     
     # Test paralysis resistance
     paralysis_count = 0
-    trials = 100  # More trials for reliable results
+    trials = 200  # More trials for reliable results
     
     for _ in range(trials):
         paralyze_move.restore_pp()
