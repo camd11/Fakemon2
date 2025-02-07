@@ -4,12 +4,12 @@ Note on Test Ranges:
 These tests use deliberately lenient ranges to prevent flaky failures while still
 catching significant implementation errors. For example:
 
-- Paralysis skip rate (5-45% range):
+- Paralysis skip rate (15-35% range):
   * Expected rate is ~25%
-  * 48 trials with wide range
+  * 100 trials for reliable results
   * Would catch if paralysis never happened
   * Would catch if paralysis happened too often
-  * Allows for normal random variation
+  * Tighter range with more trials
 
 - Freeze thaw rate (40-100% range):
   * Expected rate is ~89% over 10 turns
@@ -214,7 +214,7 @@ def test_paralysis_skip_turn(battle):
     
     # Do multiple trials to ensure paralysis sometimes prevents moves
     skipped_turns = 0
-    total_turns = 48  # Fewer trials, much wider range
+    total_turns = 100  # More trials for reliable results
     
     for _ in range(total_turns):
         result = battle.execute_turn(battle.player_pokemon.moves[0], battle.enemy_pokemon)
@@ -225,9 +225,9 @@ def test_paralysis_skip_turn(battle):
         battle.enemy_pokemon.current_hp = battle.enemy_pokemon.stats.hp
     
     # Paralysis should prevent moves ~25% of the time
-    # With 48 trials, allow for extremely wide variation (5-45%)
+    # With 100 trials, allow for reasonable variation (15-35%)
     paralysis_rate = skipped_turns / total_turns
-    assert 0.05 <= paralysis_rate <= 0.45, f"Expected 5-45% paralysis rate, got {paralysis_rate*100:.1f}%"
+    assert 0.15 <= paralysis_rate <= 0.35, f"Expected ~25% paralysis rate (±10%), got {paralysis_rate*100:.1f}%"
 
 def test_status_duration(battle):
     """Test that status effects last until cured."""
@@ -562,7 +562,7 @@ def test_ability_resistance():
         "normal": {"normal": 1.0}
     })
     
-    # Create Pokemon with status resistance
+    # Create Pokemon with paralysis resistance
     resistant_pokemon = Pokemon(
         name="Resistant Pokemon",
         types=(Type.NORMAL,),
@@ -571,21 +571,21 @@ def test_ability_resistance():
         level=50
     )
     resistant_pokemon.ability = Ability(
-        name="Water Veil",
+        name="Static Guard",
         type_=AbilityType.STATUS_RESISTANCE,
-        status_effects=(StatusEffect.BURN,),
+        status_effects=(StatusEffect.PARALYSIS,),
         resistance_multiplier=0.5  # 50% chance reduction
     )
     
-    # Create Will-O-Wisp
-    will_o_wisp = Move(
-        name="Will-O-Wisp",
-        type_=Type.FIRE,
+    # Create Thunder Wave
+    thunder_wave = Move(
+        name="Thunder Wave",
+        type_=Type.ELECTRIC,
         category=MoveCategory.STATUS,
         power=0,
         accuracy=100,
         pp=250,
-        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]  # Would be 50% with ability
+        effects=[Effect(status=StatusEffect.PARALYSIS, status_chance=100)]  # Would be 50% with ability
     )
     
     # Create battle
@@ -595,7 +595,7 @@ def test_ability_resistance():
         base_stats=Stats(hp=100, attack=100, defense=100,
                         special_attack=100, special_defense=100, speed=100),
         level=50,
-        moves=[will_o_wisp]
+        moves=[thunder_wave]
     )
     battle = Battle(attacker, resistant_pokemon, chart)
     
@@ -604,15 +604,15 @@ def test_ability_resistance():
     trials = 100
     
     for _ in range(trials):
-        battle.execute_turn(will_o_wisp, resistant_pokemon)
-        if resistant_pokemon.status == StatusEffect.BURN:
+        battle.execute_turn(thunder_wave, resistant_pokemon)
+        if resistant_pokemon.status == StatusEffect.PARALYSIS:
             burns += 1
         resistant_pokemon.set_status(None)  # Reset for next trial
     
-    burn_rate = burns / trials
-    # With 50% resistance, expect around 50% burn rate
+    paralysis_rate = burns / trials
+    # With 50% resistance, expect around 50% paralysis rate
     # Allow wide range (25-75%) due to randomness
-    assert 0.25 <= burn_rate <= 0.75, f"Expected ~50% burn rate (±25%), got {burn_rate*100:.1f}%"
+    assert 0.25 <= paralysis_rate <= 0.75, f"Expected ~50% paralysis rate (±25%), got {paralysis_rate*100:.1f}%"
 
 def test_weather_status_interaction():
     """Test that weather affects status conditions."""
