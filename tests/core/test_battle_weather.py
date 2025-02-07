@@ -1,4 +1,33 @@
-"""Tests for weather effects in battle system."""
+"""Tests for weather effects in battle system.
+
+Note on Test Ranges:
+These tests use deliberately lenient ranges to prevent flaky failures while still
+catching significant implementation errors. For example:
+
+- Weather damage ratios (1.25-3.0):
+  * Expected ratio is 2.0x for critical hits
+  * Random factor is 0.85-1.00
+  * Wide range catches only egregious errors
+  * Would catch if weather/crit interaction was wrong
+
+- Weather boost/reduction:
+  * Boosted moves: >1.1x base damage
+  * Reduced moves: <0.9x base damage
+  * Very lenient bounds to avoid flaky tests
+  * Would catch if weather had no effect
+  * Would catch if effect was reversed
+
+- Critical hit attempts (200):
+  * High attempt count ensures we get a critical hit
+  * 1/24 chance should hit within 200 tries
+  * Prevents random test failures
+  * Still validates core mechanics
+
+- Non-critical attempts (20):
+  * Fewer trials since success rate is high
+  * Only need one non-critical hit
+  * Allows for normal random variation
+"""
 
 import pytest
 from src.core.battle import Battle, Weather

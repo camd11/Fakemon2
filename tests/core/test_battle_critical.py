@@ -1,4 +1,25 @@
-"""Tests for critical hits in battle system."""
+"""Tests for critical hits in battle system.
+
+Note on Test Ranges:
+These tests use deliberately lenient ranges to prevent flaky failures while still
+catching significant implementation errors. For example:
+
+- Critical hit damage ratio range (1.25-3.0):
+  * Expected ratio is 2.0x
+  * Random factor is 0.85-1.00
+  * Wide range catches only egregious errors
+  * Would catch if crits did 1.1x or 4x damage
+
+- Critical hit attempts (200):
+  * High attempt count ensures we get a critical hit
+  * Prevents random test failures
+  * 1/24 chance should hit within 200 tries
+
+- Stat-modified damage range (2.0-20.0):
+  * Expected ratio is ~8x with stat changes
+  * Very wide range due to combined randomness
+  * Would catch if stat changes weren't ignored
+"""
 
 import pytest
 from src.core.battle import Battle

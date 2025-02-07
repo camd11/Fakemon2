@@ -1,4 +1,33 @@
-"""Tests for move accuracy in battle system."""
+"""Tests for move accuracy in battle system.
+
+Note on Test Ranges:
+These tests use deliberately lenient ranges to prevent flaky failures while still
+catching significant implementation errors. For example:
+
+- Basic accuracy test (10-90% range):
+  * Testing 50% accuracy move
+  * 20 trials with wide range
+  * Would catch if accuracy was 0% or 100%
+  * Allows for normal random variation
+
+- Baseline accuracy test (40-100% range):
+  * Testing 75% accuracy move
+  * 20 trials with wide range
+  * Would catch if accuracy was too low
+  * Allows for normal random variation
+
+- Boosted accuracy (60-100% range):
+  * Should be near 100% after boost
+  * Must be higher than baseline
+  * Would catch if boost didn't work
+  * Allows for normal random variation
+
+- Reduced accuracy (10-65% range):
+  * Expected ~37.5% after evasion
+  * Wide range due to combined randomness
+  * Would catch if evasion had no effect
+  * Still validates core mechanics
+"""
 
 import pytest
 from src.core.battle import Battle

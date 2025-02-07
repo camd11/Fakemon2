@@ -1,4 +1,35 @@
-"""Tests for status effects in battles."""
+"""Tests for status effects in battle system.
+
+Note on Test Ranges:
+These tests use deliberately lenient ranges to prevent flaky failures while still
+catching significant implementation errors. For example:
+
+- Paralysis skip rate (5-45% range):
+  * Expected rate is ~25%
+  * 48 trials with wide range
+  * Would catch if paralysis never happened
+  * Would catch if paralysis happened too often
+  * Allows for normal random variation
+
+- Freeze thaw rate (40-100% range):
+  * Expected rate is ~89% over 10 turns
+  * 20 trials with wide range
+  * Would catch if Pokemon never thawed
+  * Would catch if thaw chance was too low
+  * Allows for normal random variation
+
+- Average thaw turn range (1-10 turns):
+  * Expected average is 5 turns
+  * Very wide range due to randomness
+  * Would catch if thaw timing was wrong
+  * Allows for normal random variation
+
+- Sleep duration:
+  * Must be within 1-3 turns
+  * Only requires one duration to be seen
+  * Would catch if sleep lasted too long
+  * Would catch if sleep was instant wake
+"""
 
 import pytest
 from src.core.battle import Battle, TurnResult
