@@ -104,7 +104,7 @@ def test_status_resistance_ability():
     
     # Test multiple times to verify reduced chance
     burn_count = 0
-    trials = 20  # Reduced trials, increased range to compensate
+    trials = 100  # More trials for reliable results
     
     for trial in range(trials):
         burn_move.restore_pp()
@@ -114,9 +114,9 @@ def test_status_resistance_ability():
         defender.set_status(None)  # Reset status for next trial
     
     # With 50% resistance, expect around 50% success rate
-    # Allow for some random variation (40-60%)
+    # Allow for reasonable variation with more trials
     success_rate = burn_count / trials
-    assert 0.25 <= success_rate <= 0.75  # Much wider range to account for fewer trials
+    assert 0.40 <= success_rate <= 0.60, f"Expected ~50% success rate (±10%), got {success_rate*100:.1f}%"
 
 def test_multiple_status_resistances():
     """Test that abilities can reduce chance of multiple status effects."""
@@ -194,7 +194,7 @@ def test_multiple_status_resistances():
     # Test both status effects
     for move in [burn_move, paralyze_move]:
         status_count = 0
-        trials = 20  # Reduced trials, increased range to compensate
+        trials = 100  # More trials for reliable results
         expected_status = move.effects[0].status
         
         for _ in range(trials):
@@ -205,9 +205,9 @@ def test_multiple_status_resistances():
             defender.set_status(None)  # Reset status for next trial
         
         # With 50% resistance, expect around 50% success rate
-        # Allow for some random variation (40-60%)
+        # Allow for reasonable variation with more trials
         success_rate = status_count / trials
-        assert 0.25 <= success_rate <= 0.75, f"Expected 25-75% success rate for {expected_status.name}, got {success_rate*100}%"
+        assert 0.40 <= success_rate <= 0.60, f"Expected ~50% success rate (±10%) for {expected_status.name}, got {success_rate*100:.1f}%"
 
 def test_status_immunity_with_burn():
     """Test that a Pokemon with burn immunity cannot be burned."""
@@ -343,7 +343,7 @@ def test_status_resistance_with_paralysis():
     
     # Test paralysis resistance
     paralysis_count = 0
-    trials = 20  # Reduced trials, increased range to compensate
+    trials = 100  # More trials for reliable results
     
     for _ in range(trials):
         paralyze_move.restore_pp()
@@ -353,9 +353,9 @@ def test_status_resistance_with_paralysis():
         defender.set_status(None)  # Reset status for next trial
     
     # With 50% resistance, expect around 50% success rate
-    # Allow for some random variation (40-60%)
+    # Allow for reasonable variation with more trials
     success_rate = paralysis_count / trials
-    assert 0.25 <= success_rate <= 0.75, f"Expected 25-75% success rate for paralysis, got {success_rate*100}%"
+    assert 0.40 <= success_rate <= 0.60, f"Expected ~50% success rate (±10%), got {success_rate*100:.1f}%"
 
 def test_multiple_status_immunities():
     """Test that abilities can prevent multiple status effects."""
