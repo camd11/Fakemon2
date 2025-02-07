@@ -508,7 +508,7 @@ def test_accuracy_ability():
     
     # Test baseline accuracy first
     hits = 0
-    trials = 20
+    trials = 100  # More trials needed to reliably show small accuracy boost
     
     for _ in range(trials):
         result = battle.execute_turn(test_move, defender)
@@ -545,7 +545,7 @@ def test_accuracy_ability():
         defender.current_hp = defender.stats.hp
     
     boosted_accuracy = hits / trials
-    assert boosted_accuracy > baseline_accuracy, "Accuracy-boosting ability should improve hit rate"
+    assert boosted_accuracy > baseline_accuracy, f"Accuracy-boosting ability (20% boost) should improve hit rate above baseline {baseline_accuracy*100:.1f}%, got {boosted_accuracy*100:.1f}%"
 
 def test_evasion_ability():
     """Test that evasion-boosting abilities decrease opponent's hit rate."""
@@ -585,7 +585,7 @@ def test_evasion_ability():
     
     # Test baseline accuracy first
     hits = 0
-    trials = 20
+    trials = 100  # More trials needed to reliably show small accuracy boost
     
     for _ in range(trials):
         result = battle.execute_turn(test_move, defender)
@@ -621,7 +621,7 @@ def test_evasion_ability():
         defender.current_hp = defender.stats.hp
     
     reduced_accuracy = hits / trials
-    assert reduced_accuracy < baseline_accuracy, "Evasion-boosting ability should reduce hit rate"
+    assert reduced_accuracy < baseline_accuracy, f"Evasion-boosting ability (20% boost) should reduce hit rate below baseline {baseline_accuracy*100:.1f}%, got {reduced_accuracy*100:.1f}%"
 
 def test_ability_stat_stacking():
     """Test that abilities stack properly with stat changes."""
@@ -680,7 +680,7 @@ def test_ability_stat_stacking():
     battle.execute_turn(accuracy_boost, attacker)  # Boost accuracy stat
     
     hits = 0
-    trials = 20
+    trials = 50  # Standard number of trials for reliable results
     
     for _ in range(trials):
         result = battle.execute_turn(test_move, defender)
@@ -765,7 +765,7 @@ def test_baseline_accuracy():
     
     # First test baseline accuracy
     hits = 0
-    trials = 20  # Double from 10 trials, still wide range
+    trials = 50  # Standard number of trials for reliable results
     
     for _ in range(trials):
         # Reset defender's HP and create fresh move for each trial
@@ -888,7 +888,7 @@ def test_baseline_accuracy():
     # After accuracy boost (+1 stage): 75% * (2/1) = 150% (capped at 100%)
     # After evasion boost (+1 stage): 75% * (1/2) = 37.5%
     
-    # Allow for much wider random variation with 20 trials
+    # Allow for much wider random variation with 50 trials
     assert 0.35 <= baseline_accuracy <= 1.00, f"Expected baseline accuracy around 75% (±40%), got {baseline_accuracy*100:.1f}%"
     assert 0.60 <= boosted_accuracy <= 1.00, f"Expected boosted accuracy around 100% (capped), got {boosted_accuracy*100:.1f}%"
     assert 0.05 <= reduced_accuracy <= 0.70, f"Expected reduced accuracy around 37.5% (±32.5%), got {reduced_accuracy*100:.1f}%"
