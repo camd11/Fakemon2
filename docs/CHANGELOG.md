@@ -62,6 +62,8 @@
     * Evasion positive stages: 3 / (3 + n)
     * Evasion negative stages: (3 - n) / 3
   - Fixed ability modifiers to properly stack with stat stages
+  - Fixed weather-status interactions:
+    * Cannot be frozen during harsh sunlight
   - Ensured perfect accuracy moves override all modifiers
   - Properly handle accuracy and evasion stat stages separately
   - Fixed accuracy formula to use correct multipliers (e.g. +1 stage = 4/3)

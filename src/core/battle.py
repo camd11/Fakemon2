@@ -204,6 +204,10 @@ class Battle:
                     if resistance is not None:
                         status_chance *= resistance
                 
+                # Check weather conditions first
+                if effect.status == StatusEffect.FREEZE and self.weather == Weather.SUN:
+                    continue  # Cannot be frozen during harsh sunlight
+                
                 # Random check
                 if random.random() <= status_chance:
                     # Set duration based on status type

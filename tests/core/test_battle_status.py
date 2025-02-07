@@ -34,8 +34,9 @@ catching significant implementation errors. For example:
 import pytest
 from src.core.battle import Battle, TurnResult
 from src.core.pokemon import Pokemon, Stats
-from src.core.types import Type, TypeEffectiveness
+from src.core.types import Type, TypeEffectiveness, Weather
 from src.core.move import Move, MoveCategory, Effect, StatusEffect
+from src.core.ability import Ability, AbilityType
 
 @pytest.fixture
 def type_chart():
@@ -110,6 +111,80 @@ def battle(test_pokemon, type_chart):
         ]
     )
     return Battle(player_pokemon, enemy_pokemon, type_chart, debug=False)  # Disable debug for multiple trials
+
+@pytest.mark.parametrize("immune_type,status,move_data", [
+    (Type.FIRE, StatusEffect.BURN, {
+        "name": "Will-O-Wisp",
+        "type_": Type.FIRE,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.BURN, status_chance=100)]
+    }),
+    (Type.ICE, StatusEffect.FREEZE, {
+        "name": "Ice Beam",
+        "type_": Type.ICE,
+        "category": MoveCategory.SPECIAL,
+        "power": 90,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.FREEZE, status_chance=100)]
+    }),
+    (Type.ELECTRIC, StatusEffect.PARALYSIS, {
+        "name": "Thunder Wave",
+        "type_": Type.ELECTRIC,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
+    }),
+    (Type.POISON, StatusEffect.POISON, {
+        "name": "Toxic",
+        "type_": Type.POISON,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.POISON, status_chance=100)]
+    }),
+    (Type.STEEL, StatusEffect.POISON, {
+        "name": "Toxic",
+        "type_": Type.POISON,
+        "category": MoveCategory.STATUS,
+        "power": 0,
+        "accuracy": 100,
+        "pp": 250,
+        "effects": [Effect(status=StatusEffect.POISON, status_chance=100)]
+    })
+])
+def test_type_immunities(battle, immune_type, status, move_data):
+    """Test that Pokemon are immune to status effects based on their type.
+    
+    Args:
+        battle: Battle fixture
+        immune_type: Type that should be immune to the status
+        status: Status effect to test immunity against
+        move_data: Data to create the status-inflicting move
+    """
+    # Create status move
+    status_move = Move(**move_data)
+    battle.player_pokemon.moves = [status_move]
+    
+    # Create immune Pokemon
+    immune_pokemon = Pokemon(
+        name=f"{immune_type.name} Pokemon",
+        types=(immune_type,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    battle.enemy_pokemon = immune_pokemon
+    
+    # Try to apply status
+    battle.execute_turn(status_move, battle.enemy_pokemon)
+    assert battle.enemy_pokemon.status is None, f"{immune_type.name} type should be immune to {status.name}"
 
 def test_poison_damage(battle):
     """Test that poison deals damage at end of turn."""
@@ -433,76 +508,205 @@ def test_burn_duration(battle):
     battle.end_turn()
     assert battle.enemy_pokemon.status is None
 
-@pytest.mark.parametrize("immune_type,status,move_data", [
-    (Type.FIRE, StatusEffect.BURN, {
-        "name": "Will-O-Wisp",
-        "type_": Type.FIRE,
-        "category": MoveCategory.STATUS,
-        "power": 0,
-        "accuracy": 100,
-        "pp": 250,
-        "effects": [Effect(status=StatusEffect.BURN, status_chance=100)]
-    }),
-    (Type.ICE, StatusEffect.FREEZE, {
-        "name": "Ice Beam",
-        "type_": Type.ICE,
-        "category": MoveCategory.SPECIAL,
-        "power": 90,
-        "accuracy": 100,
-        "pp": 250,
-        "effects": [Effect(status=StatusEffect.FREEZE, status_chance=100)]
-    }),
-    (Type.ELECTRIC, StatusEffect.PARALYSIS, {
-        "name": "Thunder Wave",
-        "type_": Type.ELECTRIC,
-        "category": MoveCategory.STATUS,
-        "power": 0,
-        "accuracy": 100,
-        "pp": 250,
-        "effects": [Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
-    }),
-    (Type.POISON, StatusEffect.POISON, {
-        "name": "Toxic",
-        "type_": Type.POISON,
-        "category": MoveCategory.STATUS,
-        "power": 0,
-        "accuracy": 100,
-        "pp": 250,
-        "effects": [Effect(status=StatusEffect.POISON, status_chance=100)]
-    }),
-    (Type.STEEL, StatusEffect.POISON, {
-        "name": "Toxic",
-        "type_": Type.POISON,
-        "category": MoveCategory.STATUS,
-        "power": 0,
-        "accuracy": 100,
-        "pp": 250,
-        "effects": [Effect(status=StatusEffect.POISON, status_chance=100)]
+def test_ability_immunities():
+    """Test that abilities can provide immunity to status effects."""
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
     })
-])
-def test_type_immunities(battle, immune_type, status, move_data):
-    """Test that Pokemon are immune to status effects based on their type.
     
-    Args:
-        battle: Battle fixture
-        immune_type: Type that should be immune to the status
-        status: Status effect to test immunity against
-        move_data: Data to create the status-inflicting move
-    """
-    # Create status move
-    status_move = Move(**move_data)
-    battle.player_pokemon.moves = [status_move]
-    
-    # Create immune Pokemon
-    immune_pokemon = Pokemon(
-        name=f"{immune_type.name} Pokemon",
-        types=(immune_type,),
+    # Create Pokemon with Limber (immune to paralysis)
+    limber_pokemon = Pokemon(
+        name="Limber Pokemon",
+        types=(Type.NORMAL,),
         base_stats=Stats(hp=100, attack=100, defense=100,
                         special_attack=100, special_defense=100, speed=100),
         level=50
     )
-    battle.enemy_pokemon = immune_pokemon
+    limber_pokemon.ability = Ability(
+        name="Limber",
+        type_=AbilityType.STATUS_IMMUNITY,
+        status_effects=(StatusEffect.PARALYSIS,)
+    )
     
-    # Try to apply status
-    battle.execute_turn(status_move, battle.enemy_pokemon)
-    assert battle.enemy_pokemon.status is None, f"{immune_type.name} type should be immune to {status.name}"
+    # Create Thunder Wave
+    thunder_wave = Move(
+        name="Thunder Wave",
+        type_=Type.NORMAL,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=250,
+        effects=[Effect(status=StatusEffect.PARALYSIS, status_chance=100)]
+    )
+    
+    # Create battle
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50,
+        moves=[thunder_wave]
+    )
+    battle = Battle(attacker, limber_pokemon, chart)
+    
+    # Try to paralyze
+    battle.execute_turn(thunder_wave, limber_pokemon)
+    assert limber_pokemon.status is None, "Limber should prevent paralysis"
+
+def test_ability_resistance():
+    """Test that abilities can reduce chance of status effects."""
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create Pokemon with status resistance
+    resistant_pokemon = Pokemon(
+        name="Resistant Pokemon",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    resistant_pokemon.ability = Ability(
+        name="Water Veil",
+        type_=AbilityType.STATUS_RESISTANCE,
+        status_effects=(StatusEffect.BURN,),
+        resistance_multiplier=0.5  # 50% chance reduction
+    )
+    
+    # Create Will-O-Wisp
+    will_o_wisp = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=250,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]  # Would be 50% with ability
+    )
+    
+    # Create battle
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50,
+        moves=[will_o_wisp]
+    )
+    battle = Battle(attacker, resistant_pokemon, chart)
+    
+    # Test multiple times to verify reduced chance
+    burns = 0
+    trials = 100
+    
+    for _ in range(trials):
+        battle.execute_turn(will_o_wisp, resistant_pokemon)
+        if resistant_pokemon.status == StatusEffect.BURN:
+            burns += 1
+        resistant_pokemon.set_status(None)  # Reset for next trial
+    
+    burn_rate = burns / trials
+    # With 50% resistance, expect around 50% burn rate
+    # Allow wide range (25-75%) due to randomness
+    assert 0.25 <= burn_rate <= 0.75, f"Expected ~50% burn rate (±25%), got {burn_rate*100:.1f}%"
+
+def test_weather_status_interaction():
+    """Test that weather affects status conditions."""
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create Pokemon
+    target = Pokemon(
+        name="Target",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Create Ice Beam
+    ice_beam = Move(
+        name="Ice Beam",
+        type_=Type.ICE,
+        category=MoveCategory.SPECIAL,
+        power=90,
+        accuracy=100,
+        pp=250,
+        effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
+    )
+    
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50,
+        moves=[ice_beam]
+    )
+    
+    # Test in sun - shouldn't be able to freeze
+    battle = Battle(attacker, target, chart, weather=Weather.SUN)
+    battle.execute_turn(ice_beam, target)
+    assert target.status is None, "Cannot be frozen during harsh sunlight"
+
+def test_status_interactions():
+    """Test that status effects interact properly with each other."""
+    chart = TypeEffectiveness()
+    chart.load_from_json({
+        "normal": {"normal": 1.0}
+    })
+    
+    # Create Pokemon
+    target = Pokemon(
+        name="Target",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50
+    )
+    
+    # Create moves
+    burn_move = Move(
+        name="Will-O-Wisp",
+        type_=Type.FIRE,
+        category=MoveCategory.STATUS,
+        power=0,
+        accuracy=100,
+        pp=250,
+        effects=[Effect(status=StatusEffect.BURN, status_chance=100)]
+    )
+    
+    freeze_move = Move(
+        name="Ice Beam",
+        type_=Type.ICE,
+        category=MoveCategory.SPECIAL,
+        power=90,
+        accuracy=100,
+        pp=250,
+        effects=[Effect(status=StatusEffect.FREEZE, status_chance=100)]
+    )
+    
+    attacker = Pokemon(
+        name="Attacker",
+        types=(Type.NORMAL,),
+        base_stats=Stats(hp=100, attack=100, defense=100,
+                        special_attack=100, special_defense=100, speed=100),
+        level=50,
+        moves=[burn_move, freeze_move]
+    )
+    
+    battle = Battle(attacker, target, chart)
+    
+    # Apply burn first
+    battle.execute_turn(burn_move, target)
+    assert target.status == StatusEffect.BURN
+    
+    # Try to freeze - should fail since already burned
+    battle.execute_turn(freeze_move, target)
+    assert target.status == StatusEffect.BURN, "Cannot be frozen while burned"
