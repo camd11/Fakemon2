@@ -143,8 +143,8 @@ class Battle:
             # Calculate final accuracy:
             # - Base accuracy is a percentage (0-1)
             # - Accuracy multiplier increases hit chance
-            # - Evasion multiplier is already inverted (higher = harder to hit)
-            # - Apply ability modifiers (evasion boost means lower accuracy)
+            # - Evasion multiplier is already inverted by get_stat_multiplier
+            # - Ability modifiers: accuracy boosts hit chance, evasion reduces it
             final_accuracy = base_accuracy * accuracy_multiplier * evasion_multiplier * ability_accuracy * (1.0 / ability_evasion)
             
             # Perfect accuracy moves never miss (override after all modifiers)

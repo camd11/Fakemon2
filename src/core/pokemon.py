@@ -126,11 +126,15 @@ class Pokemon:
                 else:
                     multiplier *= 3 / (3 - stage)  # -1 = 3/2, -2 = 3/1, -3 = 3/0, etc.
             else:  # evasion
-                # For evasion, use same formula as accuracy but inverted
+                # Evasion stages affect hit chance:
+                # +1 = 0.75 hit chance (harder to hit)
+                # +2 = 0.60 hit chance (even harder to hit)
+                # -1 = 1.33 hit chance (easier to hit)
+                # -2 = 1.67 hit chance (even easier to hit)
                 if stage >= 0:
-                    multiplier *= 3 / (3 + stage)  # +1 = 3/4, +2 = 3/5, +3 = 3/6, etc.
+                    multiplier *= 3 / (3 + stage)  # +1 = 3/4, +2 = 3/5, etc.
                 else:
-                    multiplier *= (3 - stage) / 3  # -1 = 4/3, -2 = 5/3, -3 = 6/3, etc.
+                    multiplier *= (3 - stage) / 3  # -1 = 4/3, -2 = 5/3, etc.
         else:
             multiplier *= max(2, 2 + stage) / max(2, 2 - stage)
             
